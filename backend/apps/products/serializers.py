@@ -49,7 +49,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'price', 'discount_price', 'stock',
             'category', 'category_name', 'rating', 'is_featured',
-            'is_deal', 'primary_image'
+            'is_deal', 'primary_image',
         ]
 
     def get_primary_image(self, obj):

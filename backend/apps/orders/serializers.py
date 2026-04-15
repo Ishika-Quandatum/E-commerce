@@ -4,17 +4,20 @@ from .models import Order, OrderItem
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductListSerializer(read_only=True)
+    product = serializers.SerializerMethodField()
     product_id = serializers.IntegerField(write_only=True)
     subtotal = serializers.ReadOnlyField()
 
     class Meta:
         model = OrderItem
         fields = ['id', 'product', 'product_id', 'quantity', 'price', 'subtotal']
+    def get_product(self, obj):
+        request = self.context.get('request')
+        return ProductListSerializer(obj.product, context={'request': request}).data
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
+    items = serializers.SerializerMethodField()
     username = serializers.ReadOnlyField(source='user.username')
 
     class Meta:
@@ -25,6 +28,12 @@ class OrderSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at', 'items'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
+    def get_items(self, obj):
+        return OrderItemSerializer(
+            obj.items.all(),
+            many=True,
+            context=self.context
+        ).data
 
 
 class CreateOrderSerializer(serializers.ModelSerializer):

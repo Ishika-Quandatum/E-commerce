@@ -7,7 +7,11 @@ const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
+const [search, setSearch] = useState("");
+const [categoryFilter, setCategoryFilter] = useState("All");
+const [statusFilter, setStatusFilter] = useState("All");
+const [stockFilter, setStockFilter] = useState("All");
+const [selectedProducts, setSelectedProducts] = useState([]);
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -42,6 +46,24 @@ const ProductList = () => {
       </div>
     );
   }
+  const filteredProducts = products.filter((p) => {
+  const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+
+  const matchCategory =
+    categoryFilter === "All" ||
+    (p.category?.name || p.category) === categoryFilter;
+
+  const matchStatus =
+    statusFilter === "All" ||
+    (statusFilter === "Active" ? p.stock > 0 : p.stock === 0);
+
+  const matchStock =
+    stockFilter === "All" ||
+    (stockFilter === "In Stock" && p.stock > 0) ||
+    (stockFilter === "Out of Stock" && p.stock === 0);
+
+  return matchSearch && matchCategory && matchStatus && matchStock;
+});
 
   return (
     <div className="space-y-6">
@@ -58,11 +80,97 @@ const ProductList = () => {
           Add Product
         </button>
       </div>
+     <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-wrap items-end gap-4">
+
+  {/* Search */}
+  <div className="flex flex-col">
+    <label className="text-xs font-semibold text-gray-500 mb-1">
+      Search
+    </label>
+    <div className="relative">
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="pl-10 pr-3 py-2.5 w-64 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+      />
+      <span className="absolute left-3 top-2.5 text-gray-400">
+        🔍
+      </span>
+    </div>
+  </div>
+
+  {/* Category */}
+  <div className="flex flex-col">
+    <label className="text-xs font-semibold text-gray-500 mb-1">
+      Category
+    </label>
+    <select
+      value={categoryFilter}
+      onChange={(e) => setCategoryFilter(e.target.value)}
+      className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+    >
+      <option>All</option>
+      <option>Kids</option>
+      <option>Electronics</option>
+    </select>
+  </div>
+
+  {/* Status */}
+  <div className="flex flex-col">
+    <label className="text-xs font-semibold text-gray-500 mb-1">
+      Status
+    </label>
+    <select
+      value={statusFilter}
+      onChange={(e) => setStatusFilter(e.target.value)}
+      className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+    >
+      <option>All</option>
+      <option>Active</option>
+      <option>Inactive</option>
+    </select>
+  </div>
+
+  {/* Stock */}
+  <div className="flex flex-col">
+    <label className="text-xs font-semibold text-gray-500 mb-1">
+      Stock
+    </label>
+    <select
+      value={stockFilter}
+      onChange={(e) => setStockFilter(e.target.value)}
+      className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+    >
+      <option>All</option>
+      <option>In Stock</option>
+      <option>Out of Stock</option>
+    </select>
+  </div>
+
+  {/* Reset Button */}
+  <div className="flex flex-col justify-end">
+    <button
+      onClick={() => {
+        setSearch("");
+        setCategoryFilter("All");
+        setStatusFilter("All");
+        setStockFilter("All");
+      }}
+      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition"
+    >
+      🔄 Reset
+    </button>
+  </div>
+
+</div>
 
       <div className="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
+
               <tr>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
@@ -73,7 +181,7 @@ const ProductList = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {products.length > 0 ? (
-                products.map((p) => (
+                filteredProducts.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-4">

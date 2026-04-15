@@ -124,15 +124,38 @@ const Profile = () => {
                           <Clock size={16} className="text-primary-600" />
                           Order Items
                         </h4>
-                        <div className="space-y-3">
-                          {order.items.map((item, idx) => (
-                            <div key={idx} className="flex justify-between items-center text-sm">
-                              <span className="text-slate-600 flex-1 line-clamp-1">{item.product.name}</span>
-                              <span className="font-bold text-slate-400 mx-4">x{item.quantity}</span>
-                              <span className="font-bold text-slate-800">${item.price}</span>
-                            </div>
-                          ))}
-                        </div>
+                       <div className="space-y-4">
+  {(order.items || []).map((item, idx) => (
+    <div
+      key={idx}
+      className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl "
+    >
+      {/* Image */}
+      <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
+        <img
+          src={item.product?.primary_image || "https://via.placeholder.com/100"}
+          alt={item.product?.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Product Info */}
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-slate-800 line-clamp-1">
+          {item.product?.name}
+        </p>
+        <p className="text-xs text-slate-500">
+          Qty: {item.quantity}
+        </p>
+      </div>
+
+      {/* Price */}
+      <div className="text-sm font-bold text-primary-600">
+        ₹{item.price}
+      </div>
+    </div>
+  ))}
+</div>
                       </div>
                     </div>
                   </div>

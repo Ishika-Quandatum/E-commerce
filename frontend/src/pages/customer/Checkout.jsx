@@ -154,7 +154,15 @@ const Checkout = () => {
               {cart?.items.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="w-16 h-16 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
-                    <img src={item.product.images?.[0]?.image} className="w-full h-full object-cover" />
+                    <img
+  src={
+    item.product?.primary_image
+      ? item.product.primary_image
+      : "https://via.placeholder.com/150"
+  }
+  alt={item.product?.name}
+  className="w-full h-full object-cover"
+/>
                   </div>
                   <div className="flex-grow">
                     <h4 className="font-bold text-sm line-clamp-1">{item.product.name}</h4>

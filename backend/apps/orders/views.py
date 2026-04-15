@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, CreateOrderSerializer
-
+from apps.cart.models import Cart
 
 class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -20,7 +20,34 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.prefetch_related('items__product').filter(user=user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        order = serializer.save(user=self.request.user)
+
+        cart, created = Cart.objects.get_or_create(user=self.request.user)
+
+        for item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.discount_price or item.product.price
+            )
+
+        cart.items.all().delete()
+
+        order.refresh_from_db()   
+        order = serializer.save(user=self.request.user)
+
+        cart, created = Cart.objects.get_or_create(user=self.request.user)
+
+        for item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.discount_price or item.product.price
+            )
+
+        cart.items.all().delete() 
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAdminUser])
     def update_status(self, request, pk=None):
