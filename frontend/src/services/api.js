@@ -6,32 +6,30 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Add a request interceptor to add the JWT token to headers
+// 1. REQUEST INTERCEPTOR (token add)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle expired tokens globally
+//2. RESPONSE INTERCEPTOR 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // If we get unauthorized, clear the dead token so public endpoints work again
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      // Optional: trigger an event or reload if needed
+    if (error.response?.status === 401) {
+      console.warn("Unauthorized - token may be invalid");
     }
     return Promise.reject(error);
   }
 );
-
 export const authService = {
   login: (credentials) => api.post('users/login/', credentials),
   register: (userData) => api.post('users/register/', userData),
@@ -52,7 +50,7 @@ export const cartService = {
 };
 
 export const orderService = {
-  placeOrder: (orderData) => api.post('orders/place/', orderData),
+  placeOrder: (orderData) => api.post('orders/', orderData),
   getUserOrders: () => api.get('orders/'),
 };
 

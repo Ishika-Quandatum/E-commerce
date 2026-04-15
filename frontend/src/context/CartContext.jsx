@@ -30,16 +30,15 @@ export const CartProvider = ({ children }) => {
     }
   }, [user]);
 
-  const addToCart = async (productId, quantity = 1) => {
-    try {
-      await cartService.addToCart({ product_id: productId, quantity });
-      await fetchCart();
-      alert("Added to cart successfully!");
-    } catch (err) {
-      console.error("Failed to add to cart", err);
-      alert("Failed to add to cart. Please try again.");
-    }
-  };
+ const addToCart = async (productId) => {
+  const res = await cartService.addToCart({
+    product_id: productId,
+    quantity: 1,
+  });
+
+  
+  setCart(res.data);  
+};
 
   const updateQuantity = async (itemId, quantity) => {
     try {

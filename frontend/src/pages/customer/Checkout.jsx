@@ -19,8 +19,8 @@ const Checkout = () => {
     card_number: ''
   });
 
-  const subtotal = cart?.total_price || 0;
-  const shipping = subtotal > 100 ? 0 : 15;
+  const subtotal = cart?.total ? parseFloat(cart.total) : 0;
+  const shipping = subtotal > 100 || subtotal === 0 ? 0 : 15;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
 
@@ -132,12 +132,17 @@ const Checkout = () => {
             </section>
 
             <button
-              disabled={loading}
-              type="submit"
-              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 text-white h-16 rounded-2xl flex items-center justify-center gap-3 font-bold text-lg transition-all shadow-xl shadow-primary-500/25 active:scale-95"
-            >
-              {loading ? "Processing..." : `Pay $${total.toFixed(2)} Now`}
-            </button>
+  disabled={loading}
+  type="submit"
+  className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 text-white h-16 rounded-2xl flex items-center justify-center gap-3 font-bold text-lg transition-all shadow-xl shadow-primary-500/25 active:scale-95"
+>
+  {loading
+    ? "Processing..."
+    : formData.payment_method === "Cash on Delivery"
+      ? "Place Order"
+      : `Pay $${total.toFixed(2)} Now`
+  }
+</button>
           </form>
         </div>
 
@@ -155,7 +160,9 @@ const Checkout = () => {
                     <h4 className="font-bold text-sm line-clamp-1">{item.product.name}</h4>
                     <p className="text-xs text-slate-400">Qty: {item.quantity}</p>
                   </div>
-                  <div className="font-bold text-sm">${(item.product.price * item.quantity).toFixed(2)}</div>
+                  <div className="font-bold text-sm">
+  ${((item.product.discount_price || item.product.price) * item.quantity).toFixed(2)}
+</div>
                 </div>
               ))}
             </div>
