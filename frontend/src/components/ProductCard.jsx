@@ -39,7 +39,7 @@ const ProductCard = ({ product }) => {
         )}
 
         {/* Buttons */}
-        <div className="absolute bottom-4 left-0 right-0 px-4 translate-y-full group-hover:translate-y-0 transition-transform">
+        <div className="absolute bottom-4 left-0 right-0 px-4 transition-transform">
           <div className="flex gap-2">
             
             <button 

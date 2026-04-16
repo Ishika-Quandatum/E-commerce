@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, CreateOrderSerializer
 from apps.cart.models import Cart
+from apps.payments.models import Payment
+import uuid
 
 class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -20,10 +22,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.prefetch_related('items__product').filter(user=user)
 
     def perform_create(self, serializer):
+        # 1. Save the order
         order = serializer.save(user=self.request.user)
 
+        # 2. Get user's cart
         cart, created = Cart.objects.get_or_create(user=self.request.user)
 
+        # 3. Create order items from cart items
         for item in cart.items.all():
             OrderItem.objects.create(
                 order=order,
@@ -32,22 +37,19 @@ class OrderViewSet(viewsets.ModelViewSet):
                 price=item.product.discount_price or item.product.price
             )
 
+        # 4. Clear the cart
         cart.items.all().delete()
 
-        order.refresh_from_db()   
-        order = serializer.save(user=self.request.user)
-
-        cart, created = Cart.objects.get_or_create(user=self.request.user)
-
-        for item in cart.items.all():
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.product.discount_price or item.product.price
-            )
-
-        cart.items.all().delete() 
+        # 5. Create a corresponding Payment record
+        transaction_id = str(uuid.uuid4()).replace('-', '').upper()[:16]
+        Payment.objects.create(
+            order=order,
+            user=self.request.user,
+            amount=order.total_price,
+            method=order.payment_method,
+            status='Pending', # Default status
+            transaction_id=transaction_id
+        )
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAdminUser])
     def update_status(self, request, pk=None):

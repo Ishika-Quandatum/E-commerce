@@ -17,11 +17,8 @@ const OrderDetails = () => {
   const fetchOrder = async () => {
     setLoading(true);
     try {
-      // Fetch all orders and find by ID. Ideally replace with adminService.getOrderDetail.
-      const res = await adminService.getOrders();
-      const oList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
-      const found = oList.find(o => String(o.id) === String(id));
-      setOrder(found);
+      const res = await adminService.getOrderDetail(id);
+      setOrder(res.data);
     } catch (err) {
       console.error("Failed to fetch order details", err);
     } finally {
@@ -99,13 +96,13 @@ const OrderDetails = () => {
               <h3 className="text-lg font-medium text-gray-900">Order Items</h3>
             </div>
             <div className="divide-y divide-gray-100">
-              {order.order_items?.length > 0 ? (
-                order.order_items.map((item, idx) => (
+              {order.items?.length > 0 ? (
+                order.items.map((item, idx) => (
                   <div key={idx} className="p-6 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="h-16 w-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
-                        {item.product?.image ? (
-                          <img src={item.product.image} alt="" className="h-full w-full object-cover" />
+                        {item.product?.primary_image ? (
+                          <img src={item.product.primary_image} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <Package className="text-gray-400" size={24} />
                         )}
@@ -172,7 +169,7 @@ const OrderDetails = () => {
           <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Shipping Address</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              {order.shipping_address || "No shipping address provided."}
+              {order.address || "No shipping address provided."}
             </p>
           </div>
         </div>

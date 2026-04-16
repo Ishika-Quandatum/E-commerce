@@ -64,9 +64,10 @@ export const adminService = {
   updateCategory: (id, data) => api.put(`categories/${id}/`, data),
   deleteCategory: (id) => api.delete(`categories/${id}/`),
   getOrders: () => api.get('orders/'),
-  updateOrderStatus: (id, status) => api.put(`orders/${id}/`, { status }),
+  getOrderDetail: (id) => api.get(`orders/${id}/`),
+  updateOrderStatus: (id, status) => api.patch(`orders/${id}/update_status/`, { status }),
   getPayments: () => api.get('payments/'),
-  updatePaymentStatus: (id, status) => api.put(`payments/${id}/`, { status }),
+  updatePaymentStatus: (id, status) => api.patch(`payments/${id}/update_status/`, { status }),
 };
 
 export default api;

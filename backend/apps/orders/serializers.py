@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from apps.products.serializers import ProductListSerializer
 from .models import Order, OrderItem
+from apps.users.serializers import UserSerializer
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -17,6 +18,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
     items = serializers.SerializerMethodField()
     username = serializers.ReadOnlyField(source='user.username')
 

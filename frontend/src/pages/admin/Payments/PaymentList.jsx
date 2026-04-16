@@ -91,12 +91,12 @@ const PaymentList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        {p.payment_method?.toLowerCase() === 'cod' ? (
+                        {p.method?.toLowerCase() === 'cod' ? (
                           <Banknote size={16} className="text-gray-400" />
                         ) : (
                           <CreditCard size={16} className="text-gray-400" />
                         )}
-                        <span className="text-sm text-gray-900">{p.payment_method || 'N/A'}</span>
+                        <span className="text-sm text-gray-900">{p.method || 'N/A'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
