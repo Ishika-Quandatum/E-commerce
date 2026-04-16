@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CustomerRoutes from './routes/CustomerRoutes';
-import AdminRoutes from './routes/AdminRoutes';
+import VendorRoutes from './routes/VendorRoutes';
+import SuperAdminRoutes from './routes/SuperAdminRoutes';
 
 const App = () => {
   return (
@@ -15,8 +16,11 @@ const App = () => {
         {/* Customer routes */}
         <Route path="/*" element={<CustomerRoutes />} />
 
-        {/* Admin routes */}
-       <Route path="/admin/*" element={<AdminRoutes />} />
+        {/* Vendor routes */}
+        <Route path="/vendor/*" element={<VendorRoutes />} />
+
+        {/* Super Admin routes */}
+        <Route path="/superadmin/*" element={<SuperAdminRoutes />} />
       </Routes>
 
       <Footer />

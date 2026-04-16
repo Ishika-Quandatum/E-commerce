@@ -28,7 +28,7 @@ const EditProduct = () => {
     setLoading(true);
     try {
       await adminService.updateProduct(id, data);
-      navigate("/admin/products");
+      navigate("/vendor/products");
     } catch (err) {
       console.error("Failed to update product", err);
       // Wait to see if error provides more info

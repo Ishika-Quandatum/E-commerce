@@ -10,15 +10,15 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 
-const AdminSidebar = ({ isOpen, setIsOpen }) => {
+const VendorSidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
 
   const menuItems = [
-    { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
-    { name: "Products", path: "/admin/products", icon: Box },
-    { name: "Categories", path: "/admin/categories", icon: Tags },
-    { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
-    { name: "Payments", path: "/admin/payments", icon: CreditCard },
+    { name: "Dashboard", path: "/vendor", icon: LayoutDashboard },
+    { name: "Products", path: "/vendor/products", icon: Box },
+    { name: "Categories", path: "/vendor/categories", icon: Tags },
+    { name: "Orders", path: "/vendor/orders", icon: ShoppingBag },
+    { name: "Payments", path: "/vendor/payments", icon: CreditCard },
   ];
 
   return (
@@ -40,7 +40,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       >
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100">
           <h2 className="text-2xl font-black tracking-tight bg-gradient-to-br from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            QuanAdmin.
+            Partner Panel.
           </h2>
           <button 
             className="md:hidden p-2 rounded-md hover:bg-gray-100 text-gray-500"
@@ -52,7 +52,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
 
         <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
+            const isActive = location.pathname === item.path || (item.path !== '/vendor' && location.pathname.startsWith(item.path));
             const Icon = item.icon;
             return (
               <Link
@@ -77,4 +77,4 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
   );
 };
 
-export default AdminSidebar;
+export default VendorSidebar;

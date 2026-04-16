@@ -35,32 +35,36 @@ useEffect(() => {
 }, []);
 
   // LOGIN SUBMIT
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      await login(formData);
+  try {
+    const user = await login(formData);   
 
-      const res = await authService.getProfile();
-      const user = res.data;
+    console.log("USER DATA:", user);
 
-      console.log("USER DATA:", user);
+    const isSuper =
+      user?.role === "superadmin" ||
+      user?.role === "admin" ||
+      user?.is_staff ||
+      user?.is_superuser;
 
-      // Role-based redirect
-      if (user?.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
-
-    } catch (err) {
-      setError('Invalid username or password');
-    } finally {
-      setLoading(false);
+    if (isSuper) {
+      navigate("/superadmin", { replace: true });
+    } else if (user?.role === "vendor") {
+      navigate("/vendor", { replace: true });
+    } else {
+      navigate("/", { replace: true });
     }
-  };
+
+  } catch (err) {
+    setError('Invalid username or password');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">

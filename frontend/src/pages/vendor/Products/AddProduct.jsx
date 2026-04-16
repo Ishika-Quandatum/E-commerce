@@ -11,7 +11,7 @@ const AddProduct = () => {
     setLoading(true);
     try {
       await adminService.createProduct(data);
-      navigate("/admin/products");
+      navigate("/vendor/products");
     } catch (err) {
       console.error("Failed to add product", err);
       alert("Failed to create product");

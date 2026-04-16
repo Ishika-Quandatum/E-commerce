@@ -9,6 +9,7 @@ class Product(models.Model):
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
     is_featured = models.BooleanField(default=False)
     is_deal = models.BooleanField(default=False)

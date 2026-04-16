@@ -8,6 +8,8 @@ import Checkout from '../pages/customer/Checkout'
 import Login from '../pages/customer/Login'
 import Register from '../pages/customer/Register'
 import Profile from '../pages/customer/Profile'
+import VendorSignup from '../pages/customer/VendorSignup'
+
 const CustomerRoutes = () => {
   return (
     <>
@@ -20,7 +22,7 @@ const CustomerRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
-
+        <Route path="/become-seller" element={<VendorSignup />} />
       </Routes>
     </>
   )

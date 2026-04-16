@@ -73,7 +73,7 @@ const [selectedProducts, setSelectedProducts] = useState([]);
           <p className="mt-1 text-sm text-gray-500">Manage your product catalog.</p>
         </div>
         <button 
-          onClick={() => navigate("/admin/products/add")}
+          onClick={() => navigate("/vendor/products/add")}
           className="inline-flex items-center gap-2 justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
         >
           <Plus size={18} />
@@ -216,7 +216,7 @@ const [selectedProducts, setSelectedProducts] = useState([]);
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                       <button 
-                        onClick={() => navigate(`/admin/products/edit/${p.id}`)}
+                        onClick={() => navigate(`/vendor/products/edit/${p.id}`)}
                         className="inline-flex items-center justify-center p-2 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
                         title="Edit"
                       >
@@ -240,7 +240,7 @@ const [selectedProducts, setSelectedProducts] = useState([]);
                     <p className="mt-1 text-sm text-gray-500">Get started by creating a new product.</p>
                     <div className="mt-6">
                       <button
-                        onClick={() => navigate("/admin/products/add")}
+                        onClick={() => navigate("/vendor/products/add")}
                         className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                       >
                         <Plus className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />

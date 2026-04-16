@@ -22,7 +22,16 @@ const Navbar = () => {
             <div className="hidden md:flex items-center gap-6">
               <Link to="/products" className="text-slate-600 hover:text-primary-600 font-medium transition-colors">Shop</Link>
               <Link to="/categories" className="text-slate-600 hover:text-primary-600 font-medium transition-colors">Categories</Link>
-              {isAdmin && <Link to="/admin" className="text-red-500 hover:text-red-600 font-semibold transition-colors">Admin</Link>}
+              
+              {user && user.role === 'superadmin' && (
+                <Link to="/superadmin" className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">Super Admin</Link>
+              )}
+              {user && user.role === 'vendor' && (
+                <Link to="/vendor" className="text-primary-600 hover:text-primary-700 font-semibold transition-colors">Vendor Panel</Link>
+              )}
+              {(!user || user.role === 'user') && (
+                <Link to="/become-seller" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">Become a Seller</Link>
+              )}
             </div>
           </div>
 

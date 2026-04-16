@@ -89,7 +89,7 @@ const OrderList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                       <button 
-                        onClick={() => navigate(`/admin/orders/${o.id}`)}
+                        onClick={() => navigate(`/vendor/orders/${o.id}`)}
                         className="inline-flex items-center justify-center p-2 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
                         title="View Details"
                       >

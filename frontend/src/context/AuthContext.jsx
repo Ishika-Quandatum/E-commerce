@@ -27,19 +27,39 @@ export const AuthProvider = ({ children }) => {
 
   localStorage.setItem('access_token', res.data.access);
   localStorage.setItem('refresh_token', res.data.refresh);
+  const profileRes = await authService.getProfile();
+  setUser(profileRes.data);
 
-  setUser(res.data.user);   
-
-  return res.data.user;
+  return profileRes.data;
 };
+  const completeSignup = (signupData) => {
+    localStorage.setItem('access_token', signupData.access);
+    localStorage.setItem('refresh_token', signupData.refresh);
+    setUser(signupData.user);
+  };
+
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     setUser(null);
   };
 
+  const isSuperAdmin = user?.role === 'superadmin' || user?.role === 'admin' || user?.is_staff || user?.is_superuser || false;
+  const isVendor = user?.role === 'vendor';
+  const isAdmin = isSuperAdmin || isVendor;
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAdmin: user?.is_staff || false }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      completeSignup,
+      logout, 
+      isAdmin,
+      isVendor,
+      isSuperAdmin,
+      vendorStatus: user?.vendor_status
+    }}>
       {children}
     </AuthContext.Provider>
   );

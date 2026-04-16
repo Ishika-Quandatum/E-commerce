@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { adminService } from "../../../services/api";
-import { DollarSign, ShoppingBag, Box, TrendingUp, Package, Clock } from "lucide-react";
+import { DollarSign, ShoppingBag, Box, TrendingUp, Package, Clock, ShieldAlert, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
-const AdminDashboard = () => {
+const VendorDashboard = () => {
+  const { vendorStatus } = useAuth();
   const [stats, setStats] = useState({
     total_products: 0,
     total_orders: 0,
@@ -14,8 +16,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (vendorStatus === 'Approved') {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [vendorStatus]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -60,6 +66,42 @@ const AdminDashboard = () => {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (vendorStatus !== 'Approved') {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 p-12 text-center">
+          <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
+            <ShieldAlert size={40} />
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Application Under Review</h1>
+          <p className="text-slate-500 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
+            Your shop application is currently being reviewed by our administration team. 
+            Once approved, you'll gain access to your product management and sales tools.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-2xl mx-auto">
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+              <div className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Step 1</div>
+              <div className="flex items-center gap-2 text-emerald-600 font-bold">
+                <CheckCircle size={16} /> Submit Form
+              </div>
+            </div>
+            <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100">
+              <div className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">Step 2</div>
+              <div className="flex items-center gap-2 text-amber-600 font-bold">
+                <Clock size={16} /> Admin Review
+              </div>
+            </div>
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 opacity-50 font-bold text-slate-400">
+              <div className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Step 3</div>
+              Start Selling
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -114,7 +156,7 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-6 py-3">
-            <Link to="/admin/orders" className="text-sm font-medium text-green-600 hover:text-green-500">View all orders</Link>
+            <Link to="/vendor/orders" className="text-sm font-medium text-green-600 hover:text-green-500">View all orders</Link>
           </div>
         </div>
 
@@ -134,7 +176,7 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-6 py-3">
-            <Link to="/admin/products" className="text-sm font-medium text-orange-600 hover:text-orange-500">Manage products</Link>
+            <Link to="/vendor/products" className="text-sm font-medium text-orange-600 hover:text-orange-500">Manage products</Link>
           </div>
         </div>
 
@@ -147,7 +189,7 @@ const AdminDashboard = () => {
             <Clock size={18} className="text-gray-400" />
             Recent Orders
           </h3>
-          <Link to="/admin/orders" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+          <Link to="/vendor/orders" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
             View all
           </Link>
         </div>
@@ -207,4 +249,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default VendorDashboard;

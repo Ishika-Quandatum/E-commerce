@@ -3,10 +3,17 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    vendor_status = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'phone', 'address', 'avatar']
-        read_only_fields = ['id']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_superuser', 'vendor_status', 'phone', 'address', 'avatar']
+        read_only_fields = ['id', 'is_staff', 'is_superuser', 'vendor_status']
+
+    def get_vendor_status(self, obj):
+        if hasattr(obj, 'vendor_profile'):
+            return obj.vendor_profile.status
+        return None
 
 
 class RegisterSerializer(serializers.ModelSerializer):

@@ -70,4 +70,12 @@ export const adminService = {
   updatePaymentStatus: (id, status) => api.patch(`payments/${id}/update_status/`, { status }),
 };
 
+export const vendorService = {
+  getVendors: () => api.get('vendors/'),
+  signup: (data) => api.post('vendors/signup/', data),
+
+  approve: (id) => api.post(`vendors/${id}/approve/`),
+  reject: (id) => api.post(`vendors/${id}/reject/`),
+};
+
 export default api;

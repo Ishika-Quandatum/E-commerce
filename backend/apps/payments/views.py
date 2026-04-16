@@ -16,8 +16,13 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
+        if user.role == 'superadmin':
             return Payment.objects.select_related('order', 'user').all()
+        if user.role == 'vendor':
+            vendor = getattr(user, 'vendor_profile', None)
+            if vendor:
+                return Payment.objects.select_related('order', 'user').filter(order__vendor=vendor)
+            return Payment.objects.none()
         return Payment.objects.select_related('order', 'user').filter(user=user)
 
     def perform_create(self, serializer):
