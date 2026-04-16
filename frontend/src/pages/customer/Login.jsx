@@ -52,7 +52,7 @@ useEffect(() => {
       user?.is_superuser;
 
     if (isSuper) {
-      navigate("/superadmin", { replace: true });
+      navigate("/admin", { replace: true });
     } else if (user?.role === "vendor") {
       navigate("/vendor", { replace: true });
     } else {

@@ -44,7 +44,7 @@ const VendorManagement = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="space-y-10">
       <div className="flex justify-between items-center mb-10">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Vendor Management</h1>

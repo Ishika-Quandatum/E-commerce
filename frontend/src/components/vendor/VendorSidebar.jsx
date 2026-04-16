@@ -16,7 +16,6 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { name: "Dashboard", path: "/vendor", icon: LayoutDashboard },
     { name: "Products", path: "/vendor/products", icon: Box },
-    { name: "Categories", path: "/vendor/categories", icon: Tags },
     { name: "Orders", path: "/vendor/orders", icon: ShoppingBag },
     { name: "Payments", path: "/vendor/payments", icon: CreditCard },
   ];

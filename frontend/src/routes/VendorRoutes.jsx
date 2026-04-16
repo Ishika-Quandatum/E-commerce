@@ -10,9 +10,6 @@ import EditProduct from "../pages/vendor/Products/EditProduct";
 import OrderList from "../pages/vendor/Orders/OrderList";
 import OrderDetails from "../pages/vendor/Orders/OrderDetails";
 import PaymentList from "../pages/vendor/Payments/PaymentList";
-import CategoryList from "../pages/vendor/Categories/CategoryList";
-import AddCategory from "../pages/vendor/Categories/AddCategory";
-import EditCategory from "../pages/vendor/Categories/EditCategory";
 
 const VendorRoutes = () => {
   const { user, loading, isVendor, isSuperAdmin } = useAuth();
@@ -43,10 +40,6 @@ const VendorRoutes = () => {
         {/* Payments */}
         <Route path="payments" element={<PaymentList />} />
 
-        {/* Categories */}
-        <Route path="categories" element={<CategoryList />} />
-        <Route path="categories/add" element={<AddCategory />} />
-        <Route path="categories/edit/:id" element={<EditCategory />} />
 
       </Route>
     </Routes>

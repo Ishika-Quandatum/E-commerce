@@ -24,7 +24,7 @@ const Navbar = () => {
               <Link to="/categories" className="text-slate-600 hover:text-primary-600 font-medium transition-colors">Categories</Link>
               
               {user && user.role === 'superadmin' && (
-                <Link to="/superadmin" className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">Super Admin</Link>
+                <Link to="/admin" className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">Super Admin</Link>
               )}
               {user && user.role === 'vendor' && (
                 <Link to="/vendor" className="text-primary-600 hover:text-primary-700 font-semibold transition-colors">Vendor Panel</Link>

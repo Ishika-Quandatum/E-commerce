@@ -20,7 +20,7 @@ const App = () => {
         <Route path="/vendor/*" element={<VendorRoutes />} />
 
         {/* Super Admin routes */}
-        <Route path="/superadmin/*" element={<SuperAdminRoutes />} />
+        <Route path="/admin/*" element={<SuperAdminRoutes />} />
       </Routes>
 
       <Footer />

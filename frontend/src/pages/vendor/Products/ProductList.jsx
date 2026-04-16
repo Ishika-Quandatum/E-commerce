@@ -210,9 +210,14 @@ const [selectedProducts, setSelectedProducts] = useState([]);
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.stock > 10 ? 'bg-green-100 text-green-800' : p.stock > 0 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}`}>
-                        {p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={`inline-flex items-center w-fit px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${p.stock > 10 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : p.stock > 0 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                          {p.stock > 0 ? `${p.stock} Units` : 'Out of Stock'}
+                        </span>
+                        <span className="text-xs text-slate-500 font-bold mt-1 ml-1 leading-none">
+                          Pack: {p.quantity || 1} {p.unit || 'pcs'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                       <button 
