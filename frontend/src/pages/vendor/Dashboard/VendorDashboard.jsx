@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { adminService } from "../../../services/api";
+import { adminService, paymentService } from "../../../services/api";
 import { DollarSign, ShoppingBag, Box, TrendingUp, Package, Clock, ShieldAlert, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
@@ -26,15 +26,17 @@ const VendorDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [productsRes, ordersRes] = await Promise.all([
+      const [productsRes, ordersRes, payoutsRes] = await Promise.all([
         adminService.getProducts().catch(() => ({ data: [] })),
-        adminService.getOrders().catch(() => ({ data: [] }))
+        adminService.getOrders().catch(() => ({ data: [] })),
+        paymentService.getVendorPayouts().catch(() => ({ data: [] }))
       ]);
       
       const ordersData = Array.isArray(ordersRes.data) ? ordersRes.data : (ordersRes.data?.results || []);
       const productsData = Array.isArray(productsRes.data) ? productsRes.data : (productsRes.data?.results || []);
+      const payoutsData = Array.isArray(payoutsRes.data) ? payoutsRes.data : (payoutsRes.data?.results || []);
 
-      const totalRevenue = ordersData.reduce((sum, order) => sum + (parseFloat(order.total_price) || 0), 0);
+      const totalRevenue = payoutsData.reduce((sum, payout) => sum + (parseFloat(payout.final_amount) || 0), 0);
       
       setStats({
         total_products: productsData.length,
