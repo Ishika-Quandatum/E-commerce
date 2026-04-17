@@ -215,7 +215,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                 <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[11px]">Commercial Strategy</h3>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
                 <div className="relative">
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Retail Price (₹) *</label>
                   <input
@@ -229,6 +229,13 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                     onChange={handleChange}
                   />
                 </div>
+                
+                {formData.price && formData.discount_price && parseFloat(formData.discount_price) < parseFloat(formData.price) && (
+                  <div className="absolute top-[3.25rem] left-1/2 -translate-x-1/2 z-10 hidden sm:flex items-center gap-2 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg shadow-emerald-500/20 border-2 border-white animate-bounce-subtle">
+                    {Math.round(((parseFloat(formData.price) - parseFloat(formData.discount_price)) / parseFloat(formData.price)) * 100)}% SAVINGS
+                  </div>
+                )}
+
                 <div className="relative">
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Offer Price (₹)</label>
                   <input

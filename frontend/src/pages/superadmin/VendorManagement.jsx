@@ -6,15 +6,17 @@ const VendorManagement = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [statusFilter, setStatusFilter] = useState(''); // '' means All
 
   useEffect(() => {
     fetchVendors();
-  }, []);
+  }, [statusFilter]);
 
   const fetchVendors = async () => {
     setLoading(true);
     try {
-      const res = await vendorService.getVendors();
+      const params = statusFilter ? { status: statusFilter } : {};
+      const res = await vendorService.getVendors(params);
       setVendors(res.data);
     } catch (err) {
       setError('Failed to fetch vendors list.');
@@ -43,16 +45,34 @@ const VendorManagement = () => {
     }
   };
 
+  const filterTabs = [
+    { label: 'All', value: '' },
+    { label: 'Pending', value: 'Pending' },
+    { label: 'Approved', value: 'Approved' },
+    { label: 'Rejected', value: 'Rejected' },
+  ];
+
   return (
     <div className="space-y-10">
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Vendor Management</h1>
           <p className="text-slate-500 mt-1">Review and manage vendor applications and status.</p>
         </div>
-        <div className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm">
-          <ShieldCheck size={18} />
-          Super Admin Panel
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+          {filterTabs.map((tab) => (
+            <button
+              key={tab.label}
+              onClick={() => setStatusFilter(tab.value)}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                statusFilter === tab.value
+                  ? 'bg-white text-indigo-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -64,7 +84,7 @@ const VendorManagement = () => {
         <div className="bg-red-50 text-red-600 p-4 rounded-xl font-medium">{error}</div>
       ) : vendors.length === 0 ? (
         <div className="bg-slate-50 text-slate-500 p-12 text-center rounded-3xl border-2 border-dashed border-slate-200">
-          No vendor applications found.
+          No {statusFilter.toLowerCase()} vendor applications found.
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -92,7 +112,7 @@ const VendorManagement = () => {
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-3 text-sm text-slate-600">
                   <User size={16} className="text-slate-400" />
-                  <span className="font-medium text-slate-900">{vendor.username}</span>
+                  <span className="font-medium text-slate-900">{vendor.vendor_name || vendor.username}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-slate-600">
                   <Mail size={16} className="text-slate-400" />

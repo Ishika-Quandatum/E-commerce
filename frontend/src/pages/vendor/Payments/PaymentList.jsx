@@ -1,23 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { adminService } from "../../../services/api";
-import { CreditCard, Search, Banknote } from "lucide-react";
+import { paymentService } from "../../../services/api";
+import { CreditCard, ArrowRightLeft, DollarSign, Clock, CheckCircle2 } from "lucide-react";
 
 const PaymentList = () => {
-  const [payments, setPayments] = useState([]);
+  const [payouts, setPayouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
-    fetchPayments();
+    fetchPayouts();
   }, []);
 
-  const fetchPayments = async () => {
+  const fetchPayouts = async () => {
     setLoading(true);
     try {
-      const res = await adminService.getPayments();
-      setPayments(Array.isArray(res.data) ? res.data : (res.data?.results || []));
+      const res = await paymentService.getVendorPayouts();
+      setPayouts(Array.isArray(res.data) ? res.data : (res.data?.results || []));
     } catch (err) {
-      console.error("Failed to fetch payments");
+      console.error("Failed to fetch payouts");
     } finally {
       setLoading(false);
     }
@@ -25,16 +25,15 @@ const PaymentList = () => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'paid': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'pending': return 'bg-amber-100 text-amber-800 border-amber-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
-  const filteredPayments = statusFilter === "All" 
-    ? payments 
-    : payments.filter(p => p.status?.toLowerCase() === statusFilter.toLowerCase());
+  const filteredPayouts = statusFilter === "All" 
+    ? payouts 
+    : payouts.filter(p => p.status?.toLowerCase() === statusFilter.toLowerCase());
 
   if (loading) {
     return (
@@ -48,62 +47,69 @@ const PaymentList = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
-          <p className="mt-1 text-sm text-gray-500">View and track all transaction records.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Financial Ledger</h1>
+          <p className="mt-1 text-sm text-slate-500 font-medium">Track your earnings, platform commissions, and settlements.</p>
         </div>
         
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Filter Status:</label>
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filter Status</label>
           <select 
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm"
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-50 transition-all outline-none bg-white text-xs font-bold"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="All">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Completed">Completed</option>
-            <option value="Failed">Failed</option>
+            <option value="All">All Transactions</option>
+            <option value="Pending">Pending Settlements</option>
+            <option value="Paid">Paid Payouts</option>
           </select>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden min-w-full">
+      <div className="bg-white border border-slate-100 shadow-xl shadow-slate-200/40 rounded-[2rem] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-slate-100 border-collapse">
+            <thead className="bg-slate-50/50">
               <tr>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment ID</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Method</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction Details</th>
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Ref</th>
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Product Amt</th>
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-right text-rose-500">Commission</th>
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Final Payable</th>
+                <th scope="col" className="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPayments.length > 0 ? (
-                filteredPayments.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {p.transaction_id || `#${p.id}`}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 font-medium">
-                      #{p.order?.id || p.order}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {p.method?.toLowerCase() === 'cod' ? (
-                          <Banknote size={16} className="text-gray-400" />
-                        ) : (
-                          <CreditCard size={16} className="text-gray-400" />
-                        )}
-                        <span className="text-sm text-gray-900">{p.method || 'N/A'}</span>
+            <tbody className="bg-white divide-y divide-slate-100 italic font-medium">
+              {filteredPayouts.length > 0 ? (
+                filteredPayouts.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:shadow-md transition-all">
+                          <DollarSign size={14} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-black text-slate-900 leading-none mb-1 capitalize">Payout {p.id.toString().padStart(4, '0')}</div>
+                          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                            {p.payout_date ? new Date(p.payout_date).toLocaleDateString('en-GB') : 'Processing...'}
+                          </div>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ₹{p.amount}
+                    <td className="px-8 py-5 whitespace-nowrap">
+                       <span className="text-xs font-black text-slate-900 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg">ORD#{p.order_id}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(p.status)}`}>
+                    <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-bold text-slate-900 tabular-nums">
+                      ₹{p.product_amount}
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap text-right text-xs font-black text-rose-500 tabular-nums">
+                      -{p.commission_rate}% (₹{p.commission_amount})
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-black text-indigo-600 tabular-nums">
+                      ₹{p.final_amount}
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(p.status)}`}>
+                        {p.status === 'Paid' ? <CheckCircle2 size={10} /> : <Clock size={10} />}
                         {p.status || 'Pending'}
                       </span>
                     </td>
@@ -111,10 +117,16 @@ const PaymentList = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
-                    <CreditCard className="mx-auto h-12 w-12 text-gray-300" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No payments found</h3>
-                    <p className="mt-1 text-sm text-gray-500">Try adjusting your filters or wait for new transactions.</p>
+                  <td colSpan="6" className="px-8 py-24 text-center">
+                    <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
+                      <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 border border-slate-50">
+                        <ArrowRightLeft size={32} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-slate-900 uppercase">No Payout Records</h3>
+                        <p className="mt-1 text-xs text-slate-500 font-medium">Payouts are generated once orders are marked as delivered. Please check back later.</p>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )}

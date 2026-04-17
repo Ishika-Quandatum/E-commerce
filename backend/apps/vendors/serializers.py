@@ -6,10 +6,11 @@ from apps.users.models import User
 class VendorSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     email = serializers.ReadOnlyField(source='user.email')
+    vendor_name = serializers.ReadOnlyField(source='user.first_name')
 
     class Meta:
         model = Vendor
-        fields = ['id', 'user', 'username', 'email', 'shop_name', 'shop_type', 'status', 'created_at']
+        fields = ['id', 'user', 'username', 'email', 'vendor_name', 'shop_name', 'shop_type', 'status', 'created_at']
         read_only_fields = ['user', 'status', 'created_at']
 
 

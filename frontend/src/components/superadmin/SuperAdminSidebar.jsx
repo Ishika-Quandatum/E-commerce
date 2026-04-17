@@ -8,7 +8,9 @@ import {
   ShoppingBag, 
   CreditCard, 
   UserCircle,
-  X 
+  X,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -17,12 +19,20 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
 
   const menuItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
-    { name: "Vendor", path: "/admin/vendors", icon: Users },
-    { name: "Category", path: "/admin/categories", icon: Tags },
-    { name: "Product", path: "/admin/products", icon: Package },
-    { name: "Order", path: "/admin/orders", icon: ShoppingBag },
-    { name: "Payment", path: "/admin/payments", icon: CreditCard },
-    { name: "Users", path: "/admin/users", icon: UserCircle },
+    { name: "Vendors", path: "/admin/vendors", icon: Users },
+    { name: "Categories", path: "/admin/categories", icon: Tags },
+    { name: "Products", path: "/admin/products", icon: Package },
+    { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
+    { 
+      name: "Payments", 
+      path: "/admin/payments", 
+      icon: CreditCard,
+      subItems: [
+        { name: "Customer Transactions", path: "/admin/payments/customers" },
+        { name: "Vendor Transactions", path: "/admin/payments/vendors" },
+      ]
+    },
+    { name: "Settings", path: "/admin/settings", icon: Tags },
   ];
 
   return (
@@ -60,23 +70,54 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
             const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
             const Icon = item.icon;
             return (
-              <Link
-                key={item.name}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className={clsx(
-                  "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm group",
-                  isActive 
-                    ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20" 
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              <div key={item.name} className="space-y-1">
+                <Link
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={clsx(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm group",
+                    isActive 
+                      ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20" 
+                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <Icon size={20} className={clsx("transition-colors", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
+                  <span>{item.name}</span>
+                  {item.subItems ? (
+                    <div className="ml-auto">
+                      {isActive || location.pathname.startsWith(item.path) ? (
+                        <ChevronDown size={14} className="opacity-50" />
+                      ) : (
+                        <ChevronRight size={14} className="opacity-30 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </div>
+                  ) : (
+                    isActive && (
+                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
+                    )
+                  )}
+                </Link>
+                {item.subItems && (isActive || location.pathname.startsWith(item.path)) && (
+                  <div className="ml-9 space-y-1 pt-1 animate-in slide-in-from-top-1 duration-300">
+                    {item.subItems.map((sub) => {
+                      const isSubActive = location.pathname === sub.path;
+                      return (
+                        <Link
+                          key={sub.name}
+                          to={sub.path}
+                          onClick={() => setIsOpen(false)}
+                          className={clsx(
+                            "block px-4 py-2 text-[13px] font-bold rounded-xl transition-all",
+                            isSubActive ? "text-indigo-400 bg-indigo-500/10" : "text-slate-500 hover:text-white"
+                          )}
+                        >
+                          {sub.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-              >
-                <Icon size={20} className={clsx("transition-colors", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
-                <span>{item.name}</span>
-                {isActive && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
-                )}
-              </Link>
+              </div>
             );
           })}
         </nav>

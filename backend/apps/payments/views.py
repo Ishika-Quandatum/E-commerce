@@ -2,8 +2,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import uuid
-from .models import Payment
-from .serializers import PaymentSerializer, CreatePaymentSerializer
+from django.db.models import Sum, Count
+from .models import Payment, VendorPayout
+from .serializers import PaymentSerializer, CreatePaymentSerializer, VendorPayoutSerializer
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
@@ -42,3 +43,54 @@ class PaymentViewSet(viewsets.ModelViewSet):
         payment.status = new_status
         payment.save()
         return Response(PaymentSerializer(payment).data)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def dashboard_stats(self, request):
+        total_customer_payments = Payment.objects.filter(status='Completed').aggregate(Sum('amount'))['amount__sum'] or 0
+        pending_vendor_payouts = VendorPayout.objects.filter(status='Pending').aggregate(Sum('final_amount'))['final_amount__sum'] or 0
+        total_commission_earned = VendorPayout.objects.all().aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
+        failed_transactions = Payment.objects.filter(status='Failed').count()
+
+        return Response({
+            'total_customer_payments': total_customer_payments,
+            'pending_vendor_payouts': pending_vendor_payouts,
+            'total_commission_earned': total_commission_earned,
+            'failed_transactions': failed_transactions,
+        })
+
+
+class VendorPayoutViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = VendorPayoutSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'superadmin':
+            queryset = VendorPayout.objects.select_related('vendor', 'order').all()
+        elif user.role == 'vendor':
+            vendor = getattr(user, 'vendor_profile', None)
+            if vendor:
+                queryset = VendorPayout.objects.select_related('vendor', 'order').filter(vendor=vendor)
+            else:
+                queryset = VendorPayout.objects.none()
+        else:
+            queryset = VendorPayout.objects.none()
+
+        vendor_id = self.request.query_params.get('vendor_id')
+        status = self.request.query_params.get('status')
+        
+        if user.role == 'superadmin' and vendor_id:
+            queryset = queryset.filter(vendor_id=vendor_id)
+        if status:
+            queryset = queryset.filter(status=status)
+            
+        return queryset
+
+    @action(detail=True, methods=['post'])
+    def mark_as_paid(self, request, pk=None):
+        payout = self.get_object()
+        payout.status = 'Paid'
+        from django.utils import timezone
+        payout.payout_date = timezone.now()
+        payout.save()
+        return Response({'status': 'Payout marked as paid'})

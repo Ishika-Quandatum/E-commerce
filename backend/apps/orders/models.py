@@ -21,6 +21,46 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_status = None
+        if not is_new:
+            old_status = Order.objects.get(pk=self.pk).status
+        
+        super().save(*args, **kwargs)
+        
+        if self.status == 'Delivered' and old_status != 'Delivered':
+            self.create_vendor_payout()
+
+    def create_vendor_payout(self):
+        from apps.payments.models import VendorPayout
+        import uuid
+        
+        if not self.vendor:
+            return
+
+        # Check if payout already exists
+        if VendorPayout.objects.filter(order=self).exists():
+            return
+
+        commission_rate = self.vendor.commission_rate
+        product_amount = self.total_price # Simple case: total price belongs to vendor
+        commission_amount = (product_amount * commission_rate) / 100
+        final_amount = product_amount - commission_amount
+        transaction_id = f"PAY-{uuid.uuid4().hex[:8].upper()}"
+
+        VendorPayout.objects.create(
+            transaction_id=transaction_id,
+            vendor=self.vendor,
+            order=self,
+            product_amount=product_amount,
+            total_amount=self.total_price,
+            commission_rate=commission_rate,
+            commission_amount=commission_amount,
+            final_amount=final_amount,
+            status='Pending'
+        )
+
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"
 

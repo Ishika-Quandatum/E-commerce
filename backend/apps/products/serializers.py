@@ -18,10 +18,18 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'price', 'discount_price',
+            'id', 'name', 'description', 'price', 'discount_price', 'discount_percentage',
             'stock', 'quantity', 'unit', 'category', 'category_name', 'category_slug',
             'rating', 'is_featured', 'is_deal', 'created_at', 'images', 'image'
         ]
+
+    discount_percentage = serializers.SerializerMethodField()
+
+    def get_discount_percentage(self, obj):
+        if obj.discount_price and obj.price and obj.discount_price < obj.price:
+            discount = ((obj.price - obj.discount_price) / obj.price) * 100
+            return round(discount)
+        return 0
 
     def create(self, validated_data):
         image = validated_data.pop('image', None)
@@ -49,7 +57,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'price', 'discount_price', 'stock', 'quantity', 'unit',
             'category', 'category_name', 'rating', 'is_featured',
-            'is_deal', 'primary_image',
+            'is_deal', 'primary_image', 'discount_percentage',
         ]
 
     def get_primary_image(self, obj):
@@ -59,3 +67,11 @@ class ProductListSerializer(serializers.ModelSerializer):
             if request:
                 return request.build_absolute_uri(first.image.url)
         return None
+
+    discount_percentage = serializers.SerializerMethodField()
+
+    def get_discount_percentage(self, obj):
+        if obj.discount_price and obj.price and obj.discount_price < obj.price:
+            discount = ((obj.price - obj.discount_price) / obj.price) * 100
+            return round(discount)
+        return 0

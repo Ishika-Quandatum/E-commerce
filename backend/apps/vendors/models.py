@@ -13,6 +13,7 @@ class Vendor(models.Model):
     shop_name = models.CharField(max_length=255)
     shop_type = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=10.00)  # Percentage
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

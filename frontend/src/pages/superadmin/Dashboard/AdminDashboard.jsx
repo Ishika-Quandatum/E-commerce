@@ -1,12 +1,35 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Users, Store, Package, ShoppingBag, TrendingUp, DollarSign, Activity, Clock } from "lucide-react";
+import { adminService } from "../../../services/api";
 
 const AdminDashboard = () => {
+  const [metrics, setMetrics] = useState({
+    total_revenue: 0,
+    total_vendors: 0,
+    total_products: 0,
+    total_orders: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await adminService.getDashboardStats();
+        setMetrics(res.data);
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   const stats = [
-    { name: "Total Revenue", value: "₹1,24,500", icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+12.5%" },
-    { name: "Active Vendors", value: "48", icon: Store, color: "text-indigo-600", bg: "bg-indigo-50", trend: "+3 this week" },
-    { name: "Total Products", value: "1,204", icon: Package, color: "text-amber-600", bg: "bg-amber-50", trend: "+45 new" },
-    { name: "Total Orders", value: "856", icon: ShoppingBag, color: "text-rose-600", bg: "bg-rose-50", trend: "+18.2%" },
+    { name: "Total Revenue", value: `₹${metrics.total_revenue.toLocaleString()}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50", trend: "Live Total" },
+    { name: "Active Vendors", value: metrics.total_vendors.toString(), icon: Store, color: "text-indigo-600", bg: "bg-indigo-50", trend: "Total Registered" },
+    { name: "Total Products", value: metrics.total_products.toString(), icon: Package, color: "text-amber-600", bg: "bg-amber-50", trend: "Active Items" },
+    { name: "Total Orders", value: metrics.total_orders.toString(), icon: ShoppingBag, color: "text-rose-600", bg: "bg-rose-50", trend: "All Time" },
   ];
 
   return (

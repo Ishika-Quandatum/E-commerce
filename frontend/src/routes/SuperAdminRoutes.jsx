@@ -9,7 +9,10 @@ import EditCategory from "../pages/superadmin/Categories/EditCategory";
 import AdminProductList from "../pages/superadmin/Products/AdminProductList";
 import AdminOrderList from "../pages/superadmin/Orders/AdminOrderList";
 import AdminPaymentList from "../pages/superadmin/Payments/AdminPaymentList";
+import CustomerTransactions from "../pages/superadmin/Payments/CustomerTransactions";
+import VendorTransactions from "../pages/superadmin/Payments/VendorTransactions";
 import AdminUserList from "../pages/superadmin/Users/AdminUserList";
+import Settings from "../pages/superadmin/Settings";
 
 const SuperAdminRoutes = () => {
   const { user, isSuperAdmin, loading } = useAuth();
@@ -36,7 +39,10 @@ const SuperAdminRoutes = () => {
         <Route path="products" element={<AdminProductList />} />
         <Route path="orders" element={<AdminOrderList />} />
         <Route path="payments" element={<AdminPaymentList />} />
+        <Route path="payments/customers" element={<CustomerTransactions />} />
+        <Route path="payments/vendors" element={<VendorTransactions />} />
         <Route path="users" element={<AdminUserList />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>
   );

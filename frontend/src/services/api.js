@@ -55,23 +55,30 @@ export const orderService = {
 };
 
 export const adminService = {
-  getProducts: () => api.get('products/'),
+  getProducts: (params) => api.get('products/', { params }),
   createProduct: (data) => api.post('products/', data),
   updateProduct: (id, data) => api.put(`products/${id}/`, data),
   deleteProduct: (id) => api.delete(`products/${id}/`),
-  getCategories: () => api.get('categories/'),
+  getCategories: (params) => api.get('categories/', { params }),
   createCategory: (data) => api.post('categories/', data),
   updateCategory: (id, data) => api.put(`categories/${id}/`, data),
   deleteCategory: (id) => api.delete(`categories/${id}/`),
   getOrders: () => api.get('orders/'),
   getOrderDetail: (id) => api.get(`orders/${id}/`),
   updateOrderStatus: (id, status) => api.patch(`orders/${id}/update_status/`, { status }),
-  getPayments: () => api.get('payments/'),
+  getDashboardStats: () => api.get('users/dashboard-stats/'),
+};
+
+export const paymentService = {
+  getPayments: (params) => api.get('payments/', { params }),
   updatePaymentStatus: (id, status) => api.patch(`payments/${id}/update_status/`, { status }),
+  getPaymentStats: () => api.get('payments/dashboard_stats/'),
+  getVendorPayouts: (params) => api.get('payments/vendor-payouts/', { params }),
+  updatePayoutStatus: (id) => api.post(`payments/vendor-payouts/${id}/mark_as_paid/`),
 };
 
 export const vendorService = {
-  getVendors: () => api.get('vendors/'),
+  getVendors: (params) => api.get('vendors/', { params }),
   signup: (data) => api.post('vendors/signup/', data),
 
   approve: (id) => api.post(`vendors/${id}/approve/`),

@@ -53,8 +53,29 @@ class ChangePasswordView(generics.UpdateAPIView):
         return Response({'message': 'Password updated successfully.'})
 
 
+from django.db.models import Sum
+from apps.orders.models import Order
+from apps.products.models import Product
+
 class UserViewSet(viewsets.ModelViewSet):
     """Admin-only user management."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class DashboardStatsView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        total_revenue = Order.objects.filter(status='Delivered').aggregate(Sum('total_price'))['total_price__sum'] or 0
+        total_vendors = User.objects.filter(role='vendor').count()
+        total_products = Product.objects.count()
+        total_orders = Order.objects.count()
+
+        return Response({
+            'total_revenue': total_revenue,
+            'total_vendors': total_vendors,
+            'total_products': total_products,
+            'total_orders': total_orders,
+        })

@@ -71,9 +71,16 @@ class VendorViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        queryset = Vendor.objects.none()
+        
         if user.role == 'superadmin' or user.is_staff:
             # Admins see all vendor applications EXCEPT those from fellow admins
-            return Vendor.objects.exclude(user__role='superadmin').exclude(user__is_staff=True)
-        if hasattr(user, 'vendor_profile'):
-            return Vendor.objects.filter(user=user)
-        return Vendor.objects.none()
+            queryset = Vendor.objects.exclude(user__role='superadmin').exclude(user__is_staff=True)
+        elif hasattr(user, 'vendor_profile'):
+            queryset = Vendor.objects.filter(user=user)
+        
+        status_filter = self.request.query_params.get('status')
+        if status_filter and queryset.exists():
+            queryset = queryset.filter(status=status_filter)
+            
+        return queryset

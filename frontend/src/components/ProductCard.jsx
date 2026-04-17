@@ -32,9 +32,9 @@ const ProductCard = ({ product }) => {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
 
-        {product.discount_price && (
-          <div className="absolute top-4 left-4 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-            -{Math.round((1 - product.discount_price / product.price) * 100)}%
+        {product.discount_price && product.discount_price < product.price && (
+          <div className="absolute top-4 left-4 bg-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg shadow-rose-500/30 uppercase tracking-tighter">
+            {product.discount_percentage}% OFF
           </div>
         )}
 
@@ -74,14 +74,14 @@ const ProductCard = ({ product }) => {
 
         <p className="text-sm text-gray-500">{product.category_name}</p>
 
-        <div className="flex gap-2 mt-2">
-          <span className="font-bold">
-            ₹{product.discount_price || product.price}
+        <div className="flex items-baseline gap-2 mt-2">
+          <span className="font-black text-slate-900 text-lg">
+            ₹{(product.discount_price && product.discount_price < product.price ? product.discount_price : product.price).toLocaleString()}
           </span>
 
-          {product.discount_price && (
-            <span className="line-through text-gray-400">
-              ₹{product.price}
+          {product.discount_price && product.discount_price < product.price && (
+            <span className="line-through text-slate-300 text-xs font-bold">
+              ₹{product.price.toLocaleString()}
             </span>
           )}
         </div>

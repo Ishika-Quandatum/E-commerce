@@ -92,13 +92,21 @@ const ProductDetail = () => {
               <span className="text-slate-400 text-sm">128+ Reviews</span>
             </div>
 
-            <div className="flex items-baseline gap-4 mb-8">
-              <span className="text-4xl font-black text-slate-900">
-                ${product.discount_price || product.price}
-              </span>
-              {product.discount_price && (
-                <span className="text-xl text-slate-400 line-through">${product.price}</span>
-              )}
+            <div className="flex items-center gap-6 mb-8 pt-4 border-t border-slate-50">
+               <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Selling Price</span>
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-5xl font-black text-slate-900 tabular-nums">
+                      ₹{(product.discount_price && product.discount_price < product.price ? product.discount_price : product.price).toLocaleString()}
+                    </span>
+                    {product.discount_price && product.discount_price < product.price && (
+                      <div className="flex flex-col">
+                        <span className="text-xl text-slate-300 line-through font-bold">₹{product.price.toLocaleString()}</span>
+                        <span className="text-sm font-black text-emerald-500 uppercase tracking-tighter">{product.discount_percentage}% DIRECT SAVINGS</span>
+                      </div>
+                    )}
+                  </div>
+               </div>
             </div>
 
             <p className="text-slate-600 leading-relaxed mb-8 text-lg">

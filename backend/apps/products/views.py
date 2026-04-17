@@ -39,7 +39,10 @@ class ProductViewSet(viewsets.ModelViewSet):
                 
         search = self.request.query_params.get('search')
         if search:
-            queryset = queryset.filter(name__icontains=search)
+            if search.isdigit():
+                queryset = queryset.filter(id=search)
+            else:
+                queryset = queryset.filter(name__icontains=search)
             
         featured = self.request.query_params.get('featured')
         if featured == 'true':
