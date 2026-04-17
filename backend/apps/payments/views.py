@@ -65,7 +65,7 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'superadmin':
+        if user.role == 'superadmin' or user.is_staff or user.is_superuser:
             queryset = VendorPayout.objects.select_related('vendor', 'order').all()
         elif user.role == 'vendor':
             vendor = getattr(user, 'vendor_profile', None)
@@ -79,7 +79,7 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
         vendor_id = self.request.query_params.get('vendor_id')
         status = self.request.query_params.get('status')
         
-        if user.role == 'superadmin' and vendor_id:
+        if (user.role == 'superadmin' or user.is_staff or user.is_superuser) and vendor_id:
             queryset = queryset.filter(vendor_id=vendor_id)
         if status:
             queryset = queryset.filter(status=status)

@@ -16,7 +16,7 @@ const VendorTransactions = () => {
       const res = await paymentService.getVendorPayouts({
         status: statusFilter === "All" ? "" : statusFilter
       });
-      setPayouts(Array.isArray(res.data) ? res.data : []);
+      setPayouts(Array.isArray(res.data) ? res.data : (res.data?.results || []));
     } catch (err) {
       console.error("Failed to fetch vendor payouts");
     } finally {
