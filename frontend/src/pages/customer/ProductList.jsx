@@ -16,7 +16,7 @@ const ProductList = () => {
 
   const [filters, setFilters] = useState({
     category: initialCategory,
-    priceRange: [0, 5000],
+    priceRange: [0, 100000],
     rating: 0,
     search: ''
   });
@@ -44,7 +44,7 @@ const ProductList = () => {
       const params = {
         category: filters.category,
         search: filters.search,
-        // Backend filtering logic will handle these
+        max_price: filters.priceRange[1]
       };
       const res = await productService.getProducts(params);
       setProducts(res.data);
@@ -96,15 +96,15 @@ const ProductList = () => {
                   <input
                     type="range"
                     min="0"
-                    max="5000"
-                    step="100"
+                    max="100000"
+                    step="500"
                     value={filters.priceRange[1]}
-                    onChange={(e) => setFilters({ ...filters, priceRange: [0, e.target.value] })}
+                    onChange={(e) => setFilters({ ...filters, priceRange: [0, parseInt(e.target.value)] })}
                     className="w-full accent-primary-600"
                   />
                   <div className="flex justify-between text-xs font-bold text-slate-600">
-                    <span>$0</span>
-                    <span>Up to ${filters.priceRange[1]}</span>
+                    <span>₹0</span>
+                    <span>Up to ₹{filters.priceRange[1].toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>

@@ -54,6 +54,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         if deal == 'true':
             queryset = queryset.filter(is_deal=True)
             
+        max_price = self.request.query_params.get('max_price')
+        if max_price and max_price.isdigit():
+            queryset = queryset.filter(price__lte=max_price)
+            
         return queryset
 
     def perform_create(self, serializer):
