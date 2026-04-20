@@ -133,7 +133,7 @@ const Profile = () => {
       {/* Image */}
       <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
         <img
-          src={item.product?.primary_image || "https://via.placeholder.com/100"}
+          src={item.product?.primary_image || "https://placehold.co/100"}
           alt={item.product?.name}
           className="w-full h-full object-cover"
         />

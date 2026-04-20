@@ -5,15 +5,22 @@ from .models import Payment, VendorPayout
 class PaymentSerializer(serializers.ModelSerializer):
     order_id = serializers.ReadOnlyField(source='order.id')
     username = serializers.ReadOnlyField(source='user.username')
+    customer_name = serializers.SerializerMethodField()
+    customer_email = serializers.ReadOnlyField(source='user.email')
+    customer_phone = serializers.ReadOnlyField(source='order.phone')
 
     class Meta:
         model = Payment
         fields = [
-            'id', 'order', 'order_id', 'user', 'username',
+            'id', 'order', 'order_id', 'user', 'username', 'customer_name', 'customer_email', 'customer_phone',
             'amount', 'method', 'status', 'transaction_id',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['user', 'transaction_id', 'created_at', 'updated_at']
+
+    def get_customer_name(self, obj):
+        name = f"{obj.user.first_name} {obj.user.last_name}".strip()
+        return name if name else obj.user.username
 
 
 class CreatePaymentSerializer(serializers.ModelSerializer):

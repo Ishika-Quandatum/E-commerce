@@ -158,7 +158,7 @@ const Checkout = () => {
   src={
     item.product?.primary_image
       ? item.product.primary_image
-      : "https://via.placeholder.com/150"
+      : "https://placehold.co/150"
   }
   alt={item.product?.name}
   className="w-full h-full object-cover"

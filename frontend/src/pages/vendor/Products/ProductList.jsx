@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { adminService } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Box, Image as ImageIcon, Download, CheckSquare, X, ListChecks } from "lucide-react";
+import { Plus, Edit2, Trash2, Box, Image as ImageIcon, Download, CheckSquare, X, ListChecks, CheckCircle2, AlertCircle } from "lucide-react";
 import ProductForm from "./ProductForm";
 
 const ProductList = () => {
@@ -16,6 +16,7 @@ const ProductList = () => {
   
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [activeEditProduct, setActiveEditProduct] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -77,9 +78,28 @@ const ProductList = () => {
       try {
          await adminService.updateProduct(activeEditProduct.id, formData);
          setActiveEditProduct(null);
+         setToastMessage({ type: 'success', text: 'Product updated successfully!' });
+         setTimeout(() => setToastMessage(null), 4000);
          fetchProducts();
       } catch (error) {
          console.error("Error updating product", error);
+         
+         const errorData = error.response?.data;
+         let errMsg = 'Failed to update product.';
+         if (errorData) {
+            if (typeof errorData === 'object') {
+               const firstKey = Object.keys(errorData)[0];
+               if (firstKey) {
+                  const firstError = errorData[firstKey];
+                  errMsg = `${firstKey}: ${Array.isArray(firstError) ? firstError[0] : firstError}`;
+               }
+            } else if (typeof errorData === 'string') {
+               errMsg = errorData.substring(0, 50);
+            }
+         }
+
+         setToastMessage({ type: 'error', text: errMsg });
+         setTimeout(() => setToastMessage(null), 4000);
       }
   };
 
@@ -115,6 +135,14 @@ const ProductList = () => {
 
   return (
     <div className="space-y-6 pb-24 relative">
+
+      {/* TOAST NOTIFICATION */}
+      {toastMessage && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border transition-all animate-in slide-in-from-top-4 fade-in duration-300 font-bold ${toastMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-emerald-500/20' : 'bg-rose-50 text-rose-700 border-rose-200 shadow-rose-500/20'}`}>
+          {toastMessage.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+          {toastMessage.text}
+        </div>
+      )}
 
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

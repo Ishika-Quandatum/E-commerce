@@ -56,7 +56,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         discount_price: initialData.discount_price || "",
         stock: initialData.stock || "",
         quantity: initialData.quantity || "1",
-        unit: initialData.unit || "pcs",
+        unit: ["g", "kg", "ml", "l", "pcs"].includes(initialData.unit?.toLowerCase()) ? initialData.unit.toLowerCase() : "pcs",
         category: initialData.category?.id || initialData.category || "",
         description: initialData.description || "",
         image: null,

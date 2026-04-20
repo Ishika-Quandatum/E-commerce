@@ -60,7 +60,7 @@ const Cart = () => {
               >
                 <div className="w-full sm:w-32 h-32 bg-slate-50 rounded-2xl overflow-hidden flex-shrink-0">
                   <img
-                    src={product.primary_image || "https://via.placeholder.com/200"}
+                    src={product.primary_image || "https://placehold.co/200"}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />

@@ -27,7 +27,7 @@ const ProductCard = ({ product }) => {
       
       <div className="relative aspect-square overflow-hidden bg-slate-50">
         <img 
-          src={product.primary_image || product.images?.[0]?.image || 'https://via.placeholder.com/400'} 
+          src={product.primary_image || product.images?.[0]?.image || 'https://placehold.co/400'} 
           alt={product.name} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />

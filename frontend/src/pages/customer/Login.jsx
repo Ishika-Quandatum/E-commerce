@@ -60,7 +60,7 @@ useEffect(() => {
     }
 
   } catch (err) {
-    setError('Invalid email or password');
+    setError('Invalid username or password');
   } finally {
     setLoading(false);
   }
@@ -90,16 +90,16 @@ useEffect(() => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* Email */}
+          {/* Username */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">
-              Email
+              Username
             </label>
             <input
               required
-              type="email"
+              type="text"
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 h-14 focus:ring-2 ring-primary-500/20 outline-none"
-              placeholder="Your email address"
+              placeholder="Your username"
               value={formData.username}
               onChange={(e) =>
                 setFormData({ ...formData, username: e.target.value })

@@ -24,7 +24,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config.url.includes('login')) {
       console.warn("Unauthorized - token may be invalid");
     }
     return Promise.reject(error);
@@ -57,7 +57,7 @@ export const orderService = {
 export const adminService = {
   getProducts: (params) => api.get('products/', { params }),
   createProduct: (data) => api.post('products/', data),
-  updateProduct: (id, data) => api.put(`products/${id}/`, data),
+  updateProduct: (id, data) => api.patch(`products/${id}/`, data),
   deleteProduct: (id) => api.delete(`products/${id}/`),
   bulkUploadProducts: (formData) => api.post('products/bulk_upload/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   bulkExportProducts: () => api.get('products/bulk_export/', { responseType: 'blob' }),

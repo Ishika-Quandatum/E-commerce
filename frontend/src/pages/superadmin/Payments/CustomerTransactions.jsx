@@ -126,18 +126,24 @@ const CustomerTransactions = () => {
                   <tr key={t.id} className="group hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-6 font-black text-indigo-600 uppercase tracking-tighter text-sm italic">{t.transaction_id || `TXN-${t.id}`}</td>
                     <td className="px-8 py-6">
-                       <span className="font-bold text-slate-900 capitalize">{t.username}</span>
+                       <span className="font-bold text-slate-900 capitalize block">{t.customer_name || t.username}</span>
+                       <span className="text-[11px] font-medium text-slate-500 block">{t.customer_email || 'No Email'}</span>
+                       {t.customer_phone && <span className="text-[10px] font-bold text-slate-400 tracking-wider">📞 {t.customer_phone}</span>}
                     </td>
                     <td className="px-8 py-6">
                        <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-600">#{t.order_id}</span>
                     </td>
                     <td className="px-8 py-6">
-                       <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          <CreditCard size={14} className="text-slate-400" /> {t.method}
+                       <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          <CreditCard size={14} className="text-slate-400" />
+                          {t.method === 'cod' ? 'Cash on Delivery' : 
+                           t.method === 'card' ? 'Credit/Debit Card' :
+                           t.method === 'upi' ? 'UPI' :
+                           t.method === 'netbanking' ? 'Net Banking' : t.method}
                        </div>
                     </td>
                     <td className="px-8 py-6">
-                       <span className="text-sm font-black text-slate-900">₹{t.amount.toLocaleString()}</span>
+                       <span className="text-sm font-black text-slate-900">₹{parseFloat(t.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </td>
                     <td className="px-8 py-6">
                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${getStatusStyle(t.status)}`}>

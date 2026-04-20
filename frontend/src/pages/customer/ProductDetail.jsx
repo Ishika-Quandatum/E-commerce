@@ -38,7 +38,7 @@ const ProductDetail = () => {
 
   if (!product) return null;
 
-  const images = product.images.length > 0 ? product.images : [{ image: 'https://via.placeholder.com/800' }];
+  const images = product.images.length > 0 ? product.images : [{ image: 'https://placehold.co/800' }];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
