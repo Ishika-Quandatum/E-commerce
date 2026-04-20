@@ -3,8 +3,18 @@ import { Outlet } from "react-router-dom";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import { Menu, Bell, Search, UserCircle } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 const SuperAdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
+  const navigate = useNavigate();
+
+  const handleGlobalSearch = (e) => {
+    if (e.key === "Enter" && globalSearch.trim()) {
+      navigate(`/admin/products?search=${encodeURIComponent(globalSearch.trim())}`);
+    }
+  };
 
   return (
     <div 
@@ -28,8 +38,11 @@ const SuperAdminLayout = () => {
                 <Search size={18} className="text-slate-400" />
                 <input 
                     type="text" 
-                    placeholder="Search analytics, vendors, orders..." 
+                    placeholder="Search catalog products (Press Enter)..." 
                     className="bg-transparent border-none outline-none text-sm ml-3 w-full font-medium"
+                    value={globalSearch}
+                    onChange={(e) => setGlobalSearch(e.target.value)}
+                    onKeyDown={handleGlobalSearch}
                 />
             </div>
           </div>

@@ -2,10 +2,16 @@ import React, { useEffect, useState } from "react";
 import { adminService } from "../../../services/api";
 import { Box, Image as ImageIcon, Search, Filter, ArrowUpRight } from "lucide-react";
 
+import { useLocation } from "react-router-dom";
+
 const AdminProductList = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialSearch = queryParams.get("search") || "";
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {

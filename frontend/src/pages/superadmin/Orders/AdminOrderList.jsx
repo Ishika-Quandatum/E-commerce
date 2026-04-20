@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { adminService } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
-import { Eye, Package } from "lucide-react";
+import { Search, Eye, Package } from "lucide-react";
 
 const AdminOrderList = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      fetchOrders();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await adminService.getOrders();
+      const res = await adminService.getOrders({ search: searchTerm });
       setOrders(Array.isArray(res.data) ? res.data : (res.data?.results || []));
     } catch (err) {
       console.error("Failed to fetch orders");
@@ -49,6 +53,16 @@ const AdminOrderList = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
           <p className="mt-1 text-sm text-gray-500">Manage and track customer orders.</p>
+        </div>
+        <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2 w-full max-w-sm shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+          <Search size={18} className="text-gray-400" />
+          <input 
+            type="text" 
+            placeholder="Search Order ID or Customer..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full text-sm outline-none border-none ml-2"
+          />
         </div>
       </div>
 
