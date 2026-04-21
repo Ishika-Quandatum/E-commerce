@@ -74,6 +74,15 @@ export const adminService = {
   updateRider: (id, data) => api.patch(`tracking/riders/${id}/`, data),
   deleteRider: (id) => api.delete(`tracking/riders/${id}/`),
   getRiderStats: () => api.get('tracking/riders/admin_rider_stats/'),
+  getRiderWallet: () => api.get('tracking/riders/wallet/'),
+  getRiderSalary: () => api.get('tracking/riders/salary_details/'),
+  getRiderAttendance: () => api.get('tracking/attendance/'),
+  punchIn: () => api.post('tracking/attendance/punch_in/'),
+  punchOut: () => api.post('tracking/attendance/punch_out/'),
+  getRiderTasks: () => api.get('tracking/riders/active_tasks/'),
+  initializeDispatch: (id) => api.post(`orders/${id}/initialize_dispatch/`),
+  autoAssignRider: (id) => api.post(`tracking/shipments/${id}/assign_nearest_rider/`),
+  updateShipmentStatus: (id, status) => api.patch(`tracking/shipments/${id}/update_dispatch_status/`, { status }),
 };
 
 export const paymentService = {

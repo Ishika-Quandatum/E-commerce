@@ -26,16 +26,13 @@ class RiderProfile(models.Model):
 
 class Shipment(models.Model):
     STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Packed', 'Packed'),
-        ('Ready for Dispatch', 'Ready for Dispatch'),
+        ('Pending Assignment', 'Pending Assignment'),
         ('Assigned', 'Assigned'),
         ('Dispatched', 'Dispatched'),
-        ('Out for Delivery', 'Out for Delivery'),
         ('In Transit', 'In Transit'),
-        ('Reached', 'Reached'),
         ('Delivered', 'Delivered'),
         ('Failed', 'Failed'),
+        ('Rejected', 'Rejected'),
         ('Returned', 'Returned')
     ]
 
@@ -67,7 +64,64 @@ class TrackingHistory(models.Model):
         return f"{self.shipment.tracking_number} - {self.status}"
 
 
-@receiver(post_save, sender=Order)
-def create_shipment(sender, instance, created, **kwargs):
+
+
+
+class Attendance(models.Model):
+    rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE, related_name='attendance_logs')
+    check_in = models.DateTimeField()
+    check_out = models.DateTimeField(null=True, blank=True)
+    date = models.DateField(auto_now_add=True)
+    working_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"{self.rider.user.username} - {self.date}"
+
+
+class SalaryConfiguration(models.Model):
+    rider = models.OneToOneField(RiderProfile, on_delete=models.CASCADE, related_name='salary_config')
+    monthly_fixed_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    per_delivery_commission = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    fuel_allowance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    bonus = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Salary Rules: {self.rider.user.username}"
+
+
+class RiderWallet(models.Model):
+    rider = models.OneToOneField(RiderProfile, on_delete=models.CASCADE, related_name='wallet')
+    current_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    pending_payout = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Wallet: {self.rider.user.username} (${self.current_balance})"
+
+
+class Transaction(models.Model):
+    TYPE_CHOICES = [
+        ('Credit', 'Credit (Commission)'),
+        ('Debit', 'Debit (Payout)'),
+        ('Bonus', 'Bonus'),
+        ('Penalty', 'Penalty'),
+    ]
+    wallet = models.ForeignKey(RiderWallet, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    transaction_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    description = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.transaction_type}: {self.amount} for {self.wallet.rider.user.username}"
+
+
+# Signal to create Wallet and SalaryConfig for new Riders
+@receiver(post_save, sender=RiderProfile)
+def create_rider_financials(sender, instance, created, **kwargs):
     if created:
-        Shipment.objects.create(order=instance, status='Pending')
+        RiderWallet.objects.create(rider=instance)
+        SalaryConfiguration.objects.create(rider=instance)
+

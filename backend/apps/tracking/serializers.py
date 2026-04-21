@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import RiderProfile, Shipment, TrackingHistory
+from .models import RiderProfile, Shipment, TrackingHistory, Attendance, RiderWallet, SalaryConfiguration, Transaction
 from apps.users.serializers import UserSerializer
 
 class RiderProfileSerializer(serializers.ModelSerializer):
@@ -138,3 +138,27 @@ class ShipmentSerializer(serializers.ModelSerializer):
             return f"{first_item} + {count - 1} more"
         return first_item
 
+class AttendanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attendance
+        fields = '__all__'
+
+
+class SalaryConfigurationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SalaryConfiguration
+        fields = '__all__'
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'
+
+
+class RiderWalletSerializer(serializers.ModelSerializer):
+    transactions = TransactionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = RiderWallet
+        fields = '__all__'

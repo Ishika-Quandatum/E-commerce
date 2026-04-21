@@ -51,21 +51,22 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
       {/* Sidebar Content */}
       <div 
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col shadow-xl lg:shadow-none",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex items-center justify-between px-8 py-8">
-          <h2 className="text-2xl font-black tracking-tighter text-white uppercase italic">
-            QuanStore <span className="text-indigo-500 not-italic uppercase tracking-normal ml-1">Admin</span>
+          <h2 className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic">
+            QuanStore <span className="text-brand-blue not-italic uppercase tracking-normal ml-1">Admin</span>
           </h2>
           <button 
-            className="lg:hidden p-2 rounded-md hover:bg-slate-800 text-slate-400"
+            className="lg:hidden p-2 rounded-xl hover:bg-slate-50 text-slate-400"
             onClick={() => setIsOpen(false)}
           >
             <X size={20} />
           </button>
         </div>
+
 
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
           <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest px-4 mb-4">Main Navigation</div>
@@ -80,8 +81,8 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
                   className={clsx(
                     "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm group",
                     isActive 
-                      ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20" 
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      ? "bg-brand-blue text-white shadow-xl shadow-brand-blue/20" 
+                      : "text-slate-500 hover:bg-slate-50 hover:text-brand-blue"
                   )}
                 >
                   <Icon size={20} className={clsx("transition-colors", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
@@ -111,7 +112,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
                           onClick={() => setIsOpen(false)}
                           className={clsx(
                             "block px-4 py-2 text-[13px] font-bold rounded-xl transition-all",
-                            isSubActive ? "text-indigo-400 bg-indigo-500/10" : "text-slate-500 hover:text-white"
+                            isSubActive ? "text-brand-blue bg-brand-blue/5" : "text-slate-500 hover:text-brand-blue"
                           )}
                         >
                           {sub.name}
@@ -126,12 +127,12 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         </nav>
 
         <div className="p-4 mt-auto">
-            <div className="bg-slate-800/50 rounded-[2rem] p-4 border border-slate-700/50">
+            <div className="bg-slate-50 rounded-[2rem] p-4 border border-slate-100">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-black text-xs">SA</div>
+                    <div className="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center font-black text-xs text-white">SA</div>
                     <div>
-                        <div className="text-xs font-bold text-white leading-none mb-1">Super Admin</div>
-                        <div className="text-[10px] text-slate-500 font-medium">Control Center</div>
+                        <div className="text-[11px] font-black text-slate-900 leading-none mb-1">Super Admin</div>
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Control Center</div>
                     </div>
                 </div>
             </div>

@@ -1,9 +1,16 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Shipment, RiderProfile, TrackingHistory
-from .serializers import ShipmentSerializer, RiderProfileSerializer, AdminRiderSerializer
+from .models import Shipment, RiderProfile, TrackingHistory, Attendance, RiderWallet, SalaryConfiguration, Transaction
+from .serializers import (
+    ShipmentSerializer, RiderProfileSerializer, AdminRiderSerializer,
+    AttendanceSerializer, RiderWalletSerializer, SalaryConfigurationSerializer
+)
 import random
+from django.utils import timezone
+from decimal import Decimal
+import math
+from .models import RiderProfile
 
 class ShipmentViewSet(viewsets.ModelViewSet):
     queryset = Shipment.objects.all()
@@ -43,12 +50,11 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         vendor_shipments = self.get_queryset()
         
         stats = {
-            'new_orders': vendor_shipments.filter(status='Pending').count(),
-            'packed_orders': vendor_shipments.filter(status='Packed').count(),
-            'ready_to_dispatch': vendor_shipments.filter(status='Ready for Dispatch').count(),
-            'out_for_delivery': vendor_shipments.filter(status__in=['Dispatched', 'Out for Delivery']).count(),
-            'delivered_today': vendor_shipments.filter(status='Delivered', updated_at__date=self.request.user.date_joined.date()).count(), # Simple mock for today
-            'all_orders': vendor_shipments.count()
+            'pending_assignment': vendor_shipments.filter(status='Pending Assignment').count(),
+            'assigned': vendor_shipments.filter(status='Assigned').count(),
+            'in_transit': vendor_shipments.filter(status='In Transit').count(),
+            'delivered': vendor_shipments.filter(status='Delivered').count(),
+            'all_shipments': vendor_shipments.count()
         }
         return Response(stats)
 
@@ -66,6 +72,55 @@ class ShipmentViewSet(viewsets.ModelViewSet):
             return Response({'status': 'Rider assigned successfully'})
         except RiderProfile.DoesNotExist:
             return Response({'error': 'Rider not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'])
+    def assign_nearest_rider(self, request, pk=None):
+        shipment = self.get_object()
+        vendor = shipment.order.vendor
+        
+        if not vendor.location_lat or not vendor.location_lng:
+            return Response({'error': 'Vendor location not configured.'}, status=400)
+            
+        # Haversine distance function
+        def get_distance(lat1, lon1, lat2, lon2):
+            R = 6371 # km
+            dLat = math.radians(lat2 - lat1)
+            dLon = math.radians(lon2 - lon1)
+            a = math.sin(dLat / 2) * math.sin(dLat / 2) + \
+                math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * \
+                math.sin(dLon / 2) * math.sin(dLon / 2)
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            return R * c
+
+        online_riders = RiderProfile.objects.filter(
+            availability_status='Online', 
+            is_active=True,
+            current_lat__isnull=False,
+            current_lng__isnull=False
+        )
+
+        nearest_rider = None
+        min_distance = float('inf')
+
+        for rider in online_riders:
+            dist = get_distance(vendor.location_lat, vendor.location_lng, rider.current_lat, rider.current_lng)
+            if dist < min_distance:
+                min_distance = dist
+                nearest_rider = rider
+
+        if nearest_rider:
+            shipment.rider = nearest_rider
+            shipment.status = 'Assigned'
+            shipment.save()
+            TrackingHistory.objects.create(shipment=shipment, status='Assigned', description=f'Auto-assigned to nearest rider {nearest_rider.user.username} ({min_distance:.2f} km)')
+            return Response({
+                'message': f'Rider {nearest_rider.user.username} assigned (Distance: {min_distance:.2f} km)',
+                'rider': RiderProfileSerializer(nearest_rider).data,
+                'distance': round(min_distance, 2)
+            })
+            
+        return Response({'error': 'No available riders found nearby.'}, status=404)
+
 
     @action(detail=True, methods=['post'])
     def dispatch(self, request, pk=None):
@@ -160,3 +215,64 @@ class RiderViewSet(viewsets.ModelViewSet):
             user.delete() # Deleting user CASCADE deletes profile due to OneToOne
             return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=False, methods=['get'])
+    def wallet(self, request):
+        user = request.user
+        if user.role != 'rider':
+            return Response({'error': 'Unauthorized'}, status=403)
+        wallet = RiderWallet.objects.get(rider__user=user)
+        return Response(RiderWalletSerializer(wallet).data)
+
+    @action(detail=False, methods=['get'])
+    def salary_details(self, request):
+        user = request.user
+        if user.role != 'rider':
+            return Response({'error': 'Unauthorized'}, status=403)
+        config = SalaryConfiguration.objects.get(rider__user=user)
+        return Response(SalaryConfigurationSerializer(config).data)
+
+
+class AttendanceViewSet(viewsets.ModelViewSet):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(rider__user=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def punch_in(self, request):
+        rider = request.user.rider_profile
+        today = timezone.now().date()
+        
+        if Attendance.objects.filter(rider=rider, date=today, check_out__isnull=True).exists():
+            return Response({'error': 'You are already punched in'}, status=400)
+            
+        attendance = Attendance.objects.create(
+            rider=rider,
+            check_in=timezone.now()
+        )
+        rider.availability_status = 'Online'
+        rider.save()
+        return Response(AttendanceSerializer(attendance).data)
+
+    @action(detail=False, methods=['post'])
+    def punch_out(self, request):
+        rider = request.user.rider_profile
+        attendance = Attendance.objects.filter(rider=rider, check_out__isnull=True).order_by('-check_in').first()
+        
+        if not attendance:
+            return Response({'error': 'No active session found. Please punch in first.'}, status=400)
+            
+        attendance.check_out = timezone.now()
+        
+        # Calculate working hours
+        duration = attendance.check_out - attendance.check_in
+        hours = Decimal(duration.total_seconds() / 3600).quantize(Decimal('0.00'))
+        attendance.working_hours = hours
+        attendance.save()
+        
+        rider.availability_status = 'Offline'
+        rider.save()
+        
+        return Response(AttendanceSerializer(attendance).data)

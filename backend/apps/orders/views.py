@@ -123,3 +123,25 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.status = new_status
         order.save()
         return Response(OrderSerializer(order).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def initialize_dispatch(self, request, pk=None):
+        order = self.get_object()
+        if order.status != 'Packed':
+            return Response({'error': 'Order must be Packed before sending to dispatch.'}, status=400)
+        
+        from apps.tracking.models import Shipment
+        shipment, created = Shipment.objects.get_or_create(
+            order=order,
+            defaults={'status': 'Pending Assignment'}
+        )
+        
+        if not created:
+            shipment.status = 'Pending Assignment'
+            shipment.save()
+            
+        order.status = 'Ready for Dispatch'
+        order.save()
+        
+        return Response({'message': 'Order sent to dispatch queue.', 'shipment_id': shipment.id})
+
