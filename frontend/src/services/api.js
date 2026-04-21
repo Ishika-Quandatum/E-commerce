@@ -69,6 +69,11 @@ export const adminService = {
   getOrderDetail: (id) => api.get(`orders/${id}/`),
   updateOrderStatus: (id, status) => api.patch(`orders/${id}/update_status/`, { status }),
   getDashboardStats: () => api.get('users/dashboard-stats/'),
+  getRiders: (params) => api.get('tracking/riders/', { params }),
+  createRider: (data) => api.post('tracking/riders/', data),
+  updateRider: (id, data) => api.patch(`tracking/riders/${id}/`, data),
+  deleteRider: (id) => api.delete(`tracking/riders/${id}/`),
+  getRiderStats: () => api.get('tracking/riders/admin_rider_stats/'),
 };
 
 export const paymentService = {

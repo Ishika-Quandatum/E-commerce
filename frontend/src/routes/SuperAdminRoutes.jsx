@@ -13,6 +13,8 @@ import CustomerTransactions from "../pages/superadmin/Payments/CustomerTransacti
 import VendorTransactions from "../pages/superadmin/Payments/VendorTransactions";
 import AdminUserList from "../pages/superadmin/Users/AdminUserList";
 import Settings from "../pages/superadmin/Settings";
+import TrackingDashboard from "../pages/superadmin/Tracking/TrackingDashboard";
+import DeliveryBoyList from "../pages/superadmin/Delivery/DeliveryBoyList";
 
 const SuperAdminRoutes = () => {
   const { user, isSuperAdmin, loading } = useAuth();
@@ -42,6 +44,12 @@ const SuperAdminRoutes = () => {
         <Route path="payments/customers" element={<CustomerTransactions />} />
         <Route path="payments/vendors" element={<VendorTransactions />} />
         <Route path="users" element={<AdminUserList />} />
+        
+        {/* Delivery Boy Management */}
+        <Route path="delivery-boys" element={<DeliveryBoyList />} />
+
+        {/* Tracking */}
+        <Route path="tracking" element={<TrackingDashboard />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>

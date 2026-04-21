@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,3 +39,36 @@ class RegisterSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True, min_length=6)
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT serializer to allow authentication by either username or email.
+    """
+    def validate(self, attrs):
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        # Logic: If it looks like an email, find the user
+        if '@' in username:
+            try:
+                user_obj = User.objects.get(email=username)
+                username = user_obj.username
+            except (User.DoesNotExist, User.MultipleObjectsReturned):
+                pass 
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            if not user.is_active:
+                raise serializers.ValidationError('User account is disabled.')
+            
+            # SimpleJWT logic expects 'self.user' to be set
+            refresh = self.get_token(user)
+
+            data = {}
+            data['refresh'] = str(refresh)
+            data['access'] = str(refresh.access_token)
+
+            return data
+        
+        raise serializers.ValidationError('No active account found with the given credentials')

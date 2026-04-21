@@ -10,7 +10,9 @@ import {
   UserCircle,
   X,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  MapPin,
+  Bike
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -23,8 +25,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Categories", path: "/admin/categories", icon: Tags },
     { name: "Products", path: "/admin/products", icon: Package },
     { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
-    { 
-      name: "Payments", 
+    { name: "Payments", 
       path: "/admin/payments", 
       icon: CreditCard,
       subItems: [
@@ -32,6 +33,8 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         { name: "Vendor Transactions", path: "/admin/payments/vendors" },
       ]
     },
+    { name: "Delivery Boys", path: "/admin/delivery-boys", icon: Bike },
+    { name: "Tracking", path: "/admin/tracking", icon: MapPin },
     { name: "Settings", path: "/admin/settings", icon: Tags },
   ];
 

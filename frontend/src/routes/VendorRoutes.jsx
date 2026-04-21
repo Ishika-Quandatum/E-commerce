@@ -10,6 +10,7 @@ import EditProduct from "../pages/vendor/Products/EditProduct";
 import OrderList from "../pages/vendor/Orders/OrderList";
 import OrderDetails from "../pages/vendor/Orders/OrderDetails";
 import PaymentList from "../pages/vendor/Payments/PaymentList";
+import VendorDispatchList from "../pages/vendor/Dispatch/VendorDispatchList";
 
 const VendorRoutes = () => {
   const { user, loading, isVendor, isSuperAdmin } = useAuth();
@@ -39,6 +40,9 @@ const VendorRoutes = () => {
 
         {/* Payments */}
         <Route path="payments" element={<PaymentList />} />
+
+        {/* Dispatch & Tracking */}
+        <Route path="dispatch" element={<VendorDispatchList />} />
 
 
       </Route>

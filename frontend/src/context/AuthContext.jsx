@@ -46,6 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   const isSuperAdmin = user?.role === 'superadmin' || user?.role === 'admin' || user?.is_staff || user?.is_superuser || false;
   const isVendor = user?.role === 'vendor';
+  const isRider = user?.role === 'rider';
   const isAdmin = isSuperAdmin || isVendor;
 
   return (
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       isAdmin,
       isVendor,
+      isRider,
       isSuperAdmin,
       vendorStatus: user?.vendor_status
     }}>

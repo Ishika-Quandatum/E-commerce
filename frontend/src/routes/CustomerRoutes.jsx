@@ -9,6 +9,7 @@ import Login from '../pages/customer/Login'
 import Register from '../pages/customer/Register'
 import Profile from '../pages/customer/Profile'
 import VendorSignup from '../pages/customer/VendorSignup'
+import TrackOrder from '../pages/customer/Tracking/TrackOrder'
 
 const CustomerRoutes = () => {
   return (
@@ -23,6 +24,7 @@ const CustomerRoutes = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/become-seller" element={<VendorSignup />} />
+        <Route path="/track-order/:trackingNumber" element={<TrackOrder />} />
       </Routes>
     </>
   )

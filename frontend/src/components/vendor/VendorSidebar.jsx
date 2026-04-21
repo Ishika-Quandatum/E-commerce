@@ -6,7 +6,8 @@ import {
   Tags, 
   ShoppingBag, 
   CreditCard, 
-  X 
+  X,
+  Truck
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -18,6 +19,7 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Products", path: "/vendor/products", icon: Box },
     { name: "Orders", path: "/vendor/orders", icon: ShoppingBag },
     { name: "Payments", path: "/vendor/payments", icon: CreditCard },
+    { name: "Dispatch", path: "/vendor/dispatch", icon: Truck },
   ];
 
   return (

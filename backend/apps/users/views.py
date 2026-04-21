@@ -3,7 +3,11 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 User = get_user_model()
 
