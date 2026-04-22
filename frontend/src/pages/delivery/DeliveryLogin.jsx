@@ -24,7 +24,6 @@ const DeliveryLogin = () => {
             [name]: type === 'checkbox' ? checked : value
         }));
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -39,10 +38,7 @@ const DeliveryLogin = () => {
             if (user.role === 'rider') {
                 navigate('/rider');
             } else {
-                // If not a rider, we should probably log them out or show error
-                // The requirements say "Only users with role = rider can log in" on this page
                 setError("Access Denied: This portal is strictly for Delivery Personnel.");
-                // Note: AuthContext already sets the user, so we might want to log out here if it's the wrong role
             }
         } catch (err) {
             setError(err.response?.data?.detail || "Invalid credentials. Please try again.");

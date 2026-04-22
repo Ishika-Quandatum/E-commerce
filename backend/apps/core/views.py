@@ -5,7 +5,10 @@ from .models import PlatformSetting
 from .serializers import PlatformSettingSerializer
 
 class PlatformSettingViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAdminUser]
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
 
     def list(self, request):
         settings = PlatformSetting.get_settings()

@@ -11,6 +11,7 @@ import {
   UserCircle, 
   Settings, 
   LogOut,
+  Truck,
   X 
 } from "lucide-react";
 import clsx from "clsx";

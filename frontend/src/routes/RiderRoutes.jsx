@@ -7,6 +7,7 @@ import MyOrders from "../pages/rider/MyOrders";
 import Attendance from "../pages/rider/Attendance";
 import WalletSalary from "../pages/rider/WalletSalary";
 import ActiveDelivery from "../pages/rider/ActiveDelivery";
+import RiderProfile from "../pages/rider/RiderProfile";
 
 // Stub components for remaining pages
 const Placeholder = ({ title }) => (
@@ -38,7 +39,7 @@ const RiderRoutes = () => {
         <Route path="wallet" element={<WalletSalary />} />
         <Route path="tracking" element={<Placeholder title="Live Tracking" />} />
         <Route path="notifications" element={<Placeholder title="Notifications" />} />
-        <Route path="profile" element={<Placeholder title="My Profile" />} />
+        <Route path="profile" element={<RiderProfile />} />
         <Route path="settings" element={<Placeholder title="Account Settings" />} />
         
         {/* Legacy / Compatibility routes */}

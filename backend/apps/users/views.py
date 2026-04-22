@@ -37,15 +37,12 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-class ChangePasswordView(generics.UpdateAPIView):
+class ChangePasswordView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
-
-    def update(self, request, *args, **kwargs):
-        user = self.get_object()
+    def post(self, request, *args, **kwargs):
+        user = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
