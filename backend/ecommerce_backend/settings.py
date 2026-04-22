@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.payments',
     'apps.vendors',
     'apps.tracking',
+    'apps.core',
     'channels',
 ]
 

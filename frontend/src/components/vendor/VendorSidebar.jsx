@@ -10,8 +10,10 @@ import {
   Truck
 } from "lucide-react";
 import clsx from "clsx";
+import { usePlatform } from "../../context/PlatformContext";
 
 const VendorSidebar = ({ isOpen, setIsOpen }) => {
+  const { platformName } = usePlatform();
   const location = useLocation();
 
   const menuItems = [
@@ -40,8 +42,8 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
         )}
       >
         <div className="flex items-center justify-between px-8 py-8 border-b border-slate-50">
-          <h2 className="text-xl font-black tracking-tight text-slate-900">
-            Partner<span className="text-brand-blue">Box</span>
+          <h2 className="text-xl font-black tracking-tight text-slate-900 italic uppercase">
+            {platformName}<span className="text-brand-blue not-italic border-l border-slate-200 ml-2 pl-2 tracking-widest text-[10px]">VENDOR</span>
           </h2>
           <button 
             className="md:hidden p-2 rounded-xl hover:bg-slate-50 text-slate-400"

@@ -16,9 +16,11 @@ import {
   Settings as SettingsIcon
 } from "lucide-react";
 import clsx from "clsx";
+import { usePlatform } from "../../context/PlatformContext";
 
 const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
+  const { platformName } = usePlatform();
 
   const menuItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
@@ -58,7 +60,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
       >
         <div className="flex items-center justify-between px-8 py-8">
           <h2 className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic">
-            QuanStore <span className="text-brand-blue not-italic uppercase tracking-normal ml-1">Admin</span>
+            {platformName} <span className="text-brand-blue not-italic uppercase tracking-normal ml-1">Admin</span>
           </h2>
           <button 
             className="lg:hidden p-2 rounded-xl hover:bg-slate-50 text-slate-400"

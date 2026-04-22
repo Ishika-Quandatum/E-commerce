@@ -3,21 +3,31 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, LogOut, Menu, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { usePlatform } from '../context/PlatformContext';
 
 const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
   const { cart } = useCart();
+  const { platformName } = usePlatform();
   const navigate = useNavigate();
 
   const cartCount = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+
+  // Branding Logic: Extract parts for styling with robust fallback
+  const displayName = (platformName || 'QUANSTORE').toUpperCase();
+  const logoMain = displayName.length > 2 ? displayName.substring(0, displayName.length - 1) : displayName;
+  const logoLast = displayName.length > 2 ? displayName.substring(displayName.length - 1) : "";
 
   return (
     <nav className="sticky top-0 z-50 bg-brand-blue shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20 text-white">
           <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl font-black tracking-tighter text-white">
-              Quan<span className="text-brand-orange italic font-extrabold mr-0.5">S</span>tore
+            <Link to="/" className="text-2xl font-black tracking-tighter text-white uppercase italic flex items-center">
+              <span>{logoMain}</span>
+              {logoLast && (
+                <span className="text-brand-orange not-italic font-black text-3xl -ml-0.5 transform -translate-y-0.5">{logoLast}</span>
+              )}
             </Link>
             <div className="hidden md:flex items-center gap-8">
               <Link to="/products" className="text-white/80 hover:text-white font-bold transition-all text-sm uppercase tracking-widest">Shop</Link>

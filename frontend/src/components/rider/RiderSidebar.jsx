@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { useAuth } from "../../context/AuthContext";
+import { usePlatform } from "../../context/PlatformContext";
 
 const RiderSidebar = ({ isOpen, setIsOpen }) => {
+  const { platformName } = usePlatform();
   const location = useLocation();
   const { logout } = useAuth();
 
@@ -51,11 +53,11 @@ const RiderSidebar = ({ isOpen, setIsOpen }) => {
       >
         <div className="flex items-center justify-between px-8 py-8">
             <Link to="/rider" className="flex items-center gap-3 group">
-                <div className="w-10 h-10 bg-brand-blue rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-blue/20 group-hover:scale-110 transition-transform">
-                    <MapPin size={22} />
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
+                    <Truck size={22} />
                 </div>
-                <h2 className="text-xl font-black tracking-tight text-slate-900">
-                    Logi<span className="text-brand-blue">Force</span>
+                <h2 className="text-xl font-black tracking-tight text-slate-900 uppercase italic">
+                    {platformName}<span className="text-indigo-600 not-italic border-l border-slate-200 ml-2 pl-2 tracking-widest text-[10px]">RIDER</span>
                 </h2>
             </Link>
           <button 

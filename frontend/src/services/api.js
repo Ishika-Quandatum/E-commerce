@@ -102,4 +102,9 @@ export const vendorService = {
   reject: (id) => api.post(`vendors/${id}/reject/`),
 };
 
+export const platformService = {
+  getSettings: () => api.get('core/settings/'),
+  updateSettings: (data) => api.patch('core/settings/update_settings/', data),
+};
+
 export default api;
