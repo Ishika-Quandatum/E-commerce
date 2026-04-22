@@ -8,7 +8,7 @@ class Order(models.Model):
         ('Pending', 'Pending'),
         ('Accepted', 'Accepted'),
         ('Packed', 'Packed'),
-        ('Ready for Dispatch', 'Ready for Dispatch'),
+        ('Dispatch Queue', 'Dispatch Queue'),
         ('Processing', 'Processing'),
         ('Shipped', 'Shipped'),
         ('Delivered', 'Delivered'),

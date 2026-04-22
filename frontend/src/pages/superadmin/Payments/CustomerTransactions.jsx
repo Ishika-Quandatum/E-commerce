@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 const CustomerTransactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const navigate = useNavigate();
@@ -28,6 +29,26 @@ const CustomerTransactions = () => {
   useEffect(() => {
     fetchTransactions();
   }, [searchTerm, statusFilter]);
+
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const response = await paymentService.bulkExportPayments();
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Transaction_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Failed to export transactions", err);
+      alert("Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -66,8 +87,17 @@ const CustomerTransactions = () => {
         </div>
         
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3.5 rounded-2xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all">
-            <Download size={18} /> Export Reports
+          <button 
+            onClick={handleExport}
+            disabled={exporting}
+            className={`flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3.5 rounded-2xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all ${exporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {exporting ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-200 border-t-indigo-600" />
+            ) : (
+              <Download size={18} />
+            )}
+            {exporting ? 'Exporting...' : 'Export Reports'}
           </button>
         </div>
       </div>

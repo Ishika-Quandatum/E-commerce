@@ -18,8 +18,8 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Dashboard", path: "/vendor", icon: LayoutDashboard },
     { name: "Products", path: "/vendor/products", icon: Box },
     { name: "Orders", path: "/vendor/orders", icon: ShoppingBag },
-    { name: "Payments", path: "/vendor/payments", icon: CreditCard },
     { name: "Dispatch", path: "/vendor/dispatch", icon: Truck },
+    { name: "Payments", path: "/vendor/payments", icon: CreditCard },
   ];
 
   return (

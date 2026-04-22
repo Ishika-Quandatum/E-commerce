@@ -89,6 +89,7 @@ export const paymentService = {
   getPayments: (params) => api.get('payments/', { params }),
   updatePaymentStatus: (id, status) => api.patch(`payments/${id}/update_status/`, { status }),
   getPaymentStats: () => api.get('payments/dashboard_stats/'),
+  bulkExportPayments: () => api.get('payments/bulk_export/', { responseType: 'blob' }),
   getVendorPayouts: (params) => api.get('payments/vendor-payouts/', { params }),
   updatePayoutStatus: (id) => api.post(`payments/vendor-payouts/${id}/mark_as_paid/`),
 };

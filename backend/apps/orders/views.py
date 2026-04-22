@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Order, OrderItem
@@ -9,6 +9,8 @@ import uuid
 
 class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['id', 'user__username', 'user__first_name', 'user__last_name', 'address']
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -17,14 +19,18 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'superadmin':
-            return Order.objects.prefetch_related('items__product').all()
+        queryset = Order.objects.select_related('user').prefetch_related('items__product')
+        
+        if user.role in ['superadmin', 'admin'] or user.is_staff:
+            return queryset.all()
+        
         if user.role == 'vendor':
             vendor = getattr(user, 'vendor_profile', None)
             if vendor:
-                return Order.objects.prefetch_related('items__product').filter(vendor=vendor)
+                return queryset.filter(vendor=vendor)
             return Order.objects.none()
-        return Order.objects.prefetch_related('items__product').filter(user=user)
+            
+        return queryset.filter(user=user)
 
     def perform_create(self, serializer):
         # 1. Get user's cart
@@ -133,14 +139,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         from apps.tracking.models import Shipment
         shipment, created = Shipment.objects.get_or_create(
             order=order,
-            defaults={'status': 'Pending Assignment'}
+            defaults={'status': 'Dispatch Queue'}
         )
         
         if not created:
-            shipment.status = 'Pending Assignment'
+            shipment.status = 'Dispatch Queue'
             shipment.save()
             
-        order.status = 'Ready for Dispatch'
+        order.status = 'Dispatch Queue'
         order.save()
         
         return Response({'message': 'Order sent to dispatch queue.', 'shipment_id': shipment.id})

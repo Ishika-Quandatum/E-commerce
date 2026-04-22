@@ -1,7 +1,9 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import uuid
+import csv
+from django.http import HttpResponse
 from django.db.models import Sum, Count
 from .models import Payment, VendorPayout
 from .serializers import PaymentSerializer, CreatePaymentSerializer, VendorPayoutSerializer
@@ -9,6 +11,8 @@ from .serializers import PaymentSerializer, CreatePaymentSerializer, VendorPayou
 
 class PaymentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['transaction_id', 'order__id', 'user__username', 'user__first_name', 'user__last_name']
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -17,14 +21,18 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'superadmin':
-            return Payment.objects.select_related('order', 'user').all()
+        queryset = Payment.objects.select_related('order', 'user')
+        
+        if user.role in ['superadmin', 'admin'] or user.is_staff:
+            return queryset.all()
+            
         if user.role == 'vendor':
             vendor = getattr(user, 'vendor_profile', None)
             if vendor:
-                return Payment.objects.select_related('order', 'user').filter(order__vendor=vendor)
+                return queryset.filter(order__vendor=vendor)
             return Payment.objects.none()
-        return Payment.objects.select_related('order', 'user').filter(user=user)
+            
+        return queryset.filter(user=user)
 
     def perform_create(self, serializer):
         transaction_id = str(uuid.uuid4()).replace('-', '').upper()[:16]
@@ -58,10 +66,37 @@ class PaymentViewSet(viewsets.ModelViewSet):
             'failed_transactions': failed_transactions,
         })
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def bulk_export(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="customer_transactions.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['Transaction ID', 'Customer Name', 'Customer Email', 'Order ID', 'Method', 'Amount', 'Status', 'Date'])
+        
+        for p in queryset:
+            customer_name = f"{p.user.first_name} {p.user.last_name}".strip() or p.user.username
+            writer.writerow([
+                p.transaction_id,
+                customer_name,
+                p.user.email,
+                p.order.id,
+                p.method,
+                p.amount,
+                p.status,
+                p.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+            
+        return response
+
 
 class VendorPayoutViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = VendorPayoutSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['id', 'order__id', 'vendor__shop_name', 'transaction_id']
 
     def get_queryset(self):
         user = self.request.user

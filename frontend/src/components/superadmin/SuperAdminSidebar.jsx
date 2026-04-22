@@ -12,7 +12,8 @@ import {
   ChevronDown,
   ChevronRight,
   MapPin,
-  Bike
+  Bike,
+  Settings as SettingsIcon
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -35,7 +36,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
     },
     { name: "Delivery Boys", path: "/admin/delivery-boys", icon: Bike },
     { name: "Tracking", path: "/admin/tracking", icon: MapPin },
-    { name: "Settings", path: "/admin/settings", icon: Tags },
+    { name: "Settings", path: "/admin/settings", icon: SettingsIcon },
   ];
 
   return (

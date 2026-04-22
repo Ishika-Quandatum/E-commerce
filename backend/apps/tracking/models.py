@@ -26,7 +26,7 @@ class RiderProfile(models.Model):
 
 class Shipment(models.Model):
     STATUS_CHOICES = [
-        ('Pending Assignment', 'Pending Assignment'),
+        ('Dispatch Queue', 'Dispatch Queue'),
         ('Assigned', 'Assigned'),
         ('Dispatched', 'Dispatched'),
         ('In Transit', 'In Transit'),

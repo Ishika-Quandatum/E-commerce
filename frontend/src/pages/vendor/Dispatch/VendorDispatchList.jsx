@@ -25,7 +25,7 @@ const VendorDispatchList = () => {
     const [stats, setStats] = useState({});
     const [riders, setRiders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("Pending Assignment");
+    const [activeTab, setActiveTab] = useState("Dispatch Queue");
     
     // Modals state
     const [activeShipmentId, setActiveShipmentId] = useState(null);
@@ -34,7 +34,7 @@ const VendorDispatchList = () => {
     const [selectedShipment, setSelectedShipment] = useState(null);
 
     const tabs = [
-        { id: "Pending Assignment", label: "Queue", icon: <Clock size={16} />, color: "bg-amber-500" },
+        { id: "Dispatch Queue", label: "Queue", icon: <Clock size={16} />, color: "bg-amber-500" },
         { id: "Assigned", label: "Assigned", icon: <UserPlus size={16} />, color: "bg-indigo-500" },
         { id: "In Transit", label: "In Transit", icon: <Truck size={16} />, color: "bg-blue-500" },
         { id: "Delivered", label: "Delivered", icon: <CheckCircle2 size={16} />, color: "bg-emerald-500" },
@@ -47,7 +47,7 @@ const VendorDispatchList = () => {
             const [shipRes, statsRes, ridersRes] = await Promise.all([
                 api.get('tracking/shipments/'),
                 api.get('tracking/shipments/dashboard_stats/'),
-                api.get('tracking/available_riders/')
+                api.get('tracking/riders/available_riders/')
             ]);
             setShipments(shipRes.data);
             setStats(statsRes.data);
@@ -94,7 +94,7 @@ const VendorDispatchList = () => {
 
     const confirmDispatch = async (weight) => {
         try {
-            await api.post(`tracking/shipments/${selectedShipment.id}/dispatch/`, { parcel_weight: weight });
+            await api.post(`tracking/shipments/${selectedShipment.id}/finalize_dispatch/`, { parcel_weight: weight });
             setShowDispatchModal(false);
             fetchData();
         } catch (err) {
@@ -231,7 +231,7 @@ const VendorDispatchList = () => {
                                         </div>
 
                                         <div className="flex flex-row md:flex-col items-center justify-center gap-3 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-slate-100 md:pl-8 min-w-[200px]">
-                                            {shipment.status === 'Pending Assignment' && (
+                                            {shipment.status === 'Dispatch Queue' && (
                                                 <>
                                                     <button 
                                                         onClick={() => handleAutoAssign(shipment.id)}

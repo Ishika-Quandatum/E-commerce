@@ -15,13 +15,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { adminService } from "../../services/api";
 
 const MyOrders = () => {
-    const [activeTab, setActiveTab] = useState("Accepted");
+    const [activeTab, setActiveTab] = useState("Assigned");
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const tabs = [
         { id: "New", label: "New Tasks", icon: <Package size={18} /> },
-        { id: "Accepted", label: "Assigned", icon: <CheckCircle2 size={18} /> },
+        { id: "Assigned", label: "Assigned", icon: <CheckCircle2 size={18} /> },
         { id: "Picked Up", label: "In Transit", icon: <Truck size={18} /> },
         { id: "Delivered", label: "Completed", icon: <CheckCircle2 size={18} /> },
     ];
@@ -97,13 +97,13 @@ const MyOrders = () => {
                         [1,2,3,4].map(i => (
                             <div key={i} className="bg-white h-64 rounded-[32px] animate-pulse border border-slate-100" />
                         ))
-                    ) : orders.length === 0 ? (
+                    ) : orders.filter(o => o.status === activeTab).length === 0 ? (
                         <div className="col-span-full py-20 bg-white rounded-[32px] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
                             <Package size={64} className="mb-4 opacity-10" />
                             <p className="font-bold text-lg text-slate-500">No orders in this category</p>
                             <p className="text-sm">New assignments will appear here automatically.</p>
                         </div>
-                    ) : orders.map((order, idx) => (
+                    ) : orders.filter(o => o.status === activeTab).map((order, idx) => (
                         <motion.div
                             layout
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -173,7 +173,7 @@ const MyOrders = () => {
                                     <Phone size={18} /> Call
                                 </a>
                                 
-                                {activeTab === "Accepted" && (
+                                {activeTab === "Assigned" && (
                                     <button 
                                         onClick={() => handleAction(order.id, 'Picked Up')}
                                         className="flex-[2] bg-brand-orange hover:bg-brand-orange-hover text-white px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-orange/20 active:scale-95"
@@ -201,7 +201,7 @@ const MyOrders = () => {
                                         </button>
                                         <button 
                                             className="flex-[3] bg-brand-blue text-white p-4 rounded-2xl font-bold shadow-lg shadow-brand-blue/20"
-                                            onClick={() => handleAction(order.id, 'Accepted')}
+                                            onClick={() => handleAction(order.id, 'Assigned')}
                                         >
                                             Accept Order
                                         </button>

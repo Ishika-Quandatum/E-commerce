@@ -73,6 +73,7 @@ const AdminOrderList = () => {
               <tr>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
@@ -92,7 +93,9 @@ const AdminOrderList = () => {
                           ? `${o.user?.first_name || ''} ${o.user?.last_name || ''}`.trim() 
                           : o.user?.username || "Anonymous User"}
                       </div>
-                      <div className="text-xs text-gray-500">{o.user?.email || `User #${o.user?.id || '?'}`}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {o.user?.email || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(o.created_at || new Date()).toLocaleDateString()}

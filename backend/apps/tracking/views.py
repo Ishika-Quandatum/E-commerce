@@ -32,7 +32,7 @@ class ShipmentViewSet(viewsets.ModelViewSet):
     def update_dispatch_status(self, request, pk=None):
         shipment = self.get_object()
         new_status = request.data.get('status')
-        valid_statuses = ['Pending', 'Packed', 'Ready for Dispatch', 'Assigned']
+        valid_statuses = ['Pending', 'Packed', 'Dispatch Queue', 'Assigned', 'Picked Up', 'Dispatched', 'In Transit', 'Reached', 'Delivered']
         
         if new_status in valid_statuses:
             shipment.status = new_status
@@ -50,7 +50,7 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         vendor_shipments = self.get_queryset()
         
         stats = {
-            'pending_assignment': vendor_shipments.filter(status='Pending Assignment').count(),
+            'pending_assignment': vendor_shipments.filter(status='Dispatch Queue').count(),
             'assigned': vendor_shipments.filter(status='Assigned').count(),
             'in_transit': vendor_shipments.filter(status='In Transit').count(),
             'delivered': vendor_shipments.filter(status='Delivered').count(),
@@ -123,7 +123,7 @@ class ShipmentViewSet(viewsets.ModelViewSet):
 
 
     @action(detail=True, methods=['post'])
-    def dispatch(self, request, pk=None):
+    def finalize_dispatch(self, request, pk=None):
         shipment = self.get_object()
         parcel_weight = request.data.get('parcel_weight')
         
@@ -149,6 +149,11 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         if shipment.delivery_otp and shipment.delivery_otp == str(provided_otp):
             shipment.status = 'Delivered'
             shipment.save()
+            
+            # Sync Order Status to trigger payout
+            shipment.order.status = 'Delivered'
+            shipment.order.save()
+            
             TrackingHistory.objects.create(shipment=shipment, status='Delivered', description='Shipment delivered successfully')
             return Response({'status': 'Delivery Verified'})
         return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
