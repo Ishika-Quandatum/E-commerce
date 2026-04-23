@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api/';
+const API_BASE_URL = 'http://127.0.0.1:8000/api/';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -101,6 +101,13 @@ export const vendorService = {
 
   approve: (id) => api.post(`vendors/${id}/approve/`),
   reject: (id) => api.post(`vendors/${id}/reject/`),
+};
+
+export const riderService = {
+  getOpenQueue: () => api.get('tracking/shipments/open_queue/'),
+  acceptShipment: (id) => api.post(`tracking/shipments/${id}/accept_shipment/`),
+  updateStatus: (id, status) => api.patch(`tracking/shipments/${id}/update_dispatch_status/`, { status }),
+  markDelivered: (id) => api.post(`tracking/shipments/${id}/mark_delivered/`),
 };
 
 export const platformService = {

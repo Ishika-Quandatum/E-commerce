@@ -28,6 +28,57 @@ class ShipmentViewSet(viewsets.ModelViewSet):
             return queryset.filter(order__vendor__user=user)
         return queryset
 
+    @action(detail=False, methods=['get'])
+    def open_queue(self, request):
+        """Returns shipments that are ready for dispatch but have no rider assigned."""
+        queryset = Shipment.objects.filter(
+            status='Dispatch Queue',
+            rider__isnull=True
+        ).select_related('order', 'order__user').prefetch_related('order__items', 'order__items__product')
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def accept_shipment(self, request, pk=None):
+        """Atomic logic for a rider to claim an unassigned shipment."""
+        from django.db import transaction
+        
+        if request.user.role != 'rider':
+            return Response({'error': 'Only riders can accept shipments.'}, status=403)
+            
+        rider_profile = request.user.rider_profile
+        
+        try:
+            with transaction.atomic():
+                # Lock the shipment record to prevent race conditions
+                shipment = Shipment.objects.select_for_update().get(pk=pk)
+                
+                if shipment.rider is not None:
+                    return Response({'error': 'This shipment has already been claimed by another rider.'}, status=400)
+                
+                if shipment.status != 'Dispatch Queue':
+                    return Response({'error': 'This shipment is no longer available in the queue.'}, status=400)
+
+                # Assign and update
+                shipment.rider = rider_profile
+                shipment.status = 'Assigned'
+                shipment.save()
+                
+                # Sync Order
+                shipment.order.status = 'Accepted' 
+                shipment.order.save()
+
+                TrackingHistory.objects.create(
+                    shipment=shipment, 
+                    status='Assigned', 
+                    description=f'Claimed by rider {request.user.username}'
+                )
+                
+                return Response({'status': 'claimed', 'message': 'You have successfully accepted this task.'})
+        except Shipment.DoesNotExist:
+            return Response({'error': 'Shipment not found.'}, status=404)
+
     @action(detail=True, methods=['patch'])
     def update_dispatch_status(self, request, pk=None):
         shipment = self.get_object()
@@ -37,6 +88,15 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         if new_status in valid_statuses:
             shipment.status = new_status
             shipment.save()
+
+            # Sync Order Status
+            if new_status in ['Picked Up', 'In Transit', 'Dispatched']:
+                shipment.order.status = 'Shipped'
+                shipment.order.save()
+            elif new_status == 'Delivered':
+                shipment.order.status = 'Delivered'
+                shipment.order.save()
+
             TrackingHistory.objects.create(shipment=shipment, status=new_status, description=f'Shipment status updated to {new_status}')
             return Response({'status': 'updated', 'new_status': shipment.status})
         return Response({'error': 'Invalid status transition'}, status=400)
@@ -143,20 +203,31 @@ class ShipmentViewSet(viewsets.ModelViewSet):
 
 
     @action(detail=True, methods=['post'])
-    def verify_delivery(self, request, pk=None):
+    def mark_delivered(self, request, pk=None):
+        """Simple delivery confirmation with SMS notification to the customer."""
         shipment = self.get_object()
-        provided_otp = request.data.get('otp')
-        if shipment.delivery_otp and shipment.delivery_otp == str(provided_otp):
-            shipment.status = 'Delivered'
-            shipment.save()
-            
-            # Sync Order Status to trigger payout
-            shipment.order.status = 'Delivered'
-            shipment.order.save()
-            
-            TrackingHistory.objects.create(shipment=shipment, status='Delivered', description='Shipment delivered successfully')
-            return Response({'status': 'Delivery Verified'})
-        return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if shipment.status == 'Delivered':
+            return Response({'status': 'Already delivered'})
+
+        shipment.status = 'Delivered'
+        shipment.save()
+        
+        # Sync Order Status to trigger payout
+        shipment.order.status = 'Delivered'
+        shipment.order.save()
+        
+        TrackingHistory.objects.create(shipment=shipment, status='Delivered', description='Shipment delivered manually by rider')
+        
+        # SMS Simulation
+        customer_phone = shipment.order.phone
+        order_id = shipment.order.id
+        platform_name = "RainbowStore" # Fallback if context not available in backend
+        
+        print(f"\n[SMS SIMULATION] >>> Sent to {customer_phone}: Hello! Your order #{order_id} from {platform_name} has been successfully delivered by our partner. Enjoy your purchase!\n")
+
+        return Response({'status': 'Delivery Successful', 'sms_sent': True})
+
 
 class RiderViewSet(viewsets.ModelViewSet):
     queryset = RiderProfile.objects.all().select_related('user').prefetch_related('assigned_shipments')
@@ -197,7 +268,8 @@ class RiderViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role != 'rider':
             return Response({'error': 'Unauthorized'}, status=403)
-        tasks = Shipment.objects.filter(rider__user=user, status__in=['Assigned', 'Picked Up', 'In Transit', 'Reached'])
+        # Include 'Delivered' so Completed tab can show history
+        tasks = Shipment.objects.filter(rider__user=user, status__in=['Assigned', 'Picked Up', 'In Transit', 'Reached', 'Delivered'])
         return Response(ShipmentSerializer(tasks, many=True).data)
 
     def destroy(self, request, *args, **kwargs):

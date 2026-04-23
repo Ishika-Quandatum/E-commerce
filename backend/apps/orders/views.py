@@ -100,32 +100,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
 
         # Logic: Create VendorPayout when order is marked as 'Delivered'
-        if new_status == 'Delivered' and order.status != 'Delivered':
-            from apps.payments.models import VendorPayout
-            import uuid
-            
-            # Check if payout already exists to prevent duplicates
-            if not VendorPayout.objects.filter(order=order).exists():
-                product_amount = order.total_price  # Sale amount
-                vendor = order.vendor
-                commission_rate = vendor.commission_rate
-                commission_amount = (product_amount * commission_rate) / 100
-                final_amount = product_amount - commission_amount
-                
-                payout_id = f"PAY-{uuid.uuid4().hex[:8].upper()}"
-                
-                VendorPayout.objects.create(
-                    transaction_id=payout_id,
-                    vendor=vendor,
-                    order=order,
-                    product_amount=product_amount,
-                    total_amount=product_amount,
-                    commission_rate=commission_rate,
-                    commission_amount=commission_amount,
-                    final_amount=final_amount,
-                    status='Pending'
-                )
-
+        # Note: We rely on order.save() which triggers create_vendor_payout in the model save method.
         order.status = new_status
         order.save()
         return Response(OrderSerializer(order).data)

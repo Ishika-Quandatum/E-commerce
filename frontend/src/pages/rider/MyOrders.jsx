@@ -12,7 +12,8 @@ import {
   ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { adminService } from "../../services/api";
+import { adminService, riderService } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 const MyOrders = () => {
     const [activeTab, setActiveTab] = useState("Assigned");
@@ -33,8 +34,12 @@ const MyOrders = () => {
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            // In a real app, we'd filter by status on the backend
-            const res = await adminService.getRiderTasks();
+            let res;
+            if (activeTab === "New") {
+                res = await riderService.getOpenQueue();
+            } else {
+                res = await adminService.getRiderTasks();
+            }
             setOrders(res.data);
         } catch (err) {
             console.error("Error fetching tasks", err);
@@ -45,10 +50,21 @@ const MyOrders = () => {
 
     const handleAction = async (id, status) => {
         try {
-            await adminService.updateShipmentStatus(id, status);
+            if (activeTab === "New" && status === "Assigned") {
+                await riderService.acceptShipment(id);
+                setActiveTab("Assigned"); // Move to Assigned tab
+            } else if (status === "Delivered") {
+                await riderService.markDelivered(id);
+                setActiveTab("Delivered"); // Move to Completed tab
+            } else if (status === "Picked Up") {
+                await riderService.updateStatus(id, "In Transit");
+                setActiveTab("Picked Up"); // Move to In Transit tab
+            } else {
+                await riderService.updateStatus(id, status);
+            }
             fetchOrders();
         } catch (err) {
-            alert("Failed to update status");
+            alert(err.response?.data?.error || "Failed to update status");
         }
     };
 
@@ -97,13 +113,25 @@ const MyOrders = () => {
                         [1,2,3,4].map(i => (
                             <div key={i} className="bg-white h-64 rounded-[32px] animate-pulse border border-slate-100" />
                         ))
-                    ) : orders.filter(o => o.status === activeTab).length === 0 ? (
+                    ) : orders.filter(o => {
+                        if (activeTab === "New") return true; // open_queue returns only new tasks
+                        if (activeTab === "Assigned") return o.status === "Assigned";
+                        if (activeTab === "Picked Up") return o.status === "In Transit" || o.status === "Picked Up";
+                        if (activeTab === "Delivered") return o.status === "Delivered";
+                        return false;
+                    }).length === 0 ? (
                         <div className="col-span-full py-20 bg-white rounded-[32px] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
                             <Package size={64} className="mb-4 opacity-10" />
                             <p className="font-bold text-lg text-slate-500">No orders in this category</p>
                             <p className="text-sm">New assignments will appear here automatically.</p>
                         </div>
-                    ) : orders.filter(o => o.status === activeTab).map((order, idx) => (
+                    ) : orders.filter(o => {
+                        if (activeTab === "New") return true;
+                        if (activeTab === "Assigned") return o.status === "Assigned";
+                        if (activeTab === "Picked Up") return o.status === "In Transit" || o.status === "Picked Up";
+                        if (activeTab === "Delivered") return o.status === "Delivered";
+                        return false;
+                    }).map((order, idx) => (
                         <motion.div
                             layout
                             initial={{ opacity: 0, scale: 0.95 }}

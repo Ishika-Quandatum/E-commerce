@@ -22,7 +22,7 @@ const OrderList = () => {
   const [activeTab, setActiveTab] = useState("All");
   const navigate = useNavigate();
 
-  const tabs = ["All", "Pending", "Packed", "Ready for Dispatch", "Shipped", "Delivered", "Cancelled"];
+  const tabs = ["All", "Pending", "Packed", "Dispatch Queue", "Shipped", "Delivered", "Cancelled"];
 
   useEffect(() => {
     fetchOrders();
@@ -63,7 +63,7 @@ const OrderList = () => {
     switch (status) {
       case 'Delivered': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'Shipped': return 'bg-blue-50 text-blue-600 border-blue-100';
-      case 'Dispatch Queue': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+      case 'Dispatch Queue': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'Packed': return 'bg-amber-50 text-amber-600 border-amber-100';
       case 'Processing': return 'bg-sky-50 text-sky-600 border-sky-100';
       case 'Pending': return 'bg-rose-50 text-rose-600 border-rose-100';

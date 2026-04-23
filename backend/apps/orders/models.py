@@ -46,7 +46,10 @@ class Order(models.Model):
         if VendorPayout.objects.filter(order=self).exists():
             return
 
-        commission_rate = self.vendor.commission_rate
+        from apps.core.models import PlatformSetting
+        platform_settings = PlatformSetting.get_settings()
+        
+        commission_rate = platform_settings.global_commission
         product_amount = self.total_price # Simple case: total price belongs to vendor
         commission_amount = (product_amount * commission_rate) / 100
         final_amount = product_amount - commission_amount
