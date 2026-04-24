@@ -15,9 +15,6 @@ const App = () => {
       <Navbar />
 
       <Routes>
-        {/* Customer routes */}
-        <Route path="/*" element={<CustomerRoutes />} />
-        
         {/* Delivery Login (Rider) */}
         <Route path="/delivery/login" element={<DeliveryLogin />} />
 
@@ -29,6 +26,9 @@ const App = () => {
 
         {/* Rider routes */}
         <Route path="/rider/*" element={<RiderRoutes />} />
+
+        {/* Customer routes (Catch-all) */}
+        <Route path="/*" element={<CustomerRoutes />} />
       </Routes>
 
       <Footer />

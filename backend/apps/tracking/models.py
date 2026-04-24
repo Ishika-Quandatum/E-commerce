@@ -95,10 +95,71 @@ class RiderWallet(models.Model):
     current_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     pending_payout = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    pending_cod_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00) # Cash rider has collected but not given to admin
+    shortage_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Wallet: {self.rider.user.username} (${self.current_balance})"
+        return f"Wallet: {self.rider.user.username} (Bal: {self.current_balance}, COD: {self.pending_cod_amount})"
+
+
+class CODCollection(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending Submission'),
+        ('Submitted', 'Submitted to Admin'),
+        ('Disputed', 'Disputed/Shortage'),
+    ]
+    
+    shipment = models.OneToOneField(Shipment, on_delete=models.CASCADE, related_name='cod_collection')
+    rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE, related_name='cod_collections')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    collected_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    admin_notes = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"COD: {self.amount} for {self.shipment.tracking_number}"
+
+
+class RiderSettlement(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Paid', 'Paid'),
+    ]
+    
+    rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE, related_name='settlements')
+    month = models.DateField() # Store as first of the month
+    total_deliveries = models.IntegerField(default=0)
+    base_salary = models.DecimalField(max_digits=10, decimal_places=2)
+    incentives = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    bonus = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    final_payable = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    paid_at = models.DateTimeField(null=True, blank=True)
+    payment_method = models.CharField(max_length=50, blank=True)
+    
+    def __str__(self):
+        return f"Settlement: {self.rider.user.username} - {self.month.strftime('%B %Y')}"
+
+
+class RiderFinancialLog(models.Model):
+    TYPE_CHOICES = [
+        ('Incentive', 'Delivery Incentive'),
+        ('Bonus', 'Performance Bonus'),
+        ('Deduction', 'Deduction/Shortage'),
+        ('Adjustment', 'Manual Adjustment'),
+    ]
+    
+    rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE, related_name='financial_logs')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    log_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    description = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.log_type}: {self.amount} for {self.rider.user.username}"
 
 
 class Transaction(models.Model):

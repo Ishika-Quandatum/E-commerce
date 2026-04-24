@@ -24,8 +24,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !error.config.url.includes('login')) {
-      console.warn("Unauthorized - token may be invalid");
+    if (error.response?.status === 401) {
+      const hasToken = localStorage.getItem('access_token');
+      
+      if (hasToken && !window.location.pathname.includes('/login')) {
+        console.warn("Unauthorized - Session expired. Clearing session.");
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.reload(); // Reload to clear state
+      }
     }
     return Promise.reject(error);
   }
@@ -86,6 +93,10 @@ export const adminService = {
   updateShipmentStatus: (id, status) => api.patch(`tracking/shipments/${id}/update_dispatch_status/`, { status }),
 };
 
+export const trackingService = {
+  getGlobalTrackingSummary: () => api.get('tracking/shipments/tracking_summary/'),
+};
+
 export const paymentService = {
   getPayments: (params) => api.get('payments/', { params }),
   updatePaymentStatus: (id, status) => api.patch(`payments/${id}/update_status/`, { status }),
@@ -93,6 +104,13 @@ export const paymentService = {
   bulkExportPayments: () => api.get('payments/bulk_export/', { responseType: 'blob' }),
   getVendorPayouts: (params) => api.get('payments/vendor-payouts/', { params }),
   updatePayoutStatus: (id) => api.post(`payments/vendor-payouts/${id}/mark_as_paid/`),
+  
+  // Rider Finance
+  getCODCollections: (params) => api.get('tracking/cod-collections/', { params }),
+  submitCOD: (id) => api.post(`tracking/cod-collections/${id}/mark_submitted/`),
+  getRiderFinancialLogs: (params) => api.get('tracking/financial-logs/', { params }),
+  getRiderSettlements: (params) => api.get('tracking/settlements/', { params }),
+  payRider: (id, data) => api.post(`tracking/settlements/${id}/pay_rider/`, data),
 };
 
 export const vendorService = {
@@ -104,6 +122,7 @@ export const vendorService = {
 };
 
 export const riderService = {
+  getRiders: (params) => api.get('tracking/riders/', { params }),
   getOpenQueue: () => api.get('tracking/shipments/open_queue/'),
   acceptShipment: (id) => api.post(`tracking/shipments/${id}/accept_shipment/`),
   updateStatus: (id, status) => api.patch(`tracking/shipments/${id}/update_dispatch_status/`, { status }),

@@ -1,10 +1,14 @@
 from rest_framework import serializers
-from .models import RiderProfile, Shipment, TrackingHistory, Attendance, RiderWallet, SalaryConfiguration, Transaction
+from .models import (
+    RiderProfile, Shipment, TrackingHistory, Attendance, RiderWallet, 
+    SalaryConfiguration, Transaction, CODCollection, RiderSettlement, RiderFinancialLog
+)
 from apps.users.serializers import UserSerializer
 
 class RiderProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     assigned_orders_count = serializers.SerializerMethodField()
+    rider_name = serializers.ReadOnlyField(source='user.get_full_name')
 
     class Meta:
         model = RiderProfile
@@ -12,6 +16,42 @@ class RiderProfileSerializer(serializers.ModelSerializer):
     
     def get_assigned_orders_count(self, obj):
         return obj.assigned_shipments.count()
+
+
+class CODCollectionSerializer(serializers.ModelSerializer):
+    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
+    customer_name = serializers.SerializerMethodField()
+    tracking_number = serializers.ReadOnlyField(source='shipment.tracking_number')
+    order_id = serializers.ReadOnlyField(source='shipment.order.id')
+    payment_method = serializers.ReadOnlyField(source='shipment.order.payment_method')
+
+    class Meta:
+        model = CODCollection
+        fields = '__all__'
+
+    def get_customer_name(self, obj):
+        user = obj.shipment.order.user
+        return f"{user.first_name} {user.last_name}" if user.first_name else user.username
+
+
+class RiderSettlementSerializer(serializers.ModelSerializer):
+    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
+    month_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RiderSettlement
+        fields = '__all__'
+
+    def get_month_display(self, obj):
+        return obj.month.strftime('%B %Y')
+
+
+class RiderFinancialLogSerializer(serializers.ModelSerializer):
+    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
+
+    class Meta:
+        model = RiderFinancialLog
+        fields = '__all__'
 
 class AdminRiderSerializer(serializers.ModelSerializer):
     """
@@ -117,6 +157,8 @@ class ShipmentSerializer(serializers.ModelSerializer):
     customer_name = serializers.SerializerMethodField()
     product_summary = serializers.SerializerMethodField()
     address = serializers.ReadOnlyField(source='order.address')
+    phone = serializers.ReadOnlyField(source='order.phone')
+    payment_method = serializers.ReadOnlyField(source='order.payment_method')
     order_id = serializers.ReadOnlyField(source='order.id')
     
     class Meta:

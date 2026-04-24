@@ -11,6 +11,9 @@ import AdminOrderList from "../pages/superadmin/Orders/AdminOrderList";
 import AdminPaymentList from "../pages/superadmin/Payments/AdminPaymentList";
 import CustomerTransactions from "../pages/superadmin/Payments/CustomerTransactions";
 import VendorTransactions from "../pages/superadmin/Payments/VendorTransactions";
+import CODCollections from "../pages/superadmin/Payments/CODCollections";
+import RiderTransactions from "../pages/superadmin/Payments/RiderTransactions";
+import RiderSettlements from "../pages/superadmin/Payments/RiderSettlements";
 import AdminUserList from "../pages/superadmin/Users/AdminUserList";
 import Settings from "../pages/superadmin/Settings";
 import TrackingDashboard from "../pages/superadmin/Tracking/TrackingDashboard";
@@ -43,6 +46,9 @@ const SuperAdminRoutes = () => {
         <Route path="payments" element={<AdminPaymentList />} />
         <Route path="payments/customers" element={<CustomerTransactions />} />
         <Route path="payments/vendors" element={<VendorTransactions />} />
+        <Route path="payments/cod-collections" element={<CODCollections />} />
+        <Route path="payments/rider-transactions" element={<RiderTransactions />} />
+        <Route path="payments/settlements" element={<RiderSettlements />} />
         <Route path="users" element={<AdminUserList />} />
         
         {/* Delivery Boy Management */}

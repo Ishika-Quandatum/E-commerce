@@ -22,17 +22,19 @@ const AnimatedRoute = ({ lat, lng }) => {
     return null;
 };
 
-const LiveMapOverlay = ({ lat, lng, popupText = "Rider's Live Location" }) => {
-  const defaultPosition = [28.6139, 77.2090]; // Default fallback location
+const LiveMapOverlay = ({ lat, lng, fleet = [], popupText = "Rider's Live Location", height = "400px", zoom = 13 }) => {
+  const defaultPosition = [28.6139, 77.2090]; // Default fallback location (New Delhi)
   const position = (lat && lng) ? [lat, lng] : defaultPosition;
 
   return (
-    <div className="w-full h-96 rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
-        <MapContainer center={position} zoom={13} scrollWheelZoom={false} className="h-full w-full">
+    <div style={{ height }} className="w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
+        <MapContainer center={position} zoom={zoom} scrollWheelZoom={false} className="h-full w-full">
             <TileLayer
                 attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            
+            {/* Single Rider Mode */}
             {(lat && lng) && (
                 <>
                     <AnimatedRoute lat={lat} lng={lng} />
@@ -43,6 +45,25 @@ const LiveMapOverlay = ({ lat, lng, popupText = "Rider's Live Location" }) => {
                     </Marker>
                 </>
             )}
+
+            {/* Fleet Mode (Global Dashboard) */}
+            {fleet && fleet.length > 0 && fleet.map((rider) => (
+                <Marker 
+                    key={rider.id} 
+                    position={[rider.current_lat, rider.current_lng]}
+                >
+                    <Popup>
+                        <div className="p-1">
+                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Active Rider</p>
+                            <p className="text-sm font-black text-slate-900 mb-2">{rider.user?.get_full_name || rider.user?.username}</p>
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">Live Signal</span>
+                            </div>
+                        </div>
+                    </Popup>
+                </Marker>
+            ))}
         </MapContainer>
     </div>
   );

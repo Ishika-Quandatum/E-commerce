@@ -1,16 +1,19 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Shipment, RiderProfile, TrackingHistory, Attendance, RiderWallet, SalaryConfiguration, Transaction
+from .models import (
+    Shipment, RiderProfile, TrackingHistory, Attendance, RiderWallet, 
+    SalaryConfiguration, Transaction, CODCollection, RiderSettlement, RiderFinancialLog
+)
 from .serializers import (
     ShipmentSerializer, RiderProfileSerializer, AdminRiderSerializer,
-    AttendanceSerializer, RiderWalletSerializer, SalaryConfigurationSerializer
+    AttendanceSerializer, RiderWalletSerializer, SalaryConfigurationSerializer,
+    CODCollectionSerializer, RiderSettlementSerializer, RiderFinancialLogSerializer
 )
 import random
 from django.utils import timezone
 from decimal import Decimal
 import math
-from .models import RiderProfile
 
 class ShipmentViewSet(viewsets.ModelViewSet):
     queryset = Shipment.objects.all()
@@ -118,6 +121,21 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         }
         return Response(stats)
 
+    @action(detail=False, methods=['get'])
+    def tracking_summary(self, request):
+        """Stats for Global Tracking Dashboard (Super Admin)"""
+        active_riders = RiderProfile.objects.filter(availability_status='Online', is_active=True).count()
+        
+        in_transit = Shipment.objects.filter(status__in=['Picked Up', 'Out for Delivery', 'In Transit', 'Dispatched']).count()
+        
+        failed_delayed = Shipment.objects.filter(status__in=['Failed Delivery', 'Delayed', 'Returned', 'Delivery Attempt Failed']).count()
+        
+        return Response({
+            'active_riders': active_riders,
+            'in_transit_orders': in_transit,
+            'failed_delayed_orders': failed_delayed
+        })
+
 
     @action(detail=True, methods=['post'])
     def assign_rider(self, request, pk=None):
@@ -224,6 +242,26 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         order_id = shipment.order.id
         platform_name = "RainbowStore" # Fallback if context not available in backend
         
+        # COD Collection Logic
+        p_method = shipment.order.payment_method.lower()
+        if 'cod' in p_method or 'cash' in p_method:
+            # Create COD Collection record
+            cod, created = CODCollection.objects.get_or_create(
+                shipment=shipment,
+                rider=shipment.rider,
+                defaults={'amount': shipment.order.total_price}
+            )
+            
+            # Update Rider Wallet pending amount
+            try:
+                wallet = shipment.rider.wallet
+                wallet.pending_cod_amount += shipment.order.total_price
+                wallet.save()
+            except RiderWallet.DoesNotExist:
+                print(f"[ERROR] Rider {shipment.rider.user.username} has no wallet.")
+            
+            print(f"[COD] Recorded {shipment.order.total_price} for Rider {shipment.rider.user.username}")
+
         print(f"\n[SMS SIMULATION] >>> Sent to {customer_phone}: Hello! Your order #{order_id} from {platform_name} has been successfully delivered by our partner. Enjoy your purchase!\n")
 
         return Response({'status': 'Delivery Successful', 'sms_sent': True})
@@ -353,3 +391,62 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         rider.save()
         
         return Response(AttendanceSerializer(attendance).data)
+class CODCollectionViewSet(viewsets.ModelViewSet):
+    queryset = CODCollection.objects.all().select_related('rider__user', 'shipment__order')
+    serializer_class = CODCollectionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=True, methods=['post'])
+    def mark_submitted(self, request, pk=None):
+        cod = self.get_object()
+        if cod.status == 'Submitted':
+            return Response({'error': 'Already submitted'}, status=400)
+            
+        cod.status = 'Submitted'
+        cod.submitted_at = timezone.now()
+        cod.save()
+        
+        # Update Rider Wallet
+        try:
+            wallet = cod.rider.wallet
+            wallet.pending_cod_amount -= cod.amount
+            wallet.save()
+        except RiderWallet.DoesNotExist:
+            print(f"[ERROR] Rider {cod.rider.user.username} has no wallet.")
+        
+        return Response({'status': 'Payment submitted to Admin'})
+
+class RiderSettlementViewSet(viewsets.ModelViewSet):
+    queryset = RiderSettlement.objects.all().select_related('rider__user')
+    serializer_class = RiderSettlementSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=True, methods=['post'])
+    def pay_rider(self, request, pk=None):
+        settlement = self.get_object()
+        if settlement.status == 'Paid':
+            return Response({'error': 'Already paid'}, status=400)
+            
+        settlement.status = 'Paid'
+        settlement.paid_at = timezone.now()
+        settlement.payment_method = request.data.get('method', 'Bank Transfer')
+        settlement.save()
+        
+        # Log to Wallet
+        wallet = settlement.rider.wallet
+        wallet.total_earned += settlement.final_payable
+        wallet.save()
+        
+        Transaction.objects.create(
+            wallet=wallet,
+            amount=settlement.final_payable,
+            transaction_type='Debit', # Payout is a debit from platform to rider
+            description=f"Monthly Settlement for {settlement.month.strftime('%B %Y')}"
+        )
+        
+        return Response({'status': 'Settlement completed'})
+
+class RiderFinancialLogViewSet(viewsets.ModelViewSet):
+    queryset = RiderFinancialLog.objects.all().select_related('rider__user')
+    serializer_class = RiderFinancialLogSerializer
+    permission_classes = [permissions.IsAuthenticated]

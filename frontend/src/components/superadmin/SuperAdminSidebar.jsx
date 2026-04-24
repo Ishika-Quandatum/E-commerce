@@ -34,6 +34,9 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
       subItems: [
         { name: "Customer Transactions", path: "/admin/payments/customers" },
         { name: "Vendor Transactions", path: "/admin/payments/vendors" },
+        { name: "COD Collections", path: "/admin/payments/cod-collections" },
+        { name: "Rider Transactions", path: "/admin/payments/rider-transactions" },
+        { name: "Settlements", path: "/admin/payments/settlements" },
       ]
     },
     { name: "Delivery Boys", path: "/admin/delivery-boys", icon: Bike },

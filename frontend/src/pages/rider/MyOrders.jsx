@@ -179,7 +179,7 @@ const MyOrders = () => {
                                         <Package size={18} className="text-slate-400" />
                                         <div className="overflow-hidden">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter truncate">Payment</p>
-                                            <p className="text-xs font-bold text-slate-700">COD</p>
+                                            <p className="text-xs font-bold text-slate-700">{order.payment_method || 'COD'}</p>
                                         </div>
                                     </div>
                                     <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3">

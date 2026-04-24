@@ -55,6 +55,8 @@ useEffect(() => {
       navigate("/admin", { replace: true });
     } else if (user?.role === "vendor") {
       navigate("/vendor", { replace: true });
+    } else if (user?.role === "rider") {
+      navigate("/rider", { replace: true });
     } else {
       navigate("/", { replace: true });
     }
