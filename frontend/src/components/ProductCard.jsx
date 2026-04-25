@@ -23,28 +23,27 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+    <div className="group bg-white rounded-3xl border border-slate-200 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
       
-      <div className="relative aspect-square overflow-hidden bg-slate-50">
+      <div className="relative aspect-square overflow-hidden bg-brand-soft-gray">
         <img 
           src={product.primary_image || product.images?.[0]?.image || 'https://placehold.co/400'} 
           alt={product.name} 
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
 
         {product.discount_price && product.discount_price < product.price && (
-          <div className="absolute top-4 left-4 bg-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg shadow-rose-500/30 uppercase tracking-tighter">
+          <div className="absolute top-4 left-4 bg-brand-pink text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg shadow-brand-pink/20 uppercase tracking-widest">
             {product.discount_percentage}% OFF
           </div>
         )}
 
-        {/* Buttons */}
-        <div className="absolute bottom-4 left-0 right-0 px-4 transition-transform">
+        {/* Action Buttons Overlay */}
+        <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 bg-gradient-to-t from-white/80 backdrop-blur-sm">
           <div className="flex gap-2">
-            
             <button 
               onClick={() => handleAddToCart(product.id)}
-              className="flex-1 bg-white hover:bg-blue-600 hover:text-white h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold shadow-lg"
+              className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white h-11 rounded-xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest shadow-xl shadow-brand-purple/20 transition-all active:scale-95"
             >
               <ShoppingCart size={16} />
               Add to Cart
@@ -52,35 +51,34 @@ const ProductCard = ({ product }) => {
 
             <Link 
               to={`/products/${product.id}`}
-              className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-lg"
+              className="w-11 h-11 bg-brand-purple-light text-brand-purple rounded-xl flex items-center justify-center shadow-lg hover:bg-brand-purple hover:text-white transition-all"
             >
               <Eye size={18} />
             </Link>
-
           </div>
         </div>
       </div>
 
       {/* Details */}
-      <div className="p-4">
-        <div className="flex items-center gap-1 text-yellow-400 mb-2">
+      <div className="p-6">
+        <div className="flex items-center gap-1 text-brand-orange mb-3">
           <Star size={14} fill="currentColor" />
-          <span className="text-xs">{product.rating || '4.5'}</span>
+          <span className="text-xs font-black">{product.rating || '4.5'}</span>
         </div>
 
         <Link to={`/products/${product.id}`}>
-          <h3 className="font-bold">{product.name}</h3>
+          <h3 className="font-black text-brand-navy group-hover:text-brand-purple transition-colors line-clamp-1">{product.name}</h3>
         </Link>
 
-        <p className="text-sm text-gray-500">{product.category_name}</p>
+        <p className="text-[10px] font-black text-brand-text-gray uppercase tracking-widest mt-1">{product.category_name}</p>
 
-        <div className="flex items-baseline gap-2 mt-2">
-          <span className="font-black text-slate-900 text-lg">
+        <div className="flex items-baseline gap-2 mt-4">
+          <span className="font-black text-brand-purple text-xl tracking-tighter">
             ₹{(product.discount_price && product.discount_price < product.price ? product.discount_price : product.price).toLocaleString()}
           </span>
 
           {product.discount_price && product.discount_price < product.price && (
-            <span className="line-through text-slate-300 text-xs font-bold">
+            <span className="line-through text-slate-300 text-sm font-bold">
               ₹{product.price.toLocaleString()}
             </span>
           )}

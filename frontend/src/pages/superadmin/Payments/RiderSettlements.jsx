@@ -10,7 +10,10 @@ import {
   FileText,
   DollarSign,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Clock,
+  TrendingUp,
+  AlertCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { paymentService } from "../../../services/api";
@@ -21,6 +24,7 @@ const RiderSettlements = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [runPayrollLoading, setRunPayrollLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchSettlements = async () => {
@@ -42,22 +46,47 @@ const RiderSettlements = () => {
     fetchSettlements();
   }, [statusFilter, searchTerm]);
 
+  const handleRunPayroll = async () => {
+    if (!window.confirm("Run payroll for all active riders for the current month? This will generate settlement records.")) return;
+    
+    setRunPayrollLoading(true);
+    try {
+      await paymentService.runPayroll();
+      alert("Payroll generated successfully!");
+      fetchSettlements();
+    } catch (err) {
+      alert("Failed to run payroll");
+    } finally {
+      setRunPayrollLoading(false);
+    }
+  };
+
   const handlePayRider = async (id) => {
-    if (window.confirm("Confirm monthly salary payment? This will record the transaction and update the rider's earnings history.")) {
-        try {
-            await paymentService.payRider(id, { method: 'Bank Transfer' });
-            fetchSettlements();
-        } catch (err) {
-            console.error("Failed to process payment");
-        }
+    const method = window.prompt("Enter payment method (Bank Transfer / UPI / Cash):", "Bank Transfer");
+    if (!method) return;
+
+    try {
+        await paymentService.payRider(id, { method });
+        fetchSettlements();
+    } catch (err) {
+        alert("Failed to process payment");
     }
   };
 
   const totals = {
-      paid: settlements.filter(s => s.status === 'Paid').reduce((acc, curr) => acc + parseFloat(curr.final_payable), 0),
-      pending: settlements.filter(s => s.status === 'Pending').reduce((acc, curr) => acc + parseFloat(curr.final_payable), 0),
-      ridersCount: [...new Set(settlements.map(s => s.rider))].length
+      paid: settlements.filter(s => s.status === 'Paid').reduce((acc, curr) => acc + (parseFloat(curr.final_payable) || 0), 0),
+      pending: settlements.filter(s => s.status === 'Pending').reduce((acc, curr) => acc + (parseFloat(curr.final_payable) || 0), 0),
+      ridersCount: [...new Set(settlements.map(s => s.rider))].length,
+      totalIncentives: settlements.reduce((acc, curr) => acc + (parseFloat(curr.incentives) || 0), 0)
   };
+
+  if (loading && settlements.length === 0) {
+      return (
+          <div className="h-96 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
+          </div>
+      );
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-24">
@@ -71,8 +100,8 @@ const RiderSettlements = () => {
             <ArrowLeft size={24} className="text-slate-600" />
           </button>
           <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight font-title italic">Fleet <span className="text-brand-blue not-italic">Settlements</span></h1>
-            <p className="text-slate-500 font-bold mt-1">Manage monthly salaries, delivery incentives, and bonuses for riders.</p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight font-title italic tracking-tighter">Fleet <span className="text-brand-blue not-italic">Settlements</span></h1>
+            <p className="text-slate-500 font-bold mt-1">Execute payouts, manage monthly salaries and delivery incentives.</p>
           </div>
         </div>
         
@@ -80,8 +109,12 @@ const RiderSettlements = () => {
              <button className="flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
                 <FileText size={18} /> Bulk Payslips
              </button>
-             <button className="flex items-center gap-2 px-8 py-4 bg-brand-blue text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-brand-blue/20">
-                <Plus size={18} /> Run Payroll
+             <button 
+                onClick={handleRunPayroll}
+                disabled={runPayrollLoading}
+                className="flex items-center gap-2 px-8 py-4 bg-brand-blue text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-brand-blue/20 disabled:opacity-50"
+             >
+                <Plus size={18} /> {runPayrollLoading ? "Processing..." : "Run Payroll"}
              </button>
         </div>
       </div>
@@ -92,28 +125,28 @@ const RiderSettlements = () => {
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Current Month Payout</p>
               <h4 className="text-3xl font-black tracking-tighter text-slate-900">₹{(totals.paid + totals.pending).toLocaleString()}</h4>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                  <User size={12} /> {totals.ridersCount} Active Riders
+                  <User size={12} /> {totals.ridersCount} Riders Processed
               </div>
           </div>
           <div className="bg-emerald-50 rounded-[2.5rem] p-8 border border-emerald-100/50 shadow-sm">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600/60 mb-4">Total Paid</p>
               <h4 className="text-3xl font-black tracking-tighter text-emerald-700">₹{totals.paid.toLocaleString()}</h4>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">
-                  <CheckCircle2 size={12} /> Fully Settled
+                  <CheckCircle2 size={12} /> {settlements.filter(s => s.status === 'Paid').length} Fully Settled
               </div>
           </div>
           <div className="bg-amber-50 rounded-[2.5rem] p-8 border border-amber-100/50 shadow-sm">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/60 mb-4">Pending Payroll</p>
               <h4 className="text-3xl font-black tracking-tighter text-amber-700">₹{totals.pending.toLocaleString()}</h4>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-amber-600/60 uppercase tracking-widest">
-                  <Clock size={12} /> Ready for Payout
+                  <Clock size={12} /> {settlements.filter(s => s.status === 'Pending').length} Pending Payouts
               </div>
           </div>
           <div className="bg-indigo-50 rounded-[2.5rem] p-8 border border-indigo-100/50 shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60 mb-4">Est. Incentives</p>
-              <h4 className="text-3xl font-black tracking-tighter text-indigo-700">₹{settlements.reduce((acc, curr) => acc + parseFloat(curr.incentives), 0).toLocaleString()}</h4>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60 mb-4">Total Incentives</p>
+              <h4 className="text-3xl font-black tracking-tighter text-indigo-700">₹{totals.totalIncentives.toLocaleString()}</h4>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-indigo-600/60 uppercase tracking-widest">
-                  <TrendingUp size={12} className="inline mr-1" /> Performance Based
+                  <TrendingUp size={12} className="inline mr-1" /> Multi-tier Bonus
               </div>
           </div>
       </div>
@@ -191,6 +224,12 @@ const RiderSettlements = () => {
                             <span className="text-slate-400 uppercase tracking-tighter">Incentives</span>
                             <span className="text-emerald-500">+₹{parseFloat(s.incentives).toLocaleString()}</span>
                         </div>
+                        {parseFloat(s.bonus) > 0 && (
+                            <div className="flex justify-between w-48 text-[11px] font-bold">
+                                <span className="text-slate-400 uppercase tracking-tighter">Bonus</span>
+                                <span className="text-indigo-500">+₹{parseFloat(s.bonus).toLocaleString()}</span>
+                            </div>
+                        )}
                         <div className="flex justify-between w-48 text-[11px] font-bold border-t border-dashed border-slate-100 pt-1 mt-1">
                             <span className="text-rose-400 uppercase tracking-tighter">Deductions</span>
                             <span className="text-rose-500">-₹{parseFloat(s.deductions).toLocaleString()}</span>
@@ -199,7 +238,7 @@ const RiderSettlements = () => {
                   </td>
                   <td className="px-10 py-8">
                     <div className="text-center">
-                        <div className="text-xl font-black text-slate-900">₹{parseFloat(s.final_payable).toLocaleString()}</div>
+                        <div className="text-xl font-black text-slate-900 tracking-tighter">₹{parseFloat(s.final_payable).toLocaleString()}</div>
                         <span className={clsx(
                             "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest",
                             s.status === 'Paid' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
@@ -217,16 +256,19 @@ const RiderSettlements = () => {
                             Pay Rider <ArrowRight size={14} />
                         </button>
                     ) : (
-                        <button className="text-slate-400 hover:text-brand-blue transition-colors px-4 py-3 rounded-xl border border-slate-100 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 ml-auto">
-                            <FileText size={14} /> View Payslip
-                        </button>
+                        <div className="flex flex-col items-end">
+                            <button className="text-slate-400 hover:text-brand-blue transition-colors px-4 py-3 rounded-xl border border-slate-100 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 ml-auto">
+                                <FileText size={14} /> View Payslip
+                            </button>
+                            <span className="text-[9px] font-bold text-slate-300 mt-1 uppercase tracking-tighter italic">{s.payment_method}</span>
+                        </div>
                     )}
                   </td>
                 </tr>
               ))}
               {settlements.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="px-10 py-20 text-center text-slate-400 font-bold uppercase tracking-widest">No settlement records for this period.</td>
+                  <td colSpan="5" className="px-10 py-20 text-center text-slate-400 font-bold uppercase tracking-widest">No settlement records found. Click "Run Payroll" to generate.</td>
                 </tr>
               )}
             </tbody>

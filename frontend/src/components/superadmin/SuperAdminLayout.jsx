@@ -18,15 +18,15 @@ const SuperAdminLayout = () => {
 
   return (
     <div 
-      className="flex bg-slate-50 flex-col lg:flex-row min-h-screen antialiased text-slate-900" 
+      className="flex bg-slate-50 flex-col lg:flex-row h-screen overflow-hidden antialiased text-slate-900" 
       style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"' }}
     >
       
       <SuperAdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4 flex items-center justify-between sticky top-0 z-30">
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shrink-0">
           <div className="flex items-center gap-4">
             <button 
                 onClick={() => setIsSidebarOpen(true)}
@@ -60,7 +60,7 @@ const SuperAdminLayout = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-6 lg:p-10 bg-slate-50/50 overflow-x-hidden">
+        <main className="flex-1 p-6 lg:p-10 bg-slate-50/50 overflow-y-auto">
           <Outlet />   
         </main>
       </div>

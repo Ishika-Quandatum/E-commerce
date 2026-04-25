@@ -5,10 +5,30 @@ from .models import (
 )
 from apps.users.serializers import UserSerializer
 
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'
+
+
+class RiderWalletSerializer(serializers.ModelSerializer):
+    transactions = TransactionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = RiderWallet
+        fields = '__all__'
+
+class SalaryConfigurationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SalaryConfiguration
+        fields = '__all__'
+
 class RiderProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     assigned_orders_count = serializers.SerializerMethodField()
     rider_name = serializers.ReadOnlyField(source='user.get_full_name')
+    wallet = RiderWalletSerializer(read_only=True)
+    last_activity = serializers.SerializerMethodField()
 
     class Meta:
         model = RiderProfile
@@ -16,6 +36,10 @@ class RiderProfileSerializer(serializers.ModelSerializer):
     
     def get_assigned_orders_count(self, obj):
         return obj.assigned_shipments.count()
+
+    def get_last_activity(self, obj):
+        shipment = obj.assigned_shipments.order_by('-updated_at').first()
+        return shipment.updated_at if shipment else getattr(obj, 'join_date', None)
 
 
 class CODCollectionSerializer(serializers.ModelSerializer):
@@ -183,24 +207,4 @@ class ShipmentSerializer(serializers.ModelSerializer):
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance
-        fields = '__all__'
-
-
-class SalaryConfigurationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SalaryConfiguration
-        fields = '__all__'
-
-
-class TransactionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Transaction
-        fields = '__all__'
-
-
-class RiderWalletSerializer(serializers.ModelSerializer):
-    transactions = TransactionSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = RiderWallet
         fields = '__all__'

@@ -45,14 +45,20 @@ const CODCollections = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [statusFilter, searchTerm]);
 
-  const handleMarkSubmitted = async (id) => {
-    if (window.confirm("Confirm cash submission from rider? This will update the rider's pending balance.")) {
-        try {
-            await paymentService.submitCOD(id);
-            fetchCollections();
-        } catch (err) {
-            console.error("Failed to update COD status");
-        }
+  const handleMarkSubmitted = async (id, originalAmount) => {
+    const submittedAmount = window.prompt(`Enter exact amount handed over by rider (Collected from customer: ₹${originalAmount}):`, originalAmount);
+    if (submittedAmount === null) return;
+    
+    const notes = window.prompt("Admin Notes (Optional):", "");
+
+    try {
+        await paymentService.submitCOD(id, { 
+            submitted_amount: parseFloat(submittedAmount),
+            notes: notes
+        });
+        fetchCollections();
+    } catch (err) {
+        alert("Failed to update COD status: " + (err.response?.data?.error || "Server error"));
     }
   };
 
@@ -219,7 +225,8 @@ const CODCollections = () => {
                     <div className="flex justify-center">
                       <span className={clsx(
                         "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest",
-                        c.status === 'Submitted' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                        c.status === 'Submitted' ? "bg-emerald-50 text-emerald-600" : 
+                        c.status === 'Disputed' ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"
                       )}>
                         {c.status}
                       </span>
@@ -228,14 +235,25 @@ const CODCollections = () => {
                   <td className="px-10 py-8 text-right">
                     {c.status === 'Pending' ? (
                         <button 
-                            onClick={() => handleMarkSubmitted(c.id)}
+                            onClick={() => handleMarkSubmitted(c.id, c.amount)}
                             className="bg-brand-blue text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-brand-blue/20 active:scale-95"
                         >
                             Record Submission
                         </button>
                     ) : (
-                        <div className="flex items-center justify-end gap-2 text-emerald-500 font-black text-xs uppercase tracking-widest">
-                            <CheckCircle2 size={16} /> Verified
+                        <div className="flex flex-col items-end gap-1">
+                            <div className={clsx(
+                                "flex items-center gap-2 font-black text-xs uppercase tracking-widest",
+                                c.status === 'Disputed' ? "text-rose-500" : "text-emerald-500"
+                            )}>
+                                {c.status === 'Disputed' ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+                                {c.status === 'Disputed' ? 'Shortage' : 'Verified'}
+                            </div>
+                            {c.status === 'Disputed' && (
+                                <span className="text-[10px] font-bold text-rose-400 italic">
+                                    Deficit: ₹{(parseFloat(c.amount) - parseFloat(c.submitted_amount)).toLocaleString()}
+                                </span>
+                            )}
                         </div>
                     )}
                   </td>

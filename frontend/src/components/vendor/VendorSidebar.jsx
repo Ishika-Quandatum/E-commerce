@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Box, 
@@ -7,14 +7,23 @@ import {
   ShoppingBag, 
   CreditCard, 
   X,
-  Truck
+  Truck,
+  LogOut
 } from "lucide-react";
 import clsx from "clsx";
 import { usePlatform } from "../../context/PlatformContext";
+import { useAuth } from "../../context/AuthContext";
 
 const VendorSidebar = ({ isOpen, setIsOpen }) => {
   const { platformName } = usePlatform();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const menuItems = [
     { name: "Dashboard", path: "/vendor", icon: LayoutDashboard },
@@ -37,23 +46,23 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
       {/* Sidebar Content */}
       <div 
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 shadow-xl md:shadow-none transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 shadow-xl md:shadow-none transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0 flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center justify-between px-8 py-8 border-b border-slate-50">
-          <h2 className="text-xl font-black tracking-tight text-slate-900 italic uppercase">
-            {platformName}<span className="text-brand-blue not-italic border-l border-slate-200 ml-2 pl-2 tracking-widest text-[10px]">VENDOR</span>
+        <div className="flex items-center justify-between px-8 py-8 border-b border-slate-100 mb-4">
+          <h2 className="text-2xl font-black tracking-tighter text-brand-navy uppercase italic">
+            {platformName} <span className="text-brand-purple not-italic uppercase tracking-normal ml-1">Vendor</span>
           </h2>
           <button 
-            className="md:hidden p-2 rounded-xl hover:bg-slate-50 text-slate-400"
+            className="lg:hidden p-2 rounded-xl hover:bg-brand-soft-gray text-slate-400"
             onClick={() => setIsOpen(false)}
           >
             <X size={20} />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/vendor' && location.pathname.startsWith(item.path));
             const Icon = item.icon;
@@ -63,18 +72,28 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
                 to={item.path}
                 onClick={() => setIsOpen(false)}
                 className={clsx(
-                  "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm",
+                  "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm group",
                   isActive 
-                    ? "bg-brand-blue text-white shadow-xl shadow-brand-blue/20" 
-                    : "text-slate-500 hover:bg-slate-50 hover:text-brand-blue"
+                    ? "bg-brand-purple text-white shadow-xl shadow-brand-purple/20" 
+                    : "text-brand-navy/60 hover:bg-brand-purple-light hover:text-brand-purple"
                 )}
               >
-                <Icon size={20} className={clsx("transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-brand-blue")} />
+                <Icon size={20} className={clsx("transition-colors", isActive ? "text-white" : "text-brand-navy/40 group-hover:text-brand-purple")} />
                 <span>{item.name}</span>
               </Link>
             );
           })}
         </nav>
+
+        <div className="p-4 mt-auto">
+            <button 
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-brand-pink hover:bg-brand-pink/5 transition-all font-bold text-sm group"
+            >
+                <LogOut size={20} className="group-hover:rotate-12 transition-transform" />
+                <span>Logout</span>
+            </button>
+        </div>
       </div>
     </>
   );

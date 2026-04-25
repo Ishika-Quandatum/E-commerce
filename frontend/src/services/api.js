@@ -107,9 +107,10 @@ export const paymentService = {
   
   // Rider Finance
   getCODCollections: (params) => api.get('tracking/cod-collections/', { params }),
-  submitCOD: (id) => api.post(`tracking/cod-collections/${id}/mark_submitted/`),
+  submitCOD: (id, data) => api.post(`tracking/cod-collections/${id}/mark_submitted/`, data),
   getRiderFinancialLogs: (params) => api.get('tracking/financial-logs/', { params }),
   getRiderSettlements: (params) => api.get('tracking/settlements/', { params }),
+  runPayroll: (data) => api.post('tracking/settlements/run_payroll/', data),
   payRider: (id, data) => api.post(`tracking/settlements/${id}/pay_rider/`, data),
 };
 

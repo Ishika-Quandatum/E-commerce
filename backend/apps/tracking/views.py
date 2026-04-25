@@ -14,6 +14,7 @@ import random
 from django.utils import timezone
 from decimal import Decimal
 import math
+import datetime
 
 class ShipmentViewSet(viewsets.ModelViewSet):
     queryset = Shipment.objects.all()
@@ -256,6 +257,7 @@ class ShipmentViewSet(viewsets.ModelViewSet):
             try:
                 wallet = shipment.rider.wallet
                 wallet.pending_cod_amount += shipment.order.total_price
+                wallet.total_cod_collected += shipment.order.total_price
                 wallet.save()
             except RiderWallet.DoesNotExist:
                 print(f"[ERROR] Rider {shipment.rider.user.username} has no wallet.")
@@ -401,20 +403,41 @@ class CODCollectionViewSet(viewsets.ModelViewSet):
         cod = self.get_object()
         if cod.status == 'Submitted':
             return Response({'error': 'Already submitted'}, status=400)
-            
-        cod.status = 'Submitted'
+        
+        submitted_val = request.data.get('submitted_amount', cod.amount)
+        try:
+            submitted_val = Decimal(str(submitted_val))
+        except:
+            submitted_val = cod.amount
+
+        shortage = cod.amount - submitted_val
+        
+        cod.status = 'Submitted' if shortage <= 0 else 'Disputed'
+        cod.submitted_amount = submitted_val
         cod.submitted_at = timezone.now()
+        cod.admin_notes = request.data.get('notes', cod.admin_notes)
         cod.save()
         
         # Update Rider Wallet
         try:
             wallet = cod.rider.wallet
             wallet.pending_cod_amount -= cod.amount
+            wallet.total_cod_submitted += submitted_val
+            if shortage > 0:
+                wallet.shortage_amount += shortage
             wallet.save()
+
+            # Create Financial Log
+            RiderFinancialLog.objects.create(
+                rider=cod.rider,
+                amount=submitted_val,
+                log_type='Submission',
+                description=f"COD Submission for Order #{cod.shipment.order.id}. Collected: {cod.amount}, Submitted: {submitted_val}. Shortage: {shortage}"
+            )
         except RiderWallet.DoesNotExist:
-            print(f"[ERROR] Rider {cod.rider.user.username} has no wallet.")
+            return Response({'error': 'Rider wallet not found'}, status=400)
         
-        return Response({'status': 'Payment submitted to Admin'})
+        return Response({'status': 'Payment submitted to Admin', 'shortage': float(shortage)})
 
 class RiderSettlementViewSet(viewsets.ModelViewSet):
     queryset = RiderSettlement.objects.all().select_related('rider__user')
@@ -445,6 +468,62 @@ class RiderSettlementViewSet(viewsets.ModelViewSet):
         )
         
         return Response({'status': 'Settlement completed'})
+
+    @action(detail=False, methods=['post'])
+    def run_payroll(self, request):
+        """Calculates and generates settlement records for all active riders for a specific month."""
+        month_str = request.data.get('month') # Format YYYY-MM
+        if month_str:
+            from datetime import datetime
+            month_date = datetime.strptime(month_str + "-01", '%Y-%m-%d').date()
+        else:
+            month_date = timezone.now().date().replace(day=1)
+
+        riders = RiderProfile.objects.filter(is_active=True)
+        created_count = 0
+        
+        for rider in riders:
+            # 1. Get Config
+            config, _ = SalaryConfiguration.objects.get_or_create(rider=rider)
+            
+            # 2. Calculate Deliveries in that month
+            start_date = timezone.make_aware(datetime.datetime(month_date.year, month_date.month, 1))
+            if month_date.month == 12:
+                end_date = timezone.make_aware(datetime.datetime(month_date.year + 1, 1, 1))
+            else:
+                end_date = timezone.make_aware(datetime.datetime(month_date.year, month_date.month + 1, 1))
+            
+            deliveries = Shipment.objects.filter(
+                rider=rider,
+                status='Delivered',
+                updated_at__range=(start_date, end_date)
+            ).count()
+
+            # 3. Earnings
+            base = config.monthly_fixed_salary
+            incentives = Decimal(deliveries) * config.per_delivery_commission
+            bonus = config.bonus
+            # Deductions could be from shortages, but for now we leave it for manual adjustment
+            
+            final = base + incentives + bonus
+            
+            # 4. Save Settlement
+            settlement, created = RiderSettlement.objects.update_or_create(
+                rider=rider,
+                month=month_date,
+                defaults={
+                    'total_deliveries': deliveries,
+                    'base_salary': base,
+                    'incentives': incentives,
+                    'bonus': bonus,
+                    'final_payable': final,
+                    'status': 'Pending' if not RiderSettlement.objects.filter(rider=rider, month=month_date, status='Paid').exists() else 'Paid'
+                }
+            )
+            created_count += 1
+            
+        return Response({'status': 'Payroll generated', 'count': created_count})
+
 
 class RiderFinancialLogViewSet(viewsets.ModelViewSet):
     queryset = RiderFinancialLog.objects.all().select_related('rider__user')

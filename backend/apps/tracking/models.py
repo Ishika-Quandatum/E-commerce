@@ -13,11 +13,7 @@ class RiderProfile(models.Model):
     current_lat = models.FloatField(null=True, blank=True)
     current_lng = models.FloatField(null=True, blank=True)
     license_number = models.CharField(max_length=100, blank=True)
-    availability_status = models.CharField(
-        max_length=20, 
-        choices=[('Online', 'Online'), ('Offline', 'Offline')],
-        default='Offline'
-    )
+    availability_status = models.CharField(max_length=20, choices=[('Online', 'Online'), ('Offline', 'Offline')],default='Offline')
     join_date = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -95,7 +91,9 @@ class RiderWallet(models.Model):
     current_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     pending_payout = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total_cod_collected = models.DecimalField(max_digits=12, decimal_places=2, default=0.00) # Historical total collected
     pending_cod_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00) # Cash rider has collected but not given to admin
+    total_cod_submitted = models.DecimalField(max_digits=12, decimal_places=2, default=0.00) # Total cash handed over history
     shortage_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -112,7 +110,8 @@ class CODCollection(models.Model):
     
     shipment = models.OneToOneField(Shipment, on_delete=models.CASCADE, related_name='cod_collection')
     rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE, related_name='cod_collections')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2) # The amount rider collected from customer
+    submitted_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) # The amount rider handed to admin
     collected_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     submitted_at = models.DateTimeField(null=True, blank=True)

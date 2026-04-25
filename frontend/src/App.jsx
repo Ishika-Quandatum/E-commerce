@@ -12,8 +12,6 @@ import DeliveryLogin from './pages/delivery/DeliveryLogin';
 const App = () => {
   return (
     <Router>
-      <Navbar />
-
       <Routes>
         {/* Delivery Login (Rider) */}
         <Route path="/delivery/login" element={<DeliveryLogin />} />
@@ -30,8 +28,6 @@ const App = () => {
         {/* Customer routes (Catch-all) */}
         <Route path="/*" element={<CustomerRoutes />} />
       </Routes>
-
-      <Footer />
     </Router>
   );
 };

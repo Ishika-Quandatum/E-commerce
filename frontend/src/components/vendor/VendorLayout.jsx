@@ -7,13 +7,13 @@ const VendorLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex bg-gray-50 flex-col md:flex-row min-h-screen">
+    <div className="flex bg-gray-50 flex-col md:flex-row h-screen overflow-hidden">
       
       <VendorSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-10">
+        <header className="md:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-10 shrink-0">
           <h1 className="text-xl font-bold text-gray-800">Partner Panel</h1>
           <button 
             onClick={() => setIsSidebarOpen(true)}
@@ -23,7 +23,7 @@ const VendorLayout = () => {
           </button>
         </header>
 
-        <main className="flex-1 p-4 md:p-8 bg-gray-50 overflow-x-hidden pt-6">
+        <main className="flex-1 p-4 md:p-8 bg-gray-50 overflow-y-auto pt-6">
           <Outlet />   
         </main>
       </div>

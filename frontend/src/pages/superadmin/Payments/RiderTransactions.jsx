@@ -10,7 +10,10 @@ import {
   Bike,
   CheckCircle2,
   AlertTriangle,
-  History
+  History,
+  IndianRupee,
+  Eye,
+  ArrowRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { riderService, paymentService } from "../../../services/api";
@@ -30,8 +33,8 @@ const RiderTransactions = () => {
         riderService.getRiders({ search: searchTerm }),
         paymentService.getRiderFinancialLogs({ limit: 10 })
       ]);
-      setRiders(ridersRes.data.results || ridersRes.data);
-      setLogs(logsRes.data.results || logsRes.data);
+      setRiders(ridersRes.data.results || ridersRes.data || []);
+      setLogs(logsRes.data.results || logsRes.data || []);
     } catch (err) {
       console.error("Failed to fetch rider transaction data");
     } finally {
@@ -43,11 +46,12 @@ const RiderTransactions = () => {
     fetchData();
   }, [searchTerm]);
 
-  const stats = {
-      totalCollected: riders.reduce((acc, r) => acc + (parseFloat(r.wallet?.total_earned) || 0), 0),
-      pendingCOD: riders.reduce((acc, r) => acc + (parseFloat(r.wallet?.pending_cod_amount) || 0), 0),
-      shortages: riders.reduce((acc, r) => acc + (parseFloat(r.wallet?.shortage_amount) || 0), 0),
-  };
+   const stats = {
+       totalCollected: riders.reduce((acc, r) => acc + (parseFloat(r.wallet?.total_cod_collected) || 0), 0),
+       pendingCOD: riders.reduce((acc, r) => acc + (parseFloat(r.wallet?.pending_cod_amount) || 0), 0),
+       shortages: riders.reduce((acc, r) => acc + (parseFloat(r.wallet?.shortage_amount) || 0), 0),
+       totalBalance: riders.reduce((acc, r) => acc + (parseFloat(r.wallet?.current_balance) || 0), 0),
+   };
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-24">
@@ -61,46 +65,48 @@ const RiderTransactions = () => {
             <ArrowLeft size={24} className="text-slate-600" />
           </button>
           <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight font-title italic">Rider <span className="text-brand-blue not-italic">Ledger</span></h1>
-            <p className="text-slate-500 font-bold mt-1">Full financial history and wallet balances for the delivery fleet.</p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight font-title italic tracking-tighter">Rider <span className="text-brand-blue not-italic">Ledger</span></h1>
+            <p className="text-slate-500 font-bold mt-1">Monitor fleet wallet balances, COD collections, and financial history.</p>
           </div>
         </div>
         
         <button className="flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
-           <Download size={18} /> Download Ledger
+           <Download size={18} /> Export CSV
         </button>
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-slate-900 rounded-[3rem] p-8 text-white space-y-6 relative overflow-hidden">
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/5 rounded-full -mb-16 -mr-16" />
-              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
-                  <Wallet size={20} />
-              </div>
-              <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Fleet Total Collected</p>
-                  <h4 className="text-4xl font-black tracking-tighter">₹{stats.totalCollected.toLocaleString()}</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+              <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full -mb-12 -mr-12" />
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Fleet Total Earned</p>
+              <h4 className="text-3xl font-black tracking-tighter">₹{stats.totalCollected.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <TrendingUp size={12} /> All-time payouts
               </div>
           </div>
 
-          <div className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-sm space-y-6">
-              <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
-                  <Clock size={20} />
-              </div>
-              <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Awaiting Submission</p>
-                  <h4 className="text-4xl font-black tracking-tighter text-slate-900">₹{stats.pendingCOD.toLocaleString()}</h4>
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/60 mb-4">Awaiting Submission</p>
+              <h4 className="text-3xl font-black tracking-tighter text-slate-900">₹{stats.pendingCOD.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-amber-600/60 uppercase tracking-widest">
+                  <Clock size={12} /> Cash with riders
               </div>
           </div>
 
-          <div className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-sm space-y-6">
-              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600">
-                  <AlertTriangle size={20} />
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600/60 mb-4">Total Shortages</p>
+              <h4 className="text-3xl font-black tracking-tighter text-slate-900 font-black">₹{stats.shortages.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-rose-600/60 uppercase tracking-widest">
+                  <AlertTriangle size={12} /> Missing collections
               </div>
-              <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Total Shortages</p>
-                  <h4 className="text-4xl font-black tracking-tighter text-slate-900">₹{stats.shortages.toLocaleString()}</h4>
+          </div>
+
+          <div className="bg-brand-blue rounded-[2.5rem] p-8 text-white shadow-xl shadow-brand-blue/20">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-4">Current Wallet Bal.</p>
+              <h4 className="text-3xl font-black tracking-tighter">₹{stats.totalBalance.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-white/60 uppercase tracking-widest">
+                  <Wallet size={12} /> Combined Liquidity
               </div>
           </div>
       </div>
@@ -108,17 +114,17 @@ const RiderTransactions = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Riders List */}
           <div className="xl:col-span-2 space-y-6">
-              <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
-                <div className="p-10 border-b border-slate-50 flex items-center justify-between">
+              <div className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
+                <div className="p-10 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-3">
-                        <Bike size={18} className="text-brand-blue" /> Rider Wallets
+                        <Bike size={18} className="text-brand-blue" /> Wallet Overview
                     </h3>
-                    <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                        <Search size={14} className="text-slate-400" />
+                    <div className="flex items-center gap-3 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 w-full md:w-64">
+                        <Search size={16} className="text-slate-400" />
                         <input 
                             type="text" 
-                            placeholder="Search..."
-                            className="bg-transparent border-none focus:ring-0 text-xs font-bold w-32"
+                            placeholder="Find Rider..."
+                            className="bg-transparent border-none focus:ring-0 text-xs font-bold w-full"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -128,40 +134,61 @@ const RiderTransactions = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Total COD</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending Sub.</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Shortage</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Balance</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Collected</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Submitted</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Pending</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center text-rose-400">Shortage</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Wallet Balance</th>
+                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {riders.map((r) => (
                                 <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-8 py-6">
+                                    <td className="px-10 py-8">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-xs text-slate-500 uppercase">
+                                            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-sm text-slate-500 uppercase">
                                                 {r.user?.first_name?.[0] || r.user?.username?.[0]}
                                             </div>
                                             <div>
-                                                <div className="text-sm font-black text-slate-900">{r.user?.get_full_name || r.user?.username}</div>
+                                                <div className="text-sm font-black text-slate-900">{r.user?.first_name} {r.user?.last_name}</div>
                                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">ID: #{r.id}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6 font-bold text-slate-700">₹{parseFloat(r.wallet?.total_earned || 0).toLocaleString()}</td>
-                                    <td className="px-8 py-6">
-                                        <span className={clsx(
-                                            "px-3 py-1 rounded-lg font-black text-[10px] uppercase",
-                                            parseFloat(r.wallet?.pending_cod_amount) > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
-                                        )}>
-                                            ₹{parseFloat(r.wallet?.pending_cod_amount || 0).toLocaleString()}
-                                        </span>
+                                    <td className="px-10 py-8 text-center">
+                                        <div className="text-sm font-black text-slate-900">₹{parseFloat(r.wallet?.total_cod_collected || 0).toLocaleString()}</div>
                                     </td>
-                                    <td className="px-8 py-6 text-rose-500 font-bold">₹{parseFloat(r.wallet?.shortage_amount || 0).toLocaleString()}</td>
-                                    <td className="px-8 py-6 text-right font-black text-slate-900">₹{parseFloat(r.wallet?.current_balance || 0).toLocaleString()}</td>
+                                    <td className="px-10 py-8 text-center">
+                                        <div className="text-sm font-black text-emerald-600">₹{parseFloat(r.wallet?.total_cod_submitted || 0).toLocaleString()}</div>
+                                    </td>
+                                    <td className="px-10 py-8 text-center">
+                                        <div className="text-sm font-black text-amber-500">₹{parseFloat(r.wallet?.pending_cod_amount || 0).toLocaleString()}</div>
+                                    </td>
+                                    <td className="px-10 py-8 text-center">
+                                        <div className={clsx(
+                                            "text-sm font-black",
+                                            parseFloat(r.wallet?.shortage_amount) > 0 ? "text-rose-500" : "text-slate-300"
+                                        )}>
+                                            ₹{parseFloat(r.wallet?.shortage_amount || 0).toLocaleString()}
+                                        </div>
+                                    </td>
+                                    <td className="px-10 py-8 text-right">
+                                        <div className="text-lg font-black text-slate-900 tracking-tighter">₹{parseFloat(r.wallet?.current_balance || 0).toLocaleString()}</div>
+                                    </td>
+                                    <td className="px-10 py-8 text-right">
+                                        <button className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-brand-blue transition-all hover:shadow-md active:scale-95">
+                                            <Eye size={18} />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
+                            {riders.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" className="px-10 py-20 text-center text-slate-400 font-bold uppercase tracking-widest">No riders found in the ledger.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -170,54 +197,59 @@ const RiderTransactions = () => {
 
           {/* Recent Logs Sidebar */}
           <div className="space-y-6">
-              <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-8">
-                  <div className="flex items-center justify-between mb-8">
+              <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-10">
+                  <div className="flex items-center justify-between mb-10">
                       <h3 className="font-black text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
-                          <History size={16} className="text-indigo-500" /> Financial Logs
+                          <History size={16} className="text-indigo-500" /> Recent Logs
                       </h3>
-                      <button className="text-[10px] font-black text-brand-blue uppercase tracking-widest hover:underline">View All</button>
+                      <button className="text-[10px] font-black text-brand-blue uppercase tracking-widest hover:underline">Full Audit</button>
                   </div>
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                       {logs.map((log) => (
-                          <div key={log.id} className="flex gap-4 group">
+                          <div key={log.id} className="flex gap-5 group">
                               <div className={clsx(
-                                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
                                   log.log_type === 'Incentive' ? "bg-emerald-50 text-emerald-600" : "bg-indigo-50 text-indigo-600"
                               )}>
-                                  {log.log_type === 'Incentive' ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                                  {log.log_type === 'Incentive' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                               </div>
                               <div className="flex-1">
-                                  <div className="flex justify-between items-start mb-0.5">
-                                      <p className="text-[11px] font-black text-slate-900">{log.log_type}</p>
+                                  <div className="flex justify-between items-start mb-1">
+                                      <p className="text-xs font-black text-slate-900">{log.log_type}</p>
                                       <p className={clsx(
-                                          "text-xs font-black",
+                                          "text-xs font-black tracking-tighter",
                                           log.log_type === 'Incentive' ? "text-emerald-500" : "text-rose-500"
                                       )}>
-                                          {log.log_type === 'Incentive' ? '+' : '-'}₹{Math.abs(parseFloat(log.amount))}
+                                          {log.log_type === 'Incentive' ? '+' : '-'}₹{Math.abs(parseFloat(log.amount)).toLocaleString()}
                                       </p>
                                   </div>
-                                  <p className="text-[10px] text-slate-400 font-medium line-clamp-1">{log.description}</p>
-                                  <p className="text-[9px] font-bold text-slate-300 uppercase tracking-tighter mt-1">{new Date(log.timestamp).toLocaleTimeString()}</p>
+                                  <p className="text-[11px] text-slate-400 font-bold leading-tight line-clamp-2">{log.description}</p>
+                                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.1em] mt-2 flex items-center gap-1">
+                                      <Clock size={10} /> {new Date(log.timestamp).toLocaleDateString()} • {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </p>
                               </div>
                           </div>
                       ))}
-                      {logs.length === 0 && <p className="text-center py-10 text-slate-400 text-xs font-bold">No recent logs.</p>}
+                      {logs.length === 0 && <p className="text-center py-10 text-slate-400 text-xs font-bold">No recent financial logs.</p>}
                   </div>
               </div>
 
-              <div className="bg-brand-blue rounded-[3rem] p-8 text-white space-y-6">
-                  <div className="flex items-center gap-3">
-                      <Bike size={24} className="text-white/50" />
-                      <h3 className="font-black uppercase tracking-[0.2em] text-[10px]">Fleet Payout Alert</h3>
+              <div className="bg-slate-900 rounded-[3.5rem] p-10 text-white space-y-8 relative overflow-hidden shadow-2xl shadow-slate-900/20">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/10 rounded-full -mt-16 -mr-16" />
+                  <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
+                        <IndianRupee size={24} className="text-brand-blue" />
+                      </div>
+                      <h3 className="font-black uppercase tracking-[0.15em] text-[11px]">Payout Ready</h3>
                   </div>
-                  <p className="text-sm font-bold leading-relaxed opacity-90">
-                      Total pending monthly settlements: <span className="font-black underline underline-offset-4">₹42,500</span>
+                  <p className="text-sm font-bold leading-relaxed opacity-80">
+                      Total pending payroll for this cycle is currently being calculated.
                   </p>
                   <button 
                     onClick={() => navigate("/admin/payments/settlements")}
-                    className="w-full py-4 bg-white text-brand-blue rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-brand-blue/30 active:scale-95 transition-all"
+                    className="w-full py-5 bg-brand-blue text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-brand-blue/30 hover:bg-white hover:text-brand-blue transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
-                      Go to Settlements
+                      Open Payroll System <ArrowRight size={16} />
                   </button>
               </div>
           </div>
