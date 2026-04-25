@@ -1,9 +1,15 @@
 from rest_framework import serializers
 from .models import (
     RiderProfile, Shipment, TrackingHistory, Attendance, RiderWallet, 
-    SalaryConfiguration, Transaction, CODCollection, RiderSettlement, RiderFinancialLog
+    SalaryConfiguration, Transaction, CODCollection, RiderSettlement, 
+    RiderFinancialLog, LiveOrderTracking
 )
 from apps.users.serializers import UserSerializer
+
+class LiveOrderTrackingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LiveOrderTracking
+        fields = ['latitude', 'longitude', 'timestamp']
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:

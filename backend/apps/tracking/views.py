@@ -3,12 +3,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import (
     Shipment, RiderProfile, TrackingHistory, Attendance, RiderWallet, 
-    SalaryConfiguration, Transaction, CODCollection, RiderSettlement, RiderFinancialLog
+    SalaryConfiguration, Transaction, CODCollection, RiderSettlement, 
+    RiderFinancialLog, LiveOrderTracking
 )
 from .serializers import (
     ShipmentSerializer, RiderProfileSerializer, AdminRiderSerializer,
     AttendanceSerializer, RiderWalletSerializer, SalaryConfigurationSerializer,
-    CODCollectionSerializer, RiderSettlementSerializer, RiderFinancialLogSerializer
+    CODCollectionSerializer, RiderSettlementSerializer, RiderFinancialLogSerializer,
+    LiveOrderTrackingSerializer
 )
 import random
 from django.utils import timezone
@@ -267,6 +269,91 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         print(f"\n[SMS SIMULATION] >>> Sent to {customer_phone}: Hello! Your order #{order_id} from {platform_name} has been successfully delivered by our partner. Enjoy your purchase!\n")
 
         return Response({'status': 'Delivery Successful', 'sms_sent': True})
+
+    @action(detail=True, methods=['post'], url_path='rider-location')
+    def rider_location(self, request, pk=None):
+        shipment = self.get_object()
+        if request.user.role != 'rider':
+            return Response({'error': 'Only riders can update location'}, status=403)
+        
+        lat = request.data.get('latitude')
+        lng = request.data.get('longitude')
+        
+        if lat is None or lng is None:
+            return Response({'error': 'Latitude and longitude are required'}, status=400)
+            
+        LiveOrderTracking.objects.create(
+            shipment=shipment,
+            rider=request.user.rider_profile,
+            latitude=lat,
+            longitude=lng
+        )
+        
+        # Also update current location in rider profile for general use
+        request.user.rider_profile.current_lat = lat
+        request.user.rider_profile.current_lng = lng
+        request.user.rider_profile.save()
+        
+        return Response({'status': 'Location updated'})
+
+    @action(detail=True, methods=['get'], url_path='track')
+    def track(self, request, pk=None):
+        try:
+            shipment = self.get_object()
+            
+            latest_tracking = LiveOrderTracking.objects.filter(shipment=shipment).first()
+            history = LiveOrderTracking.objects.filter(shipment=shipment).order_by('-timestamp')[:20]
+            
+            # Map products safely
+            items_data = []
+            for item in shipment.order.items.all():
+                product = item.product
+                image_url = None
+                if product:
+                    first_image = product.images.first()
+                    if first_image:
+                        image_url = first_image.image.url
+
+                    items_data.append({
+                        'name': product.name,
+                        'qty': item.quantity,
+                        'price': float(item.price),
+                        'image': image_url
+                    })
+                else:
+                    items_data.append({
+                        'name': "Unknown Product",
+                        'qty': item.quantity,
+                        'price': float(item.price),
+                        'image': None
+                    })
+
+            data = {
+                'shipment_status': shipment.status,
+                'order_status': shipment.order.status,
+                'tracking_number': shipment.tracking_number,
+                'rider_info': {
+                    'name': shipment.rider.user.get_full_name() if shipment.rider else "Not Assigned",
+                    'phone': shipment.rider.user.phone if shipment.rider else "",
+                    'vehicle': shipment.rider.vehicle_type if shipment.rider else "Bike",
+                },
+                'customer_location': {
+                    'address': shipment.order.address,
+                    'lat': shipment.order.latitude or 12.9716,
+                    'lng': shipment.order.longitude or 77.5946
+                },
+                'current_location': LiveOrderTrackingSerializer(latest_tracking).data if latest_tracking else None,
+                'location_history': LiveOrderTrackingSerializer(history, many=True).data,
+                'eta': shipment.estimated_delivery_time,
+                'payment_method': shipment.order.payment_method,
+                'order_date': shipment.order.created_at,
+                'customer_name': shipment.order.user.get_full_name() or shipment.order.user.username,
+                'order_items': items_data
+            }
+            return Response(data)
+        except Exception as e:
+            print(f"[TRACKING ERROR] {str(e)}")
+            return Response({'error': 'Internal server error while fetching tracking data', 'details': str(e)}, status=500)
 
 
 class RiderViewSet(viewsets.ModelViewSet):

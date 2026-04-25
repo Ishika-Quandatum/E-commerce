@@ -12,7 +12,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { adminService, riderService } from "../../services/api";
+import { adminService, riderService, trackingService } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
 const MyOrders = () => {
@@ -26,6 +26,36 @@ const MyOrders = () => {
         { id: "Picked Up", label: "In Transit", icon: <Truck size={18} /> },
         { id: "Delivered", label: "Completed", icon: <CheckCircle2 size={18} /> },
     ];
+
+    // Real-Time GPS Tracking Logic
+    useEffect(() => {
+        let interval;
+        const inTransitOrders = orders.filter(o => o.status === 'In Transit' || o.status === 'Picked Up');
+        
+        if (inTransitOrders.length > 0) {
+            console.log("GPS: Tracking active for", inTransitOrders.length, "tasks");
+            interval = setInterval(() => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const { latitude, longitude } = position.coords;
+                            for (const order of inTransitOrders) {
+                                try {
+                                    await trackingService.updateRiderLocation(order.id, { latitude, longitude });
+                                } catch (err) {
+                                    console.error("GPS Sync Error for Order", order.id, err);
+                                }
+                            }
+                        },
+                        (error) => console.error("Geolocation Error", error),
+                        { enableHighAccuracy: true }
+                    );
+                }
+            }, 10000); // 10 seconds
+        }
+
+        return () => clearInterval(interval);
+    }, [orders]);
 
     useEffect(() => {
         fetchOrders();
@@ -52,13 +82,13 @@ const MyOrders = () => {
         try {
             if (activeTab === "New" && status === "Assigned") {
                 await riderService.acceptShipment(id);
-                setActiveTab("Assigned"); // Move to Assigned tab
+                setActiveTab("Assigned");
             } else if (status === "Delivered") {
                 await riderService.markDelivered(id);
-                setActiveTab("Delivered"); // Move to Completed tab
+                setActiveTab("Delivered");
             } else if (status === "Picked Up") {
                 await riderService.updateStatus(id, "In Transit");
-                setActiveTab("Picked Up"); // Move to In Transit tab
+                setActiveTab("Picked Up");
             } else {
                 await riderService.updateStatus(id, status);
             }
@@ -73,7 +103,7 @@ const MyOrders = () => {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight font-title">
-                    Delivery <span className="text-brand-blue">Tasks</span>
+                    Delivery <span className="text-brand-purple">Tasks</span>
                 </h1>
                 <p className="text-slate-500 font-medium mt-1">Manage your active and completed deliveries.</p>
             </div>
@@ -86,8 +116,8 @@ const MyOrders = () => {
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all shrink-0 ${
                             activeTab === tab.id 
-                            ? "bg-brand-blue text-white shadow-lg shadow-brand-blue/30 scale-[1.02]" 
-                            : "text-slate-500 hover:text-brand-blue hover:bg-slate-50"
+                            ? "bg-brand-purple text-white shadow-lg shadow-brand-purple/30 scale-[1.02]" 
+                            : "text-slate-500 hover:text-brand-purple hover:bg-slate-50"
                         }`}
                     >
                         {tab.icon}
@@ -146,9 +176,9 @@ const MyOrders = () => {
                                 <div>
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order ID</span>
-                                        <span className="text-xs font-black text-brand-blue bg-brand-blue/5 px-2 py-1 rounded-lg">#{order.tracking_number?.slice(-6)}</span>
+                                        <span className="text-xs font-black text-brand-purple bg-brand-purple/5 px-2 py-1 rounded-lg">#{order.tracking_number?.slice(-6)}</span>
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900 group-hover:text-brand-blue transition-colors">
+                                    <h3 className="text-xl font-black text-slate-900 group-hover:text-brand-purple transition-colors">
                                         {order.customer_name}
                                     </h3>
                                 </div>
@@ -228,7 +258,7 @@ const MyOrders = () => {
                                             <XCircle size={20} />
                                         </button>
                                         <button 
-                                            className="flex-[3] bg-brand-blue text-white p-4 rounded-2xl font-bold shadow-lg shadow-brand-blue/20"
+                                            className="flex-[3] bg-brand-purple text-white p-4 rounded-2xl font-bold shadow-lg shadow-brand-purple/20"
                                             onClick={() => handleAction(order.id, 'Assigned')}
                                         >
                                             Accept Order

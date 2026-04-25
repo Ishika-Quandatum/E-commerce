@@ -22,14 +22,30 @@ class OrderSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
     username = serializers.ReadOnlyField(source='user.username')
 
+    shipment_id = serializers.SerializerMethodField()
+    shipment_status = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = [
             'id', 'user', 'username', 'total_price', 'status',
             'payment_method', 'address', 'phone',
-            'created_at', 'updated_at', 'items'
+            'created_at', 'updated_at', 'items',
+            'shipment_id', 'shipment_status'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
+    
+    def get_shipment_id(self, obj):
+        try:
+            return obj.shipment.id
+        except:
+            return None
+
+    def get_shipment_status(self, obj):
+        try:
+            return obj.shipment.status
+        except:
+            return None
     def get_items(self, obj):
         return OrderItemSerializer(
             obj.items.all(),

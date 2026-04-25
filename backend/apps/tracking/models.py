@@ -178,6 +178,21 @@ class Transaction(models.Model):
         return f"{self.transaction_type}: {self.amount} for {self.wallet.rider.user.username}"
 
 
+
+class LiveOrderTracking(models.Model):
+    shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE, related_name='live_tracking')
+    rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Tracking: {self.shipment.tracking_number} at {self.timestamp}"
+
+    class Meta:
+        ordering = ['-timestamp']
+
+
 # Signal to create Wallet and SalaryConfig for new Riders
 @receiver(post_save, sender=RiderProfile)
 def create_rider_financials(sender, instance, created, **kwargs):

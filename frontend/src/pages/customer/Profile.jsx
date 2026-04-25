@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { orderService } from '../../services/api';
 import { Package, MapPin, Phone, User as UserIcon, Calendar, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,9 +106,20 @@ const Profile = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Total Price</p>
-                      <p className="text-lg font-black text-primary-600">${order.total_price}</p>
+                    <div className="flex items-center gap-6">
+                      {order.shipment_id && order.status !== 'Delivered' && (
+                        <button
+                          onClick={() => navigate(`/tracking/${order.shipment_id}`)}
+                          className="flex items-center gap-2 bg-brand-purple text-white px-4 py-2 rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-brand-purple/20 transition-all"
+                        >
+                          <MapPin size={14} />
+                          Track Order
+                        </button>
+                      )}
+                      <div className="text-right">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Total Price</p>
+                        <p className="text-lg font-black text-brand-purple">${order.total_price}</p>
+                      </div>
                     </div>
                   </div>
 

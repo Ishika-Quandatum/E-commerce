@@ -9,6 +9,7 @@ import Login from '../pages/customer/Login'
 import Register from '../pages/customer/Register'
 import Profile from '../pages/customer/Profile'
 import VendorSignup from '../pages/customer/VendorSignup'
+import OrderTracking from '../pages/customer/Tracking/OrderTracking'
 import TrackOrder from '../pages/customer/Tracking/TrackOrder'
 
 import Navbar from '../components/Navbar'
@@ -29,6 +30,7 @@ const CustomerRoutes = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/become-seller" element={<VendorSignup />} />
         <Route path="/track-order/:trackingNumber" element={<TrackOrder />} />
+        <Route path="/tracking/:id" element={<OrderTracking />} />
       </Routes>
       <Footer />
     </>
