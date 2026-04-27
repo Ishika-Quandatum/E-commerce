@@ -76,22 +76,24 @@ const Home = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.slice(0, 4).map((cat) => (
-            <Link key={cat.id} to={`/products?category=${cat.id}`} className="relative group h-72 rounded-[2rem] overflow-hidden shadow-xl transition-all duration-500 hover:-translate-y-2">
-              <img
-                src={cat.image || `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=60&w=400`}
-                alt={cat.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/90 via-brand-navy/20 to-transparent flex flex-col justify-end p-8">
-                <h3 className="text-white text-xl font-black uppercase tracking-tight">{cat.name}</h3>
-                <span className="text-brand-purple-light text-xs font-black uppercase tracking-[0.2em] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Explore</span>
+        <div className="flex flex-wrap justify-center sm:justify-start gap-8 sm:gap-12 lg:gap-16">
+          {categories.slice(0, 8).map((cat) => (
+            <Link key={cat.id} to={`/products?category=${cat.slug || cat.id}`} className="group flex flex-col items-center w-[80px] sm:w-[100px] transition-all hover:-translate-y-1">
+              <div className="w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] rounded-full overflow-hidden shadow-sm border border-slate-100 group-hover:border-brand-purple group-hover:shadow-lg transition-all duration-300 bg-white mb-3">
+                <img
+                  src={cat.image || `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=60&w=400`}
+                  alt={cat.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
               </div>
+              <h3 className="text-center text-xs sm:text-sm font-bold text-brand-navy group-hover:text-brand-purple transition-colors leading-tight line-clamp-2">{cat.name}</h3>
             </Link>
           ))}
-          {categories.length === 0 && Array(4).fill(0).map((_, i) => (
-            <div key={i} className="bg-slate-100 animate-pulse h-72 rounded-[2rem]"></div>
+          {categories.length === 0 && Array(8).fill(0).map((_, i) => (
+            <div key={i} className="flex flex-col items-center w-[80px] sm:w-[100px]">
+               <div className="w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] bg-slate-100 rounded-full animate-pulse mb-3"></div>
+               <div className="h-3 w-16 bg-slate-100 rounded animate-pulse"></div>
+            </div>
           ))}
         </div>
       </section>

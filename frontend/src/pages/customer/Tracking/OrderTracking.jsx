@@ -168,40 +168,58 @@ const OrderTracking = () => {
                                 Delivery Timeline
                             </h3>
                             
-                            <div className="relative">
-                                {/* Track Line */}
-                                <div className="absolute top-1/2 left-0 w-full h-1.5 bg-slate-100 -translate-y-1/2 rounded-full overflow-hidden">
+                            <div className="relative mt-8 mb-4">
+                                {/* Track Line Background (Dashed) */}
+                                <div className="absolute top-6 left-12 right-12 h-[2px] border-t-2 border-dashed border-slate-300 -translate-y-1/2 z-0"></div>
+                                
+                                {/* Track Line Filled (Solid Purple) */}
+                                <div className="absolute top-6 left-12 right-12 h-[2px] -translate-y-1/2 z-0">
                                     <motion.div 
                                         initial={{ width: 0 }}
                                         animate={{ width: `${(displayStatusIndex / (stages.length - 1)) * 100}%` }}
-                                        className="h-full bg-brand-purple shadow-[0_0_15px_rgba(109,40,217,0.5)]"
+                                        className="h-full bg-brand-purple shadow-[0_0_10px_rgba(109,40,217,0.5)]"
                                     />
                                 </div>
 
                                 {/* Timeline Points */}
-                                <div className="relative flex justify-between">
+                                <div className="relative flex justify-between z-10">
                                     {stages.map((stage, idx) => {
-                                        const isCompleted = idx <= displayStatusIndex;
+                                        const isPast = idx < displayStatusIndex;
                                         const isCurrent = idx === displayStatusIndex;
+                                        const isFuture = idx > displayStatusIndex;
                                         
                                         return (
-                                            <div key={idx} className="flex flex-col items-center gap-4 group">
-                                                <motion.div 
-                                                    whileHover={{ scale: 1.1 }}
-                                                    className={clsx(
-                                                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 relative z-10",
-                                                        isCompleted ? "bg-brand-purple text-white shadow-lg shadow-brand-purple/30" : "bg-white text-slate-300 border-2 border-slate-100",
-                                                        isCurrent && "ring-4 ring-brand-purple-light ring-offset-2 animate-pulse"
+                                            <div key={idx} className="flex flex-col items-center w-24 relative">
+                                                <div className="relative flex items-center justify-center w-12 h-12">
+                                                    {isCurrent && (
+                                                        <div className="absolute inset-[-12px] rounded-full bg-brand-purple/10 scale-100"></div>
                                                     )}
-                                                >
-                                                    {isCompleted ? <CheckCircle2 size={20} /> : stage.icon}
-                                                </motion.div>
-                                                <div className="text-center w-20">
+                                                    {isCurrent && (
+                                                        <div className="absolute inset-0 rounded-full bg-brand-purple/20 animate-ping"></div>
+                                                    )}
+                                                    <motion.div 
+                                                        whileHover={{ scale: 1.1 }}
+                                                        className={clsx(
+                                                            "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 relative z-10 bg-white",
+                                                            isPast && "bg-brand-purple text-white shadow-lg shadow-brand-purple/30 border border-brand-purple",
+                                                            isCurrent && "border-[3px] border-brand-purple text-brand-purple shadow-lg shadow-brand-purple/20",
+                                                            isFuture && "border-2 border-slate-200 text-slate-400"
+                                                        )}
+                                                    >
+                                                        {isPast ? <CheckCircle2 size={24} strokeWidth={2.5} /> : React.cloneElement(stage.icon, { size: 20 })}
+                                                    </motion.div>
+                                                </div>
+                                                <div className="text-center mt-5 flex flex-col items-center">
                                                     <p className={clsx(
-                                                        "text-[10px] sm:text-[11px] font-black uppercase tracking-tighter transition-colors",
-                                                        isCompleted ? "text-brand-purple" : "text-slate-400"
+                                                        "text-[10px] sm:text-xs font-black uppercase tracking-tight transition-colors leading-tight mb-1",
+                                                        isPast || isCurrent ? "text-brand-purple" : "text-slate-500"
                                                     )}>
                                                         {stage.label}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-slate-400">
+                                                        {isPast || isCurrent 
+                                                            ? `${new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short'})}, ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}` 
+                                                            : '—'}
                                                     </p>
                                                 </div>
                                             </div>
