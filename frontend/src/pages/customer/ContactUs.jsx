@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePlatform } from '../../context/PlatformContext';
 
 const ContactUs = () => {
   const { platformName } = usePlatform();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="bg-white pb-20">
@@ -17,7 +21,7 @@ const ContactUs = () => {
           <motion.span 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-brand-purple-light font-black text-sm uppercase tracking-[0.3em] mb-4 block"
+            className="text-brand-purple-light font-black text-sm uppercase tracking-[0.3em] my-4 block"
           >
             Get In Touch
           </motion.span>
