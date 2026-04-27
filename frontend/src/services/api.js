@@ -45,7 +45,7 @@ export const authService = {
 };
 
 export const productService = {
-  getCategories: () => api.get('categories/'),
+  getCategories: (params) => api.get('categories/', { params }),
   getProducts: (params) => api.get('products/', { params }),
   getProductDetail: (id) => api.get(`products/${id}/`),
 };
