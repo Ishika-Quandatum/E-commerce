@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingBag, Zap, ShieldCheck, Globe } from 'lucide-react';
 import { productService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
+import HomeBanner from '../../components/Home/HomeBanner';
 import { motion } from 'framer-motion';
 
 const Home = () => {
@@ -127,6 +128,9 @@ const Home = () => {
           ))}
         </div>
       </section>
+
+      {/* Promotional Banner System */}
+      <HomeBanner />
 
       {/* Featured Products */}
       <section className="max-w-7xl mx-auto px-4">

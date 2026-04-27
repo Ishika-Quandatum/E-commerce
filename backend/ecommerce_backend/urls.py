@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/vendors/', include('apps.vendors.urls')),
     path('api/tracking/', include('apps.tracking.urls')),
     path('api/core/', include('apps.core.urls')),
+    path('api/promotions/', include('apps.promotions.urls')),
 ]
 
 if settings.DEBUG:

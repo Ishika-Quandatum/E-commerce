@@ -11,6 +11,7 @@ import OrderList from "../pages/vendor/Orders/OrderList";
 import OrderDetails from "../pages/vendor/Orders/OrderDetails";
 import PaymentList from "../pages/vendor/Payments/PaymentList";
 import VendorDispatchList from "../pages/vendor/Dispatch/VendorDispatchList";
+import VendorPromotionBanner from "../pages/vendor/Promotions/VendorPromotionBanner";
 
 const VendorRoutes = () => {
   const { user, loading, isVendor, isSuperAdmin } = useAuth();
@@ -43,6 +44,9 @@ const VendorRoutes = () => {
 
         {/* Dispatch & Tracking */}
         <Route path="dispatch" element={<VendorDispatchList />} />
+
+        {/* Promotions */}
+        <Route path="promotion-banner" element={<VendorPromotionBanner />} />
 
 
       </Route>

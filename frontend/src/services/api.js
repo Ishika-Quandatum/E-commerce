@@ -137,4 +137,12 @@ export const platformService = {
   updateSettings: (data) => api.patch('core/settings/update_settings/', data),
 };
 
+export const promotionService = {
+  getBanners: () => api.get('promotions/banners/'),
+  getVendorBanners: () => api.get('promotions/banners/', { params: { vendor_view: 'true' } }),
+  submitBanner: (formData) => api.post('promotions/banners/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateBanner: (id, formData) => api.patch(`promotions/banners/${id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteBanner: (id) => api.delete(`promotions/banners/${id}/`),
+};
+
 export default api;
