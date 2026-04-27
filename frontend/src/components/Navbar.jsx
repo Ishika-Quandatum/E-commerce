@@ -38,6 +38,10 @@ const Navbar = () => {
                 Categories
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-purple transition-all group-hover:w-full" />
               </Link>
+              <Link to="/about-us" className="text-brand-navy/70 hover:text-brand-purple font-bold transition-all text-sm uppercase tracking-widest relative group">
+                About Us
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-purple transition-all group-hover:w-full" />
+              </Link>
               
               {user && user.role === 'superadmin' && (
                 <Link to="/admin" className="bg-brand-purple/5 hover:bg-brand-purple/10 px-4 py-2 rounded-xl text-brand-purple font-bold text-xs transition-all border border-brand-purple/10">Admin</Link>

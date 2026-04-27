@@ -11,6 +11,7 @@ import Profile from '../pages/customer/Profile'
 import VendorSignup from '../pages/customer/VendorSignup'
 import OrderTracking from '../pages/customer/Tracking/OrderTracking'
 import TrackOrder from '../pages/customer/Tracking/TrackOrder'
+import AboutUs from '../pages/customer/AboutUs'
 
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -31,6 +32,7 @@ const CustomerRoutes = () => {
         <Route path="/become-seller" element={<VendorSignup />} />
         <Route path="/track-order/:trackingNumber" element={<TrackOrder />} />
         <Route path="/tracking/:id" element={<OrderTracking />} />
+        <Route path="/about-us" element={<AboutUs />} />
       </Routes>
       <Footer />
     </>
