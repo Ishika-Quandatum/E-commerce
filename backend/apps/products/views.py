@@ -1,8 +1,13 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Product, ProductImage
-from .serializers import ProductSerializer, ProductListSerializer
+from .models import Product, ProductImage, Brand
+from .serializers import ProductSerializer, ProductListSerializer, BrandSerializer
+
+class BrandViewSet(viewsets.ModelViewSet):
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+    permission_classes = [permissions.AllowAny] # Can restrict if needed
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -124,11 +129,13 @@ class ProductViewSet(viewsets.ModelViewSet):
                     defaults={'slug': slugify(cat_name)}
                 )
                 
-                price_val = get_val(row, 'Retail Price', 'Price')
-                price = float(price_val.replace(',', '')) if price_val else 0.0
+                price_val = get_val(row, 'Regular Price', 'Retail Price', 'Price', 'Regular Price (₹)', 'Price (₹)')
+                price_str = price_val.replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '').strip() if price_val else ''
+                price = float(price_str) if price_str else 0.0
                 
-                offer_price_val = get_val(row, 'Offer Price', 'Discount Price')
-                offer_price = float(offer_price_val.replace(',', '')) if offer_price_val else None
+                offer_price_val = get_val(row, 'Offer Price', 'Discount Price', 'Offer Price (₹)', 'Discount Price (₹)')
+                offer_price_str = offer_price_val.replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '').strip() if offer_price_val else ''
+                offer_price = float(offer_price_str) if offer_price_str else None
                 
                 qty_val = get_val(row, 'Quantity', 'Qty')
                 stock_val = get_val(row, 'Stock', 'Inventory', default=qty_val if qty_val else 0)
@@ -186,7 +193,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                 'Name': p.name,
                 'Description': p.description,
                 'Category': p.category.name if p.category else '',
-                'Price': float(p.price) if p.price else 0.0,
+                'Regular Price': float(p.price) if p.price else 0.0,
                 'Offer Price': float(p.discount_price) if p.discount_price else '',
                 'Stock': p.stock,
                 'Quantity': float(p.quantity) if p.quantity else 1.0,

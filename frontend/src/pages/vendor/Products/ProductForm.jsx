@@ -21,6 +21,12 @@ import { useNavigate } from "react-router-dom";
 
 const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
   const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [showBrandInput, setShowBrandInput] = useState(false);
+  const [newBrandName, setNewBrandName] = useState("");
+  const [showSubcategoryInput, setShowSubcategoryInput] = useState(false);
+  const [newSubcategoryName, setNewSubcategoryName] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
@@ -38,9 +44,9 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     unit: "pcs",
     sku: "",
     status: "Active",
-    image: null,
+    images: [],
   });
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [error, setError] = useState(null);
   
   // Bulk Upload State
@@ -54,7 +60,49 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     adminService.getCategories().then((res) => {
       setCategories(Array.isArray(res.data) ? res.data : (res.data?.results || []));
     }).catch(err => console.error(err));
+    adminService.getBrands().then((res) => {
+      setBrands(Array.isArray(res.data) ? res.data : (res.data?.results || []));
+    }).catch(err => console.error(err));
   }, []);
+
+  useEffect(() => {
+    if (formData.category) {
+      const selectedCategory = categories.find(c => c.id === parseInt(formData.category) || c.id === formData.category);
+      if (selectedCategory && selectedCategory.children) {
+        setSubcategories(selectedCategory.children);
+      } else {
+        setSubcategories([]);
+      }
+    } else {
+      setSubcategories([]);
+    }
+  }, [formData.category, categories]);
+
+  const handleCreateBrand = async () => {
+    if (!newBrandName.trim()) return;
+    try {
+      const res = await adminService.createBrand({ name: newBrandName });
+      setBrands([...brands, res.data]);
+      setFormData({ ...formData, brand: res.data.id });
+      setShowBrandInput(false);
+      setNewBrandName("");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to create brand");
+    }
+  };
+
+  const handleCreateSubcategory = async () => {
+    if (!newSubcategoryName.trim() || !formData.category) return;
+    try {
+      const res = await adminService.createCategory({ name: newSubcategoryName, parent: formData.category });
+      setSubcategories([...subcategories, res.data]);
+      setFormData({ ...formData, subcategory: res.data.id });
+      setShowSubcategoryInput(false);
+      setNewSubcategoryName("");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to create subcategory");
+    }
+  };
 
   useEffect(() => {
     if (Object.keys(initialData).length > 0) {
@@ -75,9 +123,13 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         unit: ["g", "kg", "ml", "l", "pcs"].includes(initialData.unit?.toLowerCase()) ? initialData.unit.toLowerCase() : "pcs",
         sku: initialData.sku || "",
         status: initialData.status || "Active",
-        image: null,
+        images: [],
       });
-      setPreviewUrl(initialData.primary_image || initialData.images?.[0]?.image || "");
+      if (initialData.images && initialData.images.length > 0) {
+        setPreviewUrls(initialData.images.map(img => img.image));
+      } else if (initialData.primary_image) {
+        setPreviewUrls([initialData.primary_image]);
+      }
     }
   }, [initialData]);
 
@@ -87,11 +139,26 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, image: file });
-      setPreviewUrl(URL.createObjectURL(file));
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      const maxAllowed = 5 - formData.images.length;
+      const newFiles = files.slice(0, maxAllowed);
+      const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
+      
+      setFormData({ ...formData, images: [...formData.images, ...newFiles] });
+      setPreviewUrls([...previewUrls, ...newPreviewUrls]);
     }
+  };
+
+  const removeImage = (index) => {
+    const newImages = [...formData.images];
+    newImages.splice(index, 1);
+    
+    const newPreviewUrls = [...previewUrls];
+    newPreviewUrls.splice(index, 1);
+    
+    setFormData({ ...formData, images: newImages });
+    setPreviewUrls(newPreviewUrls);
   };
 
   const downloadSampleTemplate = () => {
@@ -101,7 +168,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
       'Quantity': "1",
       'Unit': "pcs",
       'Category': "Electronics",
-      'Retail Price': "49.99",
+      'Regular Price': "49.99",
       'Offer Price': "39.99",
       'Stock': "100",
       'Image': "https://example.com/image.png"
@@ -188,7 +255,11 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     setError(null);
     const data = new FormData();
     Object.keys(formData).forEach(key => {
-      if (formData[key] !== null && formData[key] !== "") {
+      if (key === 'images') {
+        formData.images.forEach(file => {
+          data.append('images', file);
+        });
+      } else if (formData[key] !== null && formData[key] !== "") {
         data.append(key, formData[key]);
       }
     });
@@ -370,19 +441,33 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                   
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                       <label className="block text-xs font-bold text-slate-700">Brand <span className="text-red-500">*</span></label>
-                       <button type="button" className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:text-indigo-700"><Plus size={14}/> Add New Brand</button>
+                       <label className="block text-xs font-bold text-slate-700">Brand</label>
+                       <button type="button" onClick={() => setShowBrandInput(!showBrandInput)} className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:text-indigo-700"><Plus size={14}/> {showBrandInput ? "Cancel" : "Add New Brand"}</button>
                     </div>
-                    <select
-                      name="brand"
-                      className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm appearance-none"
-                      value={formData.brand}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select Brand</option>
-                      <option value="brand1">Brand A</option>
-                      <option value="brand2">Brand B</option>
-                    </select>
+                    {showBrandInput ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm placeholder:text-slate-400"
+                          placeholder="Enter new brand name"
+                          value={newBrandName}
+                          onChange={(e) => setNewBrandName(e.target.value)}
+                        />
+                        <button type="button" onClick={handleCreateBrand} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">Add</button>
+                      </div>
+                    ) : (
+                      <select
+                        name="brand"
+                        className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm appearance-none"
+                        value={formData.brand}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select Brand</option>
+                        {brands.map(b => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -401,16 +486,36 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-2">Subcategory <span className="text-red-500">*</span></label>
-                      <select
-                        name="subcategory"
-                        className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm appearance-none"
-                        value={formData.subcategory}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select Subcategory</option>
-                        <option value="sub1">Subcategory 1</option>
-                      </select>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-xs font-bold text-slate-700">Subcategory</label>
+                        {formData.category && (
+                           <button type="button" onClick={() => setShowSubcategoryInput(!showSubcategoryInput)} className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:text-indigo-700"><Plus size={14}/> {showSubcategoryInput ? "Cancel" : "Add New Subcategory"}</button>
+                        )}
+                      </div>
+                      {showSubcategoryInput ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm placeholder:text-slate-400"
+                            placeholder="Enter new subcategory"
+                            value={newSubcategoryName}
+                            onChange={(e) => setNewSubcategoryName(e.target.value)}
+                          />
+                          <button type="button" onClick={handleCreateSubcategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">Add</button>
+                        </div>
+                      ) : (
+                        <select
+                          name="subcategory"
+                          className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm appearance-none"
+                          value={formData.subcategory}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Subcategory</option>
+                          {subcategories.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
 
@@ -466,8 +571,8 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="col-span-2 sm:col-span-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                       <label className="block text-xs font-bold text-slate-700 mb-2">Regular Price (₹) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
@@ -478,7 +583,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                         onChange={handleChange}
                       />
                     </div>
-                    <div className="col-span-2 sm:col-span-1">
+                    <div>
                       <label className="block text-xs font-bold text-slate-700 mb-2">Offer Price (₹)</label>
                       <input
                         type="number"
@@ -489,7 +594,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                         onChange={handleChange}
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <label className="block text-xs font-bold text-slate-700 mb-2">Discount Type</label>
                       <select
                         name="discount_type"
@@ -501,7 +606,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                         <option value="Flat">Flat</option>
                       </select>
                     </div>
-                    <div className="col-span-1 relative">
+                    <div className="relative">
                       <label className="block text-xs font-bold text-slate-700 mb-2">Discount Value</label>
                       <input
                         type="number"
@@ -664,30 +769,33 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                     <span className="text-sm font-bold text-slate-900">Drag & drop images here</span>
                     <span className="text-sm text-slate-500 mb-2">or click to browse</span>
                     <span className="text-[10px] text-slate-400">Supports: JPG, PNG, WebP (Max 5MB) each</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
                   </label>
 
                   <div className="grid grid-cols-5 gap-3">
-                     {previewUrl ? (
-                        <div className="aspect-square rounded-xl overflow-hidden border-2 border-indigo-100 relative group">
-                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                            <button 
-                                type="button"
-                                onClick={() => { setFormData({ ...formData, image: null }); setPreviewUrl(""); }}
-                                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                     ) : (
-                        <div className="aspect-square rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-300">
-                             <ImageIcon size={24} />
-                        </div>
-                     )}
-                     <div className="aspect-square rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-300"><ImageIcon size={24} /></div>
-                     <div className="aspect-square rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-300"><ImageIcon size={24} /></div>
-                     <div className="aspect-square rounded-xl border-2 border-slate-100 flex items-center justify-center text-slate-300"><ImageIcon size={24} /></div>
-                     <div className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 cursor-pointer transition-colors"><Plus size={24} /></div>
+                     {[...Array(5)].map((_, index) => (
+                       <div key={index} className={`aspect-square rounded-xl border-2 ${index < previewUrls.length ? 'border-indigo-100 relative group overflow-hidden' : index === previewUrls.length ? 'border-dashed border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 cursor-pointer transition-colors' : 'border-slate-100 flex items-center justify-center text-slate-300'}`}>
+                         {index < previewUrls.length ? (
+                           <>
+                             <img src={previewUrls[index]} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                             <button 
+                                 type="button"
+                                 onClick={() => removeImage(index)}
+                                 className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                             >
+                                 <X size={20} />
+                             </button>
+                           </>
+                         ) : index === previewUrls.length ? (
+                           <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                             <Plus size={24} />
+                             <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+                           </label>
+                         ) : (
+                           <ImageIcon size={24} />
+                         )}
+                       </div>
+                     ))}
                   </div>
                 </div>
               </div>

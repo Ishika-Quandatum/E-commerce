@@ -1,6 +1,20 @@
 from django.db import models
 from apps.categories.models import Category
+from django.utils.text import slugify
 
+
+class Brand(models.Model):
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 class Product(models.Model):
     UNIT_CHOICES = (
@@ -9,6 +23,16 @@ class Product(models.Model):
         ('ml', 'Milliliter (ml)'),
         ('l', 'Liter (l)'),
         ('pcs', 'Pieces (pcs)'),
+    )
+
+    DISCOUNT_TYPE_CHOICES = (
+        ('Percentage (%)', 'Percentage (%)'),
+        ('Flat', 'Flat'),
+    )
+
+    STATUS_CHOICES = (
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
     )
 
     name = models.CharField(max_length=255)
@@ -25,7 +49,15 @@ class Product(models.Model):
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='pcs')
 
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    subcategory = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='subcategory_products')
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='products', null=True, blank=True)
+
+    full_description = models.TextField(null=True, blank=True)
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, default='Percentage (%)')
+    tax = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    sku = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
 
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
     is_featured = models.BooleanField(default=False)
