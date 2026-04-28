@@ -35,7 +35,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">System Overview</h1>
+        <h1 className="text-3xl font-medium text-slate-900 tracking-tight">System Overview</h1>
         <p className="text-slate-500 font-medium">Real-time metrics for QuanStore platform.</p>
       </div>
 
@@ -47,9 +47,9 @@ const AdminDashboard = () => {
               <stat.icon size={26} strokeWidth={2.5} />
             </div>
             <div className="relative">
-              <div className="text-slate-400 text-[11px] font-black uppercase tracking-widest mb-1">{stat.name}</div>
-              <div className="text-3xl font-black text-slate-900 mb-2 tracking-tighter">{stat.value}</div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+              <div className="text-slate-400 text-[11px] font-medium uppercase tracking-widest mb-1">{stat.name}</div>
+              <div className="text-3xl font-medium text-slate-900 mb-2 tracking-tighter">{stat.value}</div>
+              <div className="flex items-center gap-1.5 text-xs font-normal text-emerald-600">
                 <TrendingUp size={14} /> {stat.trend}
               </div>
             </div>

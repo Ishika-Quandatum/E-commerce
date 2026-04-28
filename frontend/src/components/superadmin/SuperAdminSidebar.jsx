@@ -71,7 +71,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         )}
       >
         <div className="flex items-center justify-between px-8 py-8">
-          <h2 className="text-2xl font-black tracking-tighter text-brand-navy uppercase italic">
+          <h2 className="text-2xl font-medium tracking-tighter text-brand-navy uppercase italic">
             {platformName} <span className="text-brand-purple not-italic uppercase tracking-normal ml-1">Admin</span>
           </h2>
           <button 
@@ -84,7 +84,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
 
 
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          <div className="text-[11px] font-black text-brand-text-gray uppercase tracking-widest px-4 mb-4">Main Navigation</div>
+          <div className="text-[11px] font-medium text-brand-text-gray uppercase tracking-widest px-4 mb-4">Main Navigation</div>
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
             const Icon = item.icon;
@@ -94,7 +94,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
                   to={item.path}
                   onClick={() => setIsOpen(false)}
                   className={clsx(
-                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm group",
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-normal text-sm group",
                     isActive 
                       ? "bg-brand-purple text-white shadow-xl shadow-brand-purple/20" 
                       : "text-brand-navy/60 hover:bg-brand-purple-light hover:text-brand-purple"
@@ -126,7 +126,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
                           to={sub.path}
                           onClick={() => setIsOpen(false)}
                           className={clsx(
-                            "block px-4 py-2 text-[13px] font-bold rounded-xl transition-all",
+                            "block px-4 py-2 text-[13px] font-normal rounded-xl transition-all",
                             isSubActive ? "text-brand-purple bg-brand-purple/10" : "text-brand-navy/50 hover:text-brand-purple"
                           )}
                         >
@@ -144,7 +144,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         <div className="p-4 mt-auto space-y-2">
             <button 
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-brand-pink hover:bg-brand-pink/5 transition-all font-bold text-sm group"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-brand-pink hover:bg-brand-pink/5 transition-all font-normal text-sm group"
             >
                 <LogOut size={18} className="group-hover:rotate-12 transition-transform" />
                 <span>Logout</span>
@@ -152,10 +152,10 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
 
             <div className="bg-brand-purple-light/30 rounded-[2rem] p-4 border border-brand-purple-light">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-purple flex items-center justify-center font-black text-xs text-white shadow-lg shadow-brand-purple/20">SA</div>
+                    <div className="w-10 h-10 rounded-xl bg-brand-purple flex items-center justify-center font-medium text-xs text-white shadow-lg shadow-brand-purple/20">SA</div>
                     <div>
-                        <div className="text-[11px] font-black text-brand-navy leading-none mb-1">Super Admin</div>
-                        <div className="text-[10px] text-brand-text-gray font-bold uppercase tracking-tighter">Control Center</div>
+                        <div className="text-[11px] font-medium text-brand-navy leading-none mb-1">Super Admin</div>
+                        <div className="text-[10px] text-brand-text-gray font-normal uppercase tracking-tighter">Control Center</div>
                     </div>
                 </div>
             </div>

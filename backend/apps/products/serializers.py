@@ -71,6 +71,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for listing products."""
     category_name = serializers.ReadOnlyField(source='category.name')
     brand_name = serializers.ReadOnlyField(source='brand.name')
+    vendor_name = serializers.ReadOnlyField(source='vendor.shop_name')
     primary_image = serializers.SerializerMethodField()
 
     class Meta:
@@ -78,15 +79,19 @@ class ProductListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'price', 'discount_price', 'stock', 'quantity', 'unit',
             'category', 'category_name', 'brand', 'brand_name', 'status', 'rating', 'is_featured',
-            'is_deal', 'primary_image', 'discount_percentage', 'shipping_charge'
+            'is_deal', 'primary_image', 'discount_percentage', 'shipping_charge', 'vendor', 'vendor_name', 'sku', 'created_at'
         ]
 
     def get_primary_image(self, obj):
         first = obj.images.first()
         if first and first.image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(first.image.url)
+            try:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(first.image.url)
+                return first.image.url
+            except Exception:
+                return first.image.url
         return None
 
     discount_percentage = serializers.SerializerMethodField()

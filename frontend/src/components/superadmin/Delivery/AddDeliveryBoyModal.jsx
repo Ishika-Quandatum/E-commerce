@@ -47,25 +47,25 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
              <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/10">
                 <ShieldCheck size={48} />
              </div>
-             <h2 className="text-3xl font-black text-slate-900 tracking-tight">Account Created Successfully!</h2>
-             <p className="text-slate-500 font-bold max-w-md mx-auto">
+             <h2 className="text-3xl font-medium text-slate-900 tracking-tight">Account Created Successfully!</h2>
+             <p className="text-slate-500 font-normal max-w-md mx-auto">
                The delivery boy account has been initialized. Please share these credentials with the rider.
              </p>
              <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 max-w-sm mx-auto text-left space-y-4">
                 <div className="flex justify-between">
-                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Username</span>
-                   <span className="text-sm font-black text-slate-800">{showResult.username || formData.username}</span>
+                   <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Username</span>
+                   <span className="text-sm font-medium text-slate-800">{showResult.username || formData.username}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Auto-Generated Password</span>
-                   <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-black text-sm tracking-tighter shadow-sm border border-indigo-100">
+                   <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Auto-Generated Password</span>
+                   <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-medium text-sm tracking-tighter shadow-sm border border-indigo-100">
                      {showResult.password}
                    </div>
                 </div>
              </div>
              <button 
                 onClick={() => { setShowResult(null); onClose(); }}
-                className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all"
+                className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-medium text-sm uppercase tracking-widest hover:scale-105 transition-all"
              >
                 Close & Finish
              </button>
@@ -79,22 +79,22 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                     <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-600/20">
                         <Bike size={24} />
                     </div>
-                    <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-2">Fleet Management</div>
-                    <h2 className="text-3xl font-black tracking-tight leading-tight mb-4">Onboard New Delivery Boy</h2>
-                    <p className="text-slate-400 font-bold mb-8">Add a new delivery boy account to the system. The platform will automatically generate a secure password upon submission.</p>
+                    <div className="text-[10px] font-medium text-indigo-400 uppercase tracking-[0.2em] mb-2">Fleet Management</div>
+                    <h2 className="text-3xl font-medium tracking-tight leading-tight mb-4">Onboard New Delivery Boy</h2>
+                    <p className="text-slate-400 font-normal mb-8">Add a new delivery boy account to the system. The platform will automatically generate a secure password upon submission.</p>
                     
                     <div className="space-y-6 mt-auto">
                         <div className="flex items-start gap-4">
-                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold">1</div>
+                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-normal">1</div>
                             <div>
-                                <h4 className="text-sm font-bold text-white leading-none mb-1">Account Info</h4>
+                                <h4 className="text-sm font-normal text-white leading-none mb-1">Account Info</h4>
                                 <p className="text-[11px] text-slate-500">Provide personal and contact details.</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
-                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold">2</div>
+                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-normal">2</div>
                             <div>
-                                <h4 className="text-sm font-bold text-white leading-none mb-1">Verify Logistics</h4>
+                                <h4 className="text-sm font-normal text-white leading-none mb-1">Verify Logistics</h4>
                                 <p className="text-[11px] text-slate-500">Enter vehicle and license information.</p>
                             </div>
                         </div>
@@ -106,8 +106,8 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
             <div className="flex-1 p-10 lg:p-12">
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Admin Control</span>
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tight mt-1 underline decoration-indigo-500 decoration-4 underline-offset-4">Registration Form</h3>
+                        <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Admin Control</span>
+                        <h3 className="text-2xl font-medium text-slate-900 tracking-tight mt-1 underline decoration-indigo-500 decoration-4 underline-offset-4">Registration Form</h3>
                     </div>
                     <button onClick={onClose} className="p-3 bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all">
                         <X size={20} />
@@ -115,7 +115,7 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-bold animate-in shake duration-300">
+                    <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-normal animate-in shake duration-300">
                         {error}
                     </div>
                 )}
@@ -123,7 +123,7 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[11px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <User size={14} className="text-indigo-500" /> Full Name <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -133,12 +133,12 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                                 value={formData.full_name}
                                 onChange={handleChange}
                                 placeholder="Enter full name" 
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[11px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <Phone size={14} className="text-indigo-500" /> Phone Number <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -148,12 +148,12 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                                 value={formData.phone}
                                 onChange={handleChange}
                                 placeholder="+91 98765 43210" 
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[11px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <Mail size={14} className="text-indigo-500" /> Email Address <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -163,12 +163,12 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="rider@example.com" 
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[11px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <Lock size={14} className="text-indigo-500" /> Username / ID <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -178,12 +178,12 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                                 value={formData.username}
                                 onChange={handleChange}
                                 placeholder="unique_rider_id" 
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[11px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <MapPin size={14} className="text-indigo-500" /> Home Address
                             </label>
                             <input 
@@ -192,19 +192,19 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                                 value={formData.address}
                                 onChange={handleChange}
                                 placeholder="123 Street, City" 
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[11px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <Bike size={14} className="text-indigo-500" /> Vehicle Type
                             </label>
                             <select 
                                 name="vehicle_type"
                                 value={formData.vehicle_type}
                                 onChange={handleChange}
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             >
                                 <option value="Bike">Bike</option>
                                 <option value="Scooter">Scooter</option>
@@ -214,7 +214,7 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                         </div>
 
                         <div className="md:col-span-2 space-y-2">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[11px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <X size={14} className="text-indigo-500" /> DL Number
                             </label>
                             <input 
@@ -223,7 +223,7 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                                 value={formData.license_number}
                                 onChange={handleChange}
                                 placeholder="License Registration Number" 
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             />
                         </div>
                     </div>
@@ -232,11 +232,11 @@ const AddDeliveryBoyModal = ({ isOpen, onClose, onSuccess }) => {
                         <button 
                             type="submit" 
                             disabled={loading}
-                            className="w-full md:w-auto px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black text-md shadow-2xl shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3 uppercase tracking-tighter"
+                            className="w-full md:w-auto px-12 py-5 bg-indigo-600 text-white rounded-2xl font-medium text-md shadow-2xl shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3 uppercase tracking-tighter"
                         >
                             {loading ? <Loader2 className="animate-spin" size={20} /> : "Initialize Rider Account"}
                         </button>
-                        <p className="text-[11px] font-bold text-slate-400 max-w-xs leading-relaxed text-center md:text-left italic">
+                        <p className="text-[11px] font-normal text-slate-400 max-w-xs leading-relaxed text-center md:text-left italic">
                            Note: The password will be auto-generated and displayed after account initialization.
                         </p>
                     </div>

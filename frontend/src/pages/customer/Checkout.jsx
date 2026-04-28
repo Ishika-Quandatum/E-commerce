@@ -20,9 +20,9 @@ const Checkout = () => {
   });
 
   const subtotal = cart?.total ? parseFloat(cart.total) : 0;
-  const shipping = subtotal > 100 || subtotal === 0 ? 0 : 15;
-  const tax = subtotal * 0.1;
-  const total = subtotal + shipping + tax;
+  const shipping = cart?.total_shipping ? parseFloat(cart.total_shipping) : 0;
+  const tax = cart?.total_tax ? parseFloat(cart.total_tax) : 0;
+  const total = cart?.grand_total ? parseFloat(cart.grand_total) : (subtotal + shipping + tax);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -140,7 +140,7 @@ const Checkout = () => {
     ? "Processing..."
     : formData.payment_method === "Cash on Delivery"
       ? "Place Order"
-      : `Pay $${total.toFixed(2)} Now`
+      : `Pay ₹${total.toFixed(2)} Now`
   }
 </button>
           </form>
@@ -169,7 +169,7 @@ const Checkout = () => {
                     <p className="text-xs text-slate-400">Qty: {item.quantity}</p>
                   </div>
                   <div className="font-bold text-sm">
-  ${((item.product.discount_price || item.product.price) * item.quantity).toFixed(2)}
+  ₹{((item.product.discount_price || item.product.price) * item.quantity).toFixed(2)}
 </div>
                 </div>
               ))}
@@ -178,19 +178,19 @@ const Checkout = () => {
             <div className="space-y-4 pt-8 border-t border-white/10">
               <div className="flex justify-between text-slate-400 text-sm">
                 <span>Subtotal</span>
-                <span className="text-white font-bold">${subtotal.toFixed(2)}</span>
+                <span className="text-white font-bold">₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-slate-400 text-sm">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</span>
+                <span>{shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-slate-400 text-sm">
                 <span>Tax</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>₹{tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between pt-4 border-t border-white/10">
                 <span className="text-xl font-bold">Total</span>
-                <span className="text-3xl font-black text-primary-400">${total.toFixed(2)}</span>
+                <span className="text-3xl font-black text-primary-400">₹{total.toFixed(2)}</span>
               </div>
             </div>
 

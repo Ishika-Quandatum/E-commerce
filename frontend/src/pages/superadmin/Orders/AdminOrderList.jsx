@@ -51,7 +51,7 @@ const AdminOrderList = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+          <h1 className="text-2xl font-normal text-gray-900">Orders</h1>
           <p className="mt-1 text-sm text-gray-500">Manage and track customer orders.</p>
         </div>
         <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2 w-full max-w-sm shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all">

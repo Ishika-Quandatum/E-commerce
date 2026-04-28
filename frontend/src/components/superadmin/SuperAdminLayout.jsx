@@ -54,8 +54,8 @@ const SuperAdminLayout = () => {
               </button>
               <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden sm:block" />
               <button className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-slate-50 border border-slate-200 hover:border-indigo-200 transition-all group">
-                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black">SA</div>
-                  <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors hidden sm:block">Admin Center</span>
+                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-medium">SA</div>
+                  <span className="text-sm font-normal text-slate-700 group-hover:text-indigo-600 transition-colors hidden sm:block">Admin Center</span>
               </button>
           </div>
         </header>

@@ -56,7 +56,7 @@ const VendorManagement = () => {
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Vendor Management</h1>
+          <h1 className="text-3xl font-medium text-slate-900 tracking-tight">Vendor Management</h1>
           <p className="text-slate-500 mt-1">Review and manage vendor applications and status.</p>
         </div>
         <div className="flex bg-slate-100 p-1.5 rounded-2xl">
@@ -64,7 +64,7 @@ const VendorManagement = () => {
             <button
               key={tab.label}
               onClick={() => setStatusFilter(tab.value)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+              className={`px-6 py-2 rounded-xl text-sm font-normal transition-all ${
                 statusFilter === tab.value
                   ? 'bg-white text-indigo-600 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
@@ -96,11 +96,11 @@ const VendorManagement = () => {
                     <Store size={28} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">{vendor.shop_name}</h3>
+                    <h3 className="text-xl font-normal text-slate-900">{vendor.shop_name}</h3>
                     <p className="text-slate-500 text-sm">{vendor.shop_type}</p>
                   </div>
                 </div>
-                <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                <div className={`px-4 py-1.5 rounded-full text-xs font-normal uppercase tracking-wider ${
                   vendor.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
                   vendor.status === 'Rejected' ? 'bg-red-100 text-red-700' :
                   'bg-orange-100 text-orange-700'
@@ -128,14 +128,14 @@ const VendorManagement = () => {
                 <div className="flex gap-4">
                   <button 
                     onClick={() => handleApprove(vendor.id)}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-normal flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
                   >
                     <Check size={18} />
                     Approve
                   </button>
                   <button 
                     onClick={() => handleReject(vendor.id)}
-                    className="flex-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                    className="flex-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl font-normal flex items-center justify-center gap-2 transition-all"
                   >
                     <X size={18} />
                     Reject

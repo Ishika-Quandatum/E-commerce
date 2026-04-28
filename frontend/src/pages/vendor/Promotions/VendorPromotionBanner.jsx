@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminService, promotionService } from '../../../services/api';
-import { Megaphone, Plus, Trash2, Calendar, Tag, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Megaphone, Plus, Trash2, Calendar, Tag, Image as ImageIcon, Loader2, Edit2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const VendorPromotionBanner = () => {
@@ -10,7 +10,7 @@ const VendorPromotionBanner = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     product: '',
     title: '',
     short_description: '',
@@ -21,7 +21,8 @@ const VendorPromotionBanner = () => {
     end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
     priority: 0,
     banner_image: null
-  });
+  };
+  const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
     fetchData();
@@ -57,26 +58,25 @@ const VendorPromotionBanner = () => {
     
     const data = new FormData();
     Object.keys(formData).forEach(key => {
+      if (key === 'id') return;
       if (formData[key] !== null && formData[key] !== '') {
+        if (key === 'banner_image' && typeof formData[key] === 'string') {
+          return; // Skip sending image if it is just a URL string
+        }
         data.append(key, formData[key]);
+      } else if (key === 'banner_image' && (formData[key] === null || formData[key] === '')) {
+        data.append(key, ''); // Explicitly send empty string to clear the image in backend
       }
     });
 
     try {
-      await promotionService.submitBanner(data);
+      if (formData.id) {
+        await promotionService.updateBanner(formData.id, data);
+      } else {
+        await promotionService.submitBanner(data);
+      }
       setShowForm(false);
-      setFormData({
-        product: '',
-        title: '',
-        short_description: '',
-        offer_price: '',
-        discount_percent: '',
-        background_color: '#6D28D9',
-        start_date: '',
-        end_date: '',
-        priority: 0,
-        banner_image: null
-      });
+      setFormData(initialFormState);
       fetchData();
     } catch (err) {
       console.error("Error submitting promotion", err);
@@ -84,6 +84,24 @@ const VendorPromotionBanner = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEdit = (promo) => {
+    setFormData({
+      id: promo.id,
+      product: promo.product?.id || promo.product || '',
+      title: promo.title || '',
+      short_description: promo.short_description || '',
+      offer_price: promo.offer_price || '',
+      discount_percent: promo.discount_percent || '',
+      background_color: promo.background_color || '#6D28D9',
+      start_date: promo.start_date ? new Date(promo.start_date).toISOString().slice(0, 16) : '',
+      end_date: promo.end_date ? new Date(promo.end_date).toISOString().slice(0, 16) : '',
+      priority: promo.priority || 0,
+      banner_image: promo.image_url || null
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
@@ -108,7 +126,15 @@ const VendorPromotionBanner = () => {
         </div>
         
         <button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+             if (showForm) {
+               setShowForm(false);
+               setFormData(initialFormState);
+             } else {
+               setFormData(initialFormState);
+               setShowForm(true);
+             }
+          }}
           className="bg-brand-purple text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-lg active:scale-95"
         >
           {showForm ? 'Cancel Submission' : <><Plus size={20} /> New Promotion</>}
@@ -235,17 +261,33 @@ const VendorPromotionBanner = () => {
 
                 <div>
                   <label className="block text-xs font-black uppercase tracking-widest text-brand-navy mb-2">Custom Banner Image (Optional)</label>
-                  <label className="w-full h-40 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-all group relative overflow-hidden">
+                  <div className="w-full h-40 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-all group relative overflow-hidden">
                     {formData.banner_image ? (
-                      <img src={URL.createObjectURL(formData.banner_image)} className="w-full h-full object-cover" />
-                    ) : (
                       <>
+                        <img 
+                          src={typeof formData.banner_image === 'string' ? formData.banner_image : URL.createObjectURL(formData.banner_image)} 
+                          className="w-full h-full object-cover" 
+                        />
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                             setFormData({...formData, banner_image: null});
+                          }}
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                        >
+                           <X size={32} />
+                        </button>
+                      </>
+                    ) : (
+                      <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
                         <ImageIcon className="text-slate-300 group-hover:text-brand-purple transition-colors mb-2" size={32} />
                         <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Click to upload</span>
-                      </>
+                        <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
+                      </label>
                     )}
-                    <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
-                  </label>
+                  </div>
                 </div>
 
                 <button 
@@ -253,7 +295,7 @@ const VendorPromotionBanner = () => {
                   disabled={submitting}
                   className="w-full bg-brand-navy text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-brand-purple transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {submitting ? <><Loader2 className="animate-spin" size={18} /> Submitting...</> : 'Launch Promotion'}
+                  {submitting ? <><Loader2 className="animate-spin" size={18} /> Submitting...</> : formData.id ? 'Update Promotion' : 'Launch Promotion'}
                 </button>
               </div>
             </form>
@@ -287,12 +329,20 @@ const VendorPromotionBanner = () => {
                       <p className="text-xs text-brand-text-gray font-bold uppercase tracking-widest">₹{promo.offer_price}</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => handleDelete(promo.id)}
-                    className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all rounded-xl"
-                  >
-                    <Trash2 size={20} />
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEdit(promo)}
+                      className="p-3 text-slate-300 hover:text-brand-purple hover:bg-brand-purple/10 transition-all rounded-xl"
+                    >
+                      <Edit2 size={20} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(promo.id)}
+                      className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all rounded-xl"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-4">

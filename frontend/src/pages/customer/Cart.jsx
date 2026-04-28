@@ -102,7 +102,7 @@ const Cart = () => {
                 <div className="w-full sm:w-auto text-center sm:text-right mt-4 sm:mt-0 sm:pl-6 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0">
                   <p className="text-sm font-semibold text-slate-500 mb-1">Subtotal</p>
                   <p className="text-2xl font-extrabold text-slate-900 flex items-center justify-center sm:justify-end gap-1">
-                    <span className="text-lg text-slate-400 font-medium">$</span>
+                    <span className="text-lg text-slate-400 font-medium">₹</span>
                     {parseFloat(item.subtotal).toFixed(2)}
                   </p>
                   {product.discount_price && (
@@ -123,25 +123,27 @@ const Cart = () => {
 
             <div className="space-y-4 mb-8">
               <div className="flex justify-between items-center text-slate-300">
-                <span className="font-medium">Total Items ({cart.item_count})</span>
-                <span className="font-bold">${parseFloat(cart.total).toFixed(2)}</span>
+                <span className="font-medium">Subtotal ({cart.item_count} items)</span>
+                <span className="font-bold">₹{parseFloat(cart.total).toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center text-slate-300">
                 <span className="font-medium">Shipping</span>
-                <span className="font-bold text-green-400">Free</span>
+                <span className={`font-bold ${cart.total_shipping > 0 ? 'text-slate-300' : 'text-green-400'}`}>
+                  {cart.total_shipping > 0 ? `₹${parseFloat(cart.total_shipping).toFixed(2)}` : 'Free'}
+                </span>
               </div>
               <div className="flex justify-between items-center text-slate-300">
                 <span className="font-medium">Tax</span>
-                <span className="font-bold text-slate-400">Calculated at checkout</span>
+                <span className="font-bold text-slate-300">₹{parseFloat(cart.total_tax).toFixed(2)}</span>
               </div>
             </div>
 
             <div className="border-t border-slate-700 pt-6 mb-8">
               <div className="flex justify-between items-end">
-                <span className="text-lg font-medium text-slate-300">Total</span>
+                <span className="text-lg font-medium text-slate-300">Grand Total</span>
                 <span className="text-4xl font-extrabold flex items-start">
-                  <span className="text-xl text-primary-400 mt-1 mr-1">$</span>
-                  {parseFloat(cart.total).toFixed(2)}
+                  <span className="text-xl text-primary-400 mt-1 mr-1">₹</span>
+                  {parseFloat(cart.grand_total).toFixed(2)}
                 </span>
               </div>
             </div>

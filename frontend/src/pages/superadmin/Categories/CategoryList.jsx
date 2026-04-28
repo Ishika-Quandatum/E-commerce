@@ -40,12 +40,12 @@ const CategoryList = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Product Categories</h1>
+          <h1 className="text-4xl font-medium text-slate-900 tracking-tight">Product Categories</h1>
           <p className="text-slate-500 font-medium mt-1">Manage and organize your store's taxonomy.</p>
         </div>
         <button 
           onClick={() => navigate("/admin/categories/add")}
-          className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-200 active:scale-95"
+          className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl font-normal transition-all shadow-lg shadow-indigo-200 active:scale-95"
         >
           <Plus size={20} className="group-hover:rotate-90 transition-transform" />
           Add New Category
@@ -65,7 +65,7 @@ const CategoryList = () => {
             />
           </div>
           <div className="flex items-center gap-3">
-             <div className="px-5 py-3 bg-slate-100 rounded-2xl text-slate-600 font-bold text-sm flex items-center gap-2">
+             <div className="px-5 py-3 bg-slate-100 rounded-2xl text-slate-600 font-normal text-sm flex items-center gap-2">
                 <Filter size={16} />
                 {categories.length} Total
              </div>
@@ -76,10 +76,10 @@ const CategoryList = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Image</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Category Name</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Product Inventory</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em]">Image</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em]">Category Name</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em]">Product Inventory</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -88,7 +88,7 @@ const CategoryList = () => {
                   <td colSpan="4" className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-slate-100 border-t-indigo-600"></div>
-                       <p className="font-bold text-slate-400">Loading taxonomy...</p>
+                       <p className="font-normal text-slate-400">Loading taxonomy...</p>
                     </div>
                   </td>
                 </tr>
@@ -107,10 +107,10 @@ const CategoryList = () => {
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                      <span className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{c.name}</span>
+                      <span className="text-lg font-normal text-slate-900 group-hover:text-indigo-600 transition-colors">{c.name}</span>
                     </td>
                     <td className="px-8 py-5">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-black">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium">
                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
                          {c.products_count || 0} Products
                       </div>
@@ -143,12 +143,12 @@ const CategoryList = () => {
                           <Tags size={40} />
                        </div>
                        <div>
-                          <p className="text-xl font-bold text-slate-900">No categories found</p>
+                          <p className="text-xl font-normal text-slate-900">No categories found</p>
                           <p className="text-slate-500 mt-1">Try a different search term or add a new category.</p>
                        </div>
                        <button 
                           onClick={() => setSearchTerm("")}
-                          className="text-indigo-600 font-bold hover:underline"
+                          className="text-indigo-600 font-normal hover:underline"
                        >
                           Clear search
                        </button>

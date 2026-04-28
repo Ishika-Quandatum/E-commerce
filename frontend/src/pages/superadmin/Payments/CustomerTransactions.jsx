@@ -81,7 +81,7 @@ const CustomerTransactions = () => {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Customer Transactions</h1>
+            <h1 className="text-3xl font-medium text-slate-900 tracking-tight">Customer Transactions</h1>
             <p className="text-slate-500 font-medium">Full ledger of store inflows and order payments.</p>
           </div>
         </div>
@@ -90,7 +90,7 @@ const CustomerTransactions = () => {
           <button 
             onClick={handleExport}
             disabled={exporting}
-            className={`flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3.5 rounded-2xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all ${exporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3.5 rounded-2xl font-normal text-sm shadow-sm hover:bg-slate-50 transition-all ${exporting ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {exporting ? (
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-200 border-t-indigo-600" />
@@ -120,7 +120,7 @@ const CustomerTransactions = () => {
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all ${statusFilter === f ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-500 border border-slate-100 hover:border-slate-200'}`}
+                className={`px-5 py-2.5 rounded-xl text-xs font-medium transition-all ${statusFilter === f ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-500 border border-slate-100 hover:border-slate-200'}`}
               >
                 {f}
               </button>
@@ -132,13 +132,13 @@ const CustomerTransactions = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Transaction ID</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Customer</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Order ID</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Method</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Amount</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-widest">Transaction ID</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-widest">Customer</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-widest">Order ID</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-widest">Method</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-widest">Amount</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="px-8 py-5 text-[11px] font-medium text-slate-400 uppercase tracking-widest text-right">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -147,24 +147,24 @@ const CustomerTransactions = () => {
                   <td colSpan="7" className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-100 border-t-indigo-600"></div>
-                      <span className="font-bold text-slate-400">Loading ledger...</span>
+                      <span className="font-normal text-slate-400">Loading ledger...</span>
                     </div>
                   </td>
                 </tr>
               ) : transactions.length > 0 ? (
                 transactions.map((t) => (
                   <tr key={t.id} className="group hover:bg-slate-50/50 transition-colors">
-                    <td className="px-8 py-6 font-black text-indigo-600 uppercase tracking-tighter text-sm italic">{t.transaction_id || `TXN-${t.id}`}</td>
+                    <td className="px-8 py-6 font-medium text-indigo-600 uppercase tracking-tighter text-sm italic">{t.transaction_id || `TXN-${t.id}`}</td>
                     <td className="px-8 py-6">
-                       <span className="font-bold text-slate-900 capitalize block">{t.customer_name || t.username}</span>
+                       <span className="font-normal text-slate-900 capitalize block">{t.customer_name || t.username}</span>
                        <span className="text-[11px] font-medium text-slate-500 block">{t.customer_email || 'No Email'}</span>
-                       {t.customer_phone && <span className="text-[10px] font-bold text-slate-400 tracking-wider">📞 {t.customer_phone}</span>}
+                       {t.customer_phone && <span className="text-[10px] font-normal text-slate-400 tracking-wider">📞 {t.customer_phone}</span>}
                     </td>
                     <td className="px-8 py-6">
-                       <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-600">#{t.order_id}</span>
+                       <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-normal text-slate-600">#{t.order_id}</span>
                     </td>
                     <td className="px-8 py-6">
-                       <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                       <div className="flex items-center gap-2 text-[11px] font-normal text-slate-500 uppercase tracking-wider">
                           <CreditCard size={14} className="text-slate-400" />
                           {t.method === 'cod' ? 'Cash on Delivery' : 
                            t.method === 'card' ? 'Credit/Debit Card' :
@@ -173,15 +173,15 @@ const CustomerTransactions = () => {
                        </div>
                     </td>
                     <td className="px-8 py-6">
-                       <span className="text-sm font-black text-slate-900">₹{parseFloat(t.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                       <span className="text-sm font-medium text-slate-900">₹{parseFloat(t.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </td>
                     <td className="px-8 py-6">
-                       <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${getStatusStyle(t.status)}`}>
+                       <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-medium uppercase tracking-widest ${getStatusStyle(t.status)}`}>
                           {getStatusIcon(t.status)} {t.status}
                        </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                       <span className="text-[11px] font-normal text-slate-400 uppercase tracking-widest">
                           {new Date(t.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                        </span>
                     </td>
@@ -194,7 +194,7 @@ const CustomerTransactions = () => {
                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
                           <FileText size={32} />
                        </div>
-                       <p className="text-lg font-bold text-slate-900">No transactions found</p>
+                       <p className="text-lg font-normal text-slate-900">No transactions found</p>
                        <p className="text-slate-500 text-sm">No payment records match your current criteria.</p>
                     </div>
                   </td>

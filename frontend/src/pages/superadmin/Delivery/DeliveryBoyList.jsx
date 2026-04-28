@@ -28,10 +28,10 @@ const StatCard = ({ title, value, icon: Icon, color, subtext }) => (
       <div className={clsx("w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg", color)}>
         <Icon size={24} />
       </div>
-      <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">{subtext}</span>
+      <span className="text-[10px] font-medium text-slate-300 uppercase tracking-[0.2em]">{subtext}</span>
     </div>
-    <div className="text-3xl font-black text-slate-800 tracking-tighter">{value}</div>
-    <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">{title}</p>
+    <div className="text-3xl font-medium text-slate-800 tracking-tighter">{value}</div>
+    <p className="text-xs font-normal text-slate-400 mt-1 uppercase tracking-widest">{title}</p>
   </div>
 );
 
@@ -97,23 +97,23 @@ const DeliveryBoyList = () => {
                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
                           <Bike size={20} />
                        </div>
-                       <h2 className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Logistics Control</h2>
+                       <h2 className="text-xs font-medium text-indigo-600 uppercase tracking-[0.3em]">Logistics Control</h2>
                    </div>
-                   <h1 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">Fleet <span className="text-indigo-600 not-italic uppercase tracking-normal">Management</span></h1>
-                   <p className="text-slate-400 font-bold mt-2 max-w-xl">Monitor your delivery partners, track fleet availability, and onboard new personnel in real-time.</p>
+                   <h1 className="text-4xl font-medium text-slate-900 tracking-tight italic uppercase">Fleet <span className="text-indigo-600 not-italic uppercase tracking-normal">Management</span></h1>
+                   <p className="text-slate-400 font-normal mt-2 max-w-xl">Monitor your delivery partners, track fleet availability, and onboard new personnel in real-time.</p>
                 </div>
                 <button 
                   onClick={() => setShowAddModal(true)}
-                  className="flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
+                  className="flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-medium text-sm uppercase tracking-widest shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
                 >
                    <Plus size={18} /> Add Delivery Boy
                 </button>
             </div>
 
             {actionError && (
-                <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-bold flex items-center justify-between">
+                <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-normal flex items-center justify-between">
                     <span>{actionError}</span>
-                    <button onClick={() => setActionError("")} className="text-rose-400 hover:text-rose-600 font-black">X</button>
+                    <button onClick={() => setActionError("")} className="text-rose-400 hover:text-rose-600 font-medium">X</button>
                 </div>
             )}
 
@@ -154,17 +154,17 @@ const DeliveryBoyList = () => {
                 {/* Search & Filters */}
                 <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black" size={18} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium" size={18} />
                         <input 
                            type="text" 
                            placeholder="Search by ID, Name, or Email..." 
                            value={searchTerm}
                            onChange={(e) => setSearchTerm(e.target.value)}
-                           className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                           className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-5 py-3.5 bg-slate-50 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
+                        <button className="flex items-center gap-2 px-5 py-3.5 bg-slate-50 text-slate-600 rounded-xl text-xs font-medium uppercase tracking-widest hover:bg-slate-100 transition-colors">
                            <Filter size={16} /> Filter
                         </button>
                     </div>
@@ -175,13 +175,13 @@ const DeliveryBoyList = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Rider Detail</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Assigned</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Availability</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Registered</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">Rider Detail</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">Contact</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">Assigned</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">Availability</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">Registered</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -189,33 +189,33 @@ const DeliveryBoyList = () => {
                                 <tr key={rider.id} className="group hover:bg-slate-50/50 transition-colors">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-xs">
+                                            <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-medium text-xs">
                                                 {rider.user.username.slice(0, 2).toUpperCase()}
                                             </div>
                                             <div>
-                                                <div className="font-black text-slate-800 text-sm tracking-tight">{rider.user.first_name} {rider.user.last_name || rider.user.username}</div>
-                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID: #{rider.id}</div>
+                                                <div className="font-medium text-slate-800 text-sm tracking-tight">{rider.user.first_name} {rider.user.last_name || rider.user.username}</div>
+                                                <div className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">ID: #{rider.id}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                            <div className="flex items-center gap-2 text-xs font-normal text-slate-600">
                                                 <Mail size={12} className="text-slate-300" /> {rider.user.email}
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                            <div className="flex items-center gap-2 text-xs font-normal text-slate-600">
                                                 <Phone size={12} className="text-slate-300" /> {rider.user.phone || "N/A"}
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className="inline-flex items-center px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black tracking-tighter">
+                                        <span className="inline-flex items-center px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium tracking-tighter">
                                             {rider.assigned_orders_count || 0} Orders
                                         </span>
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={clsx(
-                                            "inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border",
+                                            "inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-medium uppercase tracking-widest border",
                                             rider.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-100 text-slate-400 border-slate-200"
                                         )}>
                                             {rider.is_active ? "Active" : "Inactive"}
@@ -224,10 +224,10 @@ const DeliveryBoyList = () => {
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-2">
                                             <div className={clsx("w-2 h-2 rounded-full", rider.availability_status === 'Online' ? "bg-emerald-500 animate-pulse" : "bg-slate-300")} />
-                                            <span className="text-xs font-bold text-slate-700">{rider.availability_status}</span>
+                                            <span className="text-xs font-normal text-slate-700">{rider.availability_status}</span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6 text-xs font-bold text-slate-500 italic">
+                                    <td className="px-8 py-6 text-xs font-normal text-slate-500 italic">
                                         {new Date(rider.join_date).toLocaleDateString()}
                                     </td>
                                     <td className="px-8 py-6">
@@ -254,10 +254,10 @@ const DeliveryBoyList = () => {
 
                 {/* Pagination Simulation */}
                 <div className="p-8 border-t border-slate-50 flex items-center justify-between">
-                    <p className="text-xs font-bold text-slate-400 tracking-wide uppercase">Showing {filteredRiders.length} of {riders.length} results</p>
+                    <p className="text-xs font-normal text-slate-400 tracking-wide uppercase">Showing {filteredRiders.length} of {riders.length} results</p>
                     <div className="flex items-center gap-2">
                         <button className="p-2 text-slate-400 hover:text-slate-800 disabled:opacity-30"><ChevronLeft size={20} /></button>
-                        <div className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-500/20">1</div>
+                        <div className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium shadow-lg shadow-indigo-500/20">1</div>
                         <button className="p-2 text-slate-400 hover:text-slate-800 disabled:opacity-30"><ChevronRight size={20} /></button>
                     </div>
                 </div>

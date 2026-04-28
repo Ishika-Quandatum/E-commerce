@@ -85,6 +85,7 @@ const MyOrders = () => {
                 setActiveTab("Assigned");
             } else if (status === "Delivered") {
                 await riderService.markDelivered(id);
+                alert("Delivery completed successfully! Wallet and COD logs updated.");
                 setActiveTab("Delivered");
             } else if (status === "Picked Up") {
                 await riderService.updateStatus(id, "In Transit");

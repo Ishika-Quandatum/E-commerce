@@ -69,7 +69,7 @@ const AdminPaymentList = () => {
     <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 px-2">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none mb-4">
+          <h1 className="text-4xl font-medium text-slate-900 tracking-tighter uppercase italic leading-none mb-4">
             Payment <span className="text-indigo-600 not-italic uppercase tracking-normal">Dashboard</span>
           </h1>
           <p className="text-slate-500 font-medium">Real-time financial health and transaction overview.</p>
@@ -88,9 +88,9 @@ const AdminPaymentList = () => {
               <card.icon size={26} strokeWidth={2.5} />
             </div>
             <div className="relative">
-              <div className="text-slate-400 text-[11px] font-black uppercase tracking-widest mb-1">{card.name}</div>
-              <div className="text-3xl font-black text-slate-900 mb-2 tracking-tighter">{card.value}</div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{card.description}</div>
+              <div className="text-slate-400 text-[11px] font-medium uppercase tracking-widest mb-1">{card.name}</div>
+              <div className="text-3xl font-medium text-slate-900 mb-2 tracking-tighter">{card.value}</div>
+              <div className="text-[10px] font-normal text-slate-400 uppercase tracking-wider">{card.description}</div>
             </div>
           </Link>
         ))}
@@ -105,9 +105,9 @@ const AdminPaymentList = () => {
                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
                     <CreditCard size={24} />
                  </div>
-                 <h3 className="text-2xl font-black italic uppercase tracking-tighter underline decoration-indigo-500 decoration-4 underline-offset-8">Customer Transactions</h3>
+                 <h3 className="text-2xl font-medium italic uppercase tracking-tighter underline decoration-indigo-500 decoration-4 underline-offset-8">Customer Transactions</h3>
                  <p className="text-slate-400 font-medium max-w-sm">Detailed logs of all order payments, transaction IDs, and settlement methods.</p>
-                 <div className="pt-4 font-black text-xs text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                 <div className="pt-4 font-medium text-xs text-indigo-400 uppercase tracking-widest flex items-center gap-2">
                     View Ledger <ArrowUpRight size={16} />
                  </div>
              </div>
@@ -121,9 +121,9 @@ const AdminPaymentList = () => {
                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
                     <Users size={24} />
                  </div>
-                 <h3 className="text-2xl font-black italic uppercase tracking-tighter underline decoration-indigo-500 decoration-4 underline-offset-8">Vendor Payouts</h3>
+                 <h3 className="text-2xl font-medium italic uppercase tracking-tighter underline decoration-indigo-500 decoration-4 underline-offset-8">Vendor Payouts</h3>
                  <p className="text-slate-500 font-medium max-w-sm">Manage merchant settlements, commission deductions, and payout history.</p>
-                 <div className="pt-4 font-black text-xs text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                 <div className="pt-4 font-medium text-xs text-indigo-600 uppercase tracking-widest flex items-center gap-2">
                     Manage Settlements <ArrowUpRight size={16} />
                  </div>
              </div>

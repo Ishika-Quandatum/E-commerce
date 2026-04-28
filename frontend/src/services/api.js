@@ -93,6 +93,7 @@ export const adminService = {
   initializeDispatch: (id) => api.post(`orders/${id}/initialize_dispatch/`),
   autoAssignRider: (id) => api.post(`tracking/shipments/${id}/assign_nearest_rider/`),
   updateShipmentStatus: (id, status) => api.patch(`tracking/shipments/${id}/update_dispatch_status/`, { status }),
+  getProductStats: () => api.get('products/admin_stats/'),
 };
 
 export const trackingService = {

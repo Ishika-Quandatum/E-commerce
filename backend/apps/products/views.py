@@ -1,8 +1,10 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Q
 from .models import Product, ProductImage, Brand
 from .serializers import ProductSerializer, ProductListSerializer, BrandSerializer
+from .pagination import StandardResultsSetPagination
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
@@ -12,6 +14,7 @@ class BrandViewSet(viewsets.ModelViewSet):
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related('category').prefetch_related('images').all()
+    pagination_class = StandardResultsSetPagination
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -38,7 +41,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             # Super Admin can see all, customers can see all (public list)
 
         category_param = self.request.query_params.get('category')
-        if category_param:
+        if category_param and category_param != 'All Categories':
             categories = [c.strip() for c in category_param.split(',') if c.strip()]
             if categories:
                 if categories[0].isdigit():
@@ -48,10 +51,44 @@ class ProductViewSet(viewsets.ModelViewSet):
                 
         search = self.request.query_params.get('search')
         if search:
-            if search.isdigit():
-                queryset = queryset.filter(id=search)
-            else:
-                queryset = queryset.filter(name__icontains=search)
+            queryset = queryset.filter(
+                Q(name__icontains=search) | 
+                Q(sku__icontains=search) | 
+                Q(vendor__shop_name__icontains=search)
+            )
+            
+        status_param = self.request.query_params.get('status')
+        if status_param and status_param != 'All Status':
+            queryset = queryset.filter(status=status_param)
+
+        stock_status = self.request.query_params.get('stock_status')
+        if stock_status == 'Out of Stock':
+            queryset = queryset.filter(stock=0)
+        elif stock_status == 'Low Stock':
+            queryset = queryset.filter(stock__gt=0, stock__lte=10)
+        elif stock_status == 'In Stock':
+            queryset = queryset.filter(stock__gt=10)
+
+        vendor_param = self.request.query_params.get('vendor')
+        if vendor_param and vendor_param != 'All Vendors':
+            if vendor_param.isdigit():
+                queryset = queryset.filter(vendor_id=vendor_param)
+
+        min_price = self.request.query_params.get('min_price')
+        if min_price and min_price.isdigit():
+            queryset = queryset.filter(price__gte=min_price)
+            
+        max_price = self.request.query_params.get('max_price')
+        if max_price and max_price.isdigit():
+            queryset = queryset.filter(price__lte=max_price)
+            
+        start_date = self.request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(created_at__date__gte=start_date)
+            
+        end_date = self.request.query_params.get('end_date')
+        if end_date:
+            queryset = queryset.filter(created_at__date__lte=end_date)
             
         featured = self.request.query_params.get('featured')
         if featured == 'true':
@@ -60,10 +97,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         deal = self.request.query_params.get('deal')
         if deal == 'true':
             queryset = queryset.filter(is_deal=True)
-            
-        max_price = self.request.query_params.get('max_price')
-        if max_price and max_price.isdigit():
-            queryset = queryset.filter(price__lte=max_price)
             
         sort_by = self.request.query_params.get('sort')
         if sort_by == 'price_asc':
@@ -74,8 +107,28 @@ class ProductViewSet(viewsets.ModelViewSet):
             queryset = queryset.order_by('-created_at')
         elif sort_by == 'popularity':
             queryset = queryset.order_by('-rating')
+        else:
+            queryset = queryset.order_by('-created_at')
             
-        return queryset
+        return queryset.distinct()
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def admin_stats(self, request):
+        if request.user.role not in ['admin', 'superadmin', 'vendor']:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        base_qs = Product.objects.all()
+        if request.user.role == 'vendor':
+            vendor = getattr(request.user, 'vendor_profile', None)
+            base_qs = base_qs.filter(vendor=vendor)
+            
+        return Response({
+            'total_products': base_qs.count(),
+            'active_products': base_qs.filter(status='Active').count(),
+            'inactive_products': base_qs.filter(status='Inactive').count(),
+            'out_of_stock': base_qs.filter(stock=0).count(),
+            'low_stock': base_qs.filter(stock__gt=0, stock__lte=10).count()
+        })
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -181,23 +234,29 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def bulk_export(self, request):
-        if request.user.role != 'vendor':
-            return Response({'error': 'Only vendors can export products.'}, status=status.HTTP_403_FORBIDDEN)
+        user = request.user
+        if user.role not in ['admin', 'superadmin', 'vendor']:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
             
-        vendor = getattr(request.user, 'vendor_profile', None)
-        products = Product.objects.filter(vendor=vendor)
+        if user.role == 'vendor':
+            vendor = getattr(user, 'vendor_profile', None)
+            products = Product.objects.filter(vendor=vendor)
+        else:
+            products = Product.objects.all()
         
         data = []
         for p in products:
             data.append({
                 'Name': p.name,
+                'SKU': p.sku or '',
                 'Description': p.description,
                 'Category': p.category.name if p.category else '',
+                'Vendor': p.vendor.shop_name if p.vendor else 'Official Store',
                 'Regular Price': float(p.price) if p.price else 0.0,
                 'Offer Price': float(p.discount_price) if p.discount_price else '',
                 'Stock': p.stock,
-                'Quantity': float(p.quantity) if p.quantity else 1.0,
-                'Unit': p.unit
+                'Status': p.status,
+                'Created At': p.created_at.strftime('%Y-%m-%d %H:%M:%S')
             })
             
         import pandas as pd
@@ -210,9 +269,10 @@ class ProductViewSet(viewsets.ModelViewSet):
             df.to_excel(writer, index=False, sheet_name='Products')
         
         output.seek(0)
+        filename = "All_Products.xlsx" if user.role != 'vendor' else "Vendor_Products.xlsx"
         response = HttpResponse(
             output.read(), 
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; filename="Vendor_Products.xlsx"'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response

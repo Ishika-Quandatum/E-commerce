@@ -644,7 +644,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                     </div>
                     <div className="bg-indigo-50 rounded-xl p-4 flex flex-col justify-center border border-indigo-100">
                         <span className="text-[11px] font-bold text-indigo-600 mb-1">You Will Receive</span>
-                        <span className="text-2xl font-black text-indigo-700">₹{(
+                        <span className="text-xl lg:text-2xl font-black text-indigo-700 break-all leading-tight">₹{(
                              (parseFloat(formData.discount_price || formData.price || 0)) +
                              parseFloat(formData.shipping_charge || 0) -
                              ((parseFloat(formData.discount_price || formData.price || 0)) * (parseFloat(formData.tax || 0)/100))

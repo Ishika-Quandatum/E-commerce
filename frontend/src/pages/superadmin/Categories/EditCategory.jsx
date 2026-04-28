@@ -74,7 +74,7 @@ const EditCategory = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Edit Category</h1>
+        <h1 className="text-3xl font-normal text-gray-900">Edit Category</h1>
         <p className="mt-1 text-sm text-gray-500">Update category details including featured images.</p>
       </div>
 

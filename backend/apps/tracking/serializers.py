@@ -17,35 +17,13 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RiderWalletSerializer(serializers.ModelSerializer):
-    transactions = TransactionSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = RiderWallet
-        fields = '__all__'
+
 
 class SalaryConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalaryConfiguration
         fields = '__all__'
 
-class RiderProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    assigned_orders_count = serializers.SerializerMethodField()
-    rider_name = serializers.ReadOnlyField(source='user.get_full_name')
-    wallet = RiderWalletSerializer(read_only=True)
-    last_activity = serializers.SerializerMethodField()
-
-    class Meta:
-        model = RiderProfile
-        fields = '__all__'
-    
-    def get_assigned_orders_count(self, obj):
-        return obj.assigned_shipments.count()
-
-    def get_last_activity(self, obj):
-        shipment = obj.assigned_shipments.order_by('-updated_at').first()
-        return shipment.updated_at if shipment else getattr(obj, 'join_date', None)
 
 
 class CODCollectionSerializer(serializers.ModelSerializer):
@@ -74,6 +52,56 @@ class RiderSettlementSerializer(serializers.ModelSerializer):
 
     def get_month_display(self, obj):
         return obj.month.strftime('%B %Y')
+
+
+class RiderWalletSerializer(serializers.ModelSerializer):
+    transactions = TransactionSerializer(many=True, read_only=True)
+    total_orders_delivered = serializers.SerializerMethodField()
+    hold_amount = serializers.SerializerMethodField()
+    recent_cod_transactions = serializers.SerializerMethodField()
+    settlement_summary = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = RiderWallet
+        fields = '__all__'
+
+    def get_total_orders_delivered(self, obj):
+        return Shipment.objects.filter(rider=obj.rider, status='Delivered').count()
+
+    def get_hold_amount(self, obj):
+        return obj.pending_cod_amount
+
+    def get_recent_cod_transactions(self, obj):
+        cods = CODCollection.objects.filter(rider=obj.rider).order_by('-collected_at')[:10]
+        return CODCollectionSerializer(cods, many=True).data
+
+    def get_settlement_summary(self, obj):
+        last_settlement = RiderSettlement.objects.filter(rider=obj.rider, status='Paid').order_by('-paid_at').first()
+        return {
+            'total_payable': obj.pending_cod_amount,
+            'total_paid': obj.total_cod_submitted,
+            'pending_amount': obj.pending_cod_amount,
+            'last_settlement_date': last_settlement.paid_at if last_settlement else None
+        }
+
+
+class RiderProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    assigned_orders_count = serializers.SerializerMethodField()
+    rider_name = serializers.ReadOnlyField(source='user.get_full_name')
+    wallet = RiderWalletSerializer(read_only=True)
+    last_activity = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RiderProfile
+        fields = '__all__'
+    
+    def get_assigned_orders_count(self, obj):
+        return obj.assigned_shipments.count()
+
+    def get_last_activity(self, obj):
+        shipment = obj.assigned_shipments.order_by('-updated_at').first()
+        return shipment.updated_at if shipment else getattr(obj, 'join_date', None)
 
 
 class RiderFinancialLogSerializer(serializers.ModelSerializer):

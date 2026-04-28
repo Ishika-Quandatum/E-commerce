@@ -88,8 +88,8 @@ const VendorTransactions = () => {
             <ArrowLeft size={24} className="text-slate-600" />
           </button>
           <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight font-title italic">Vendor <span className="text-brand-blue not-italic">Settlements</span></h1>
-            <p className="text-slate-500 font-bold mt-1">Merchant payout registry and financial distribution logs.</p>
+            <h1 className="text-4xl font-medium text-slate-900 tracking-tight font-title italic">Vendor <span className="text-brand-blue not-italic">Settlements</span></h1>
+            <p className="text-slate-500 font-normal mt-1">Merchant payout registry and financial distribution logs.</p>
           </div>
         </div>
         
@@ -98,10 +98,10 @@ const VendorTransactions = () => {
                {[1,2,3].map(i => <div key={i} className="w-10 h-10 rounded-full bg-slate-100 border-4 border-white" />)}
            </div>
            <div className="pr-4 border-r border-slate-100">
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Active Merchants</p>
-               <p className="text-sm font-black text-slate-900">12 Vendors Syncing</p>
+               <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none mb-1">Active Merchants</p>
+               <p className="text-sm font-medium text-slate-900">12 Vendors Syncing</p>
            </div>
-           <button className="bg-brand-blue text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-blue/20 hover:scale-105 transition-all">
+           <button className="bg-brand-blue text-white px-6 py-3 rounded-2xl font-medium text-[10px] uppercase tracking-widest shadow-lg shadow-brand-blue/20 hover:scale-105 transition-all">
                 Export Ledger
            </button>
         </div>
@@ -116,10 +116,10 @@ const VendorTransactions = () => {
                       <Wallet size={24} />
                   </div>
                   <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Pending Settlement</p>
-                      <h4 className="text-4xl font-black tracking-tighter">₹{totals.pending.toLocaleString()}</h4>
+                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] opacity-50">Pending Settlement</p>
+                      <h4 className="text-4xl font-medium tracking-tighter">₹{totals.pending.toLocaleString()}</h4>
                   </div>
-                  <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-medium uppercase tracking-widest">
                        <ShieldCheck size={16} /> Awaiting Delivered Proof
                   </div>
               </div>
@@ -129,10 +129,10 @@ const VendorTransactions = () => {
                   <CreditCard size={24} />
               </div>
               <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total Settled</p>
-                  <h4 className="text-4xl font-black tracking-tighter text-slate-900">₹{totals.settled.toLocaleString()}</h4>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">Total Settled</p>
+                  <h4 className="text-4xl font-medium tracking-tighter text-slate-900">₹{totals.settled.toLocaleString()}</h4>
               </div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <div className="text-[10px] font-normal text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Clock size={16} /> Updated Real-time
               </div>
           </div>
@@ -141,10 +141,10 @@ const VendorTransactions = () => {
                   <TrendingUp size={24} />
               </div>
               <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Platform Revenue</p>
-                  <h4 className="text-4xl font-black tracking-tighter text-slate-900">₹{totals.commission.toLocaleString()}</h4>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">Platform Revenue</p>
+                  <h4 className="text-4xl font-medium tracking-tighter text-slate-900">₹{totals.commission.toLocaleString()}</h4>
               </div>
-              <div className="flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-emerald-500 text-[10px] font-medium uppercase tracking-widest">
                    +12% Yield This Week
               </div>
           </div>
@@ -159,7 +159,7 @@ const VendorTransactions = () => {
                 placeholder="Search by Order ID or Vendor..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-16 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-brand-blue outline-none transition-all"
+                className="w-full pl-16 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-normal focus:ring-2 focus:ring-brand-blue outline-none transition-all"
              />
           </div>
           <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2 lg:pb-0">
@@ -168,7 +168,7 @@ const VendorTransactions = () => {
                 key={f}
                 onClick={() => setStatusFilter(f)}
                 className={clsx(
-                    "px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0",
+                    "px-8 py-3.5 rounded-2xl text-[10px] font-medium uppercase tracking-widest transition-all shrink-0",
                     statusFilter === f 
                         ? "bg-brand-blue text-white shadow-xl shadow-brand-blue/20" 
                         : "bg-white text-slate-400 border border-slate-100 hover:border-slate-300"
@@ -186,11 +186,11 @@ const VendorTransactions = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Merchant</th>
-                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Registry ID</th>
-                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Protocol</th>
-                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Net Settlement</th>
-                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Operational Action</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest">Target Merchant</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest">Registry ID</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-center">Protocol</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest">Net Settlement</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-right">Operational Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 text-slate-900">
@@ -201,31 +201,31 @@ const VendorTransactions = () => {
                   <tr key={p.id} className="group hover:bg-slate-50/50 transition-all duration-300">
                     <td className="px-10 py-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-brand-blue font-black text-lg group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-brand-blue font-medium text-lg group-hover:scale-110 transition-transform">
                                 {p.vendor_name?.slice(0,1).toUpperCase()}
                             </div>
                             <div>
-                                <span className="font-black text-slate-900 font-title tracking-tight">{p.vendor_name}</span>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Verified Merchant Partner</p>
+                                <span className="font-medium text-slate-900 font-title tracking-tight">{p.vendor_name}</span>
+                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-tighter">Verified Merchant Partner</p>
                             </div>
                         </div>
                     </td>
                     <td className="px-10 py-8">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">TRANSACTION ORIGIN</span>
-                            <span className="font-black text-slate-700 tracking-tighter">ORD-{p.order_id}</span>
+                            <span className="text-[10px] font-medium text-slate-300 uppercase tracking-widest mb-1">TRANSACTION ORIGIN</span>
+                            <span className="font-medium text-slate-700 tracking-tighter">ORD-{p.order_id}</span>
                         </div>
                     </td>
                     <td className="px-10 py-8 text-center">
                         <div className="inline-flex flex-col items-center bg-rose-50/50 px-4 py-2 rounded-2xl border border-rose-100">
-                            <span className="text-[9px] font-black text-rose-400 uppercase mb-1">-{p.commission_rate}% FEE</span>
-                            <span className="text-sm font-black text-rose-600 leading-none">-₹{p.commission_amount.toLocaleString()}</span>
+                            <span className="text-[9px] font-medium text-rose-400 uppercase mb-1">-{p.commission_rate}% FEE</span>
+                            <span className="text-sm font-medium text-rose-600 leading-none">-₹{p.commission_amount.toLocaleString()}</span>
                         </div>
                     </td>
                     <td className="px-10 py-8">
                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-300 line-through decoration-slate-200">₹{p.product_amount.toLocaleString()}</span>
-                          <div className="flex items-center gap-2 text-brand-blue font-black text-2xl tracking-tighter italic">
+                          <span className="text-sm font-normal text-slate-300 line-through decoration-slate-200">₹{p.product_amount.toLocaleString()}</span>
+                          <div className="flex items-center gap-2 text-brand-blue font-medium text-2xl tracking-tighter italic">
                              ₹{p.final_amount.toLocaleString()}
                           </div>
                        </div>
@@ -236,12 +236,12 @@ const VendorTransactions = () => {
                                <motion.button 
                                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                                  onClick={() => handleMarkPaid(p.id)}
-                                 className="inline-flex items-center gap-2 px-6 py-3 bg-brand-blue text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-blue/90 transition-all shadow-xl shadow-brand-blue/20 active:scale-95"
+                                 className="inline-flex items-center gap-2 px-6 py-3 bg-brand-blue text-white rounded-2xl text-[10px] font-medium uppercase tracking-widest hover:bg-brand-blue/90 transition-all shadow-xl shadow-brand-blue/20 active:scale-95"
                                >
                                   <Check size={14} strokeWidth={3} /> Authorize Payout
                                </motion.button>
                            ) : (
-                               <div className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                               <div className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl text-[10px] font-medium uppercase tracking-widest border border-emerald-100">
                                    <ShieldCheck size={16} /> Fully Settled
                                </div>
                            )}
@@ -255,8 +255,8 @@ const VendorTransactions = () => {
                     <div className="max-w-xs mx-auto space-y-6 opacity-30">
                        <ShieldCheck size={80} strokeWidth={1} className="mx-auto text-slate-400" />
                        <div className="space-y-1">
-                           <p className="text-xl font-black text-slate-900 font-title uppercase tracking-tighter italic">Ledger Synchronized</p>
-                           <p className="text-slate-500 font-bold text-sm tracking-tight">All delivered orders have been settled with our merchant partners.</p>
+                           <p className="text-xl font-medium text-slate-900 font-title uppercase tracking-tighter italic">Ledger Synchronized</p>
+                           <p className="text-slate-500 font-normal text-sm tracking-tight">All delivered orders have been settled with our merchant partners.</p>
                        </div>
                     </div>
                   </td>
@@ -274,7 +274,7 @@ const VendorTransactions = () => {
                   <Percent size={32} />
               </div>
               <div className="max-w-xl">
-                  <h4 className="font-black text-slate-900 uppercase tracking-widest text-sm mb-1">Financial Reconciliation Protocol</h4>
+                  <h4 className="font-medium text-slate-900 uppercase tracking-widest text-sm mb-1">Financial Reconciliation Protocol</h4>
                   <p className="text-xs font-medium text-slate-400 leading-relaxed italic">
                       Payouts are automatically recalculated and staged for authorization once logistics telemetry confirms "Delivered" status via OTP validation. Administrative review is required before final wire transfer.
                   </p>
@@ -282,12 +282,12 @@ const VendorTransactions = () => {
           </div>
           <div className="flex items-center gap-8 border-l border-slate-200 pl-10 shrink-0">
                <div className="text-center">
-                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Avg Settlement</p>
-                   <p className="text-lg font-black text-slate-900 tracking-tighter">4.2 Hours</p>
+                   <p className="text-[10px] font-medium text-slate-300 uppercase tracking-widest mb-1">Avg Settlement</p>
+                   <p className="text-lg font-medium text-slate-900 tracking-tighter">4.2 Hours</p>
                </div>
                <div className="text-center">
-                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Accuracy</p>
-                   <p className="text-lg font-black text-emerald-500 tracking-tighter">99.98%</p>
+                   <p className="text-[10px] font-medium text-slate-300 uppercase tracking-widest mb-1">Accuracy</p>
+                   <p className="text-lg font-medium text-emerald-500 tracking-tighter">99.98%</p>
                </div>
           </div>
       </div>

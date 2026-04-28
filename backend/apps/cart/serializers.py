@@ -16,15 +16,27 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     total = serializers.SerializerMethodField()
+    total_tax = serializers.SerializerMethodField()
+    total_shipping = serializers.SerializerMethodField()
+    grand_total = serializers.SerializerMethodField()
     item_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'items', 'total', 'item_count', 'created_at']
+        fields = ['id', 'user', 'items', 'total', 'total_tax', 'total_shipping', 'grand_total', 'item_count', 'created_at']
         read_only_fields = ['user']
 
     def get_total(self, obj):
         return sum(item.subtotal for item in obj.items.all())
+
+    def get_total_tax(self, obj):
+        return sum((item.subtotal * ((item.product.tax or 0) / 100)) for item in obj.items.all())
+
+    def get_total_shipping(self, obj):
+        return sum(((item.product.shipping_charge or 0) * item.quantity) for item in obj.items.all())
+
+    def get_grand_total(self, obj):
+        return self.get_total(obj) + self.get_total_tax(obj) + self.get_total_shipping(obj)
 
     def get_item_count(self, obj):
         return obj.items.count()

@@ -257,12 +257,33 @@ class ShipmentViewSet(viewsets.ModelViewSet):
             
             # Update Rider Wallet pending amount
             try:
-                wallet = shipment.rider.wallet
-                wallet.pending_cod_amount += shipment.order.total_price
-                wallet.total_cod_collected += shipment.order.total_price
+                from apps.tracking.models import RiderWallet, SalaryConfiguration, Transaction
+                
+                wallet, _ = RiderWallet.objects.get_or_create(rider=shipment.rider)
+                config, _ = SalaryConfiguration.objects.get_or_create(rider=shipment.rider)
+                
+                delivery_earning = config.per_delivery_commission
+                if delivery_earning == 0:
+                    delivery_earning = Decimal('40.00') # Fallback
+                
+                payable_to_admin = Decimal(str(shipment.order.total_price)) - Decimal(str(delivery_earning))
+                
+                wallet.pending_cod_amount = Decimal(str(wallet.pending_cod_amount)) + payable_to_admin
+                wallet.total_cod_collected = Decimal(str(wallet.total_cod_collected)) + Decimal(str(shipment.order.total_price))
+                wallet.total_earned = Decimal(str(wallet.total_earned)) + Decimal(str(delivery_earning))
                 wallet.save()
-            except RiderWallet.DoesNotExist:
-                print(f"[ERROR] Rider {shipment.rider.user.username} has no wallet.")
+                
+                # Transaction for earning
+                Transaction.objects.create(
+                    wallet=wallet,
+                    amount=delivery_earning,
+                    transaction_type='Credit',
+                    description=f'Delivery Earning for Order #{shipment.order.id}'
+                )
+            except Exception as e:
+                import traceback
+                print(f"[ERROR] Rider Wallet update failed: {e}")
+                traceback.print_exc()
             
             print(f"[COD] Recorded {shipment.order.total_price} for Rider {shipment.rider.user.username}")
 

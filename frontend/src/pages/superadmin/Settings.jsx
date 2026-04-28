@@ -77,7 +77,7 @@ const Settings = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={clsx(
-              "fixed top-10 right-10 z-50 px-8 py-4 rounded-2xl shadow-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3",
+              "fixed top-10 right-10 z-50 px-8 py-4 rounded-2xl shadow-2xl font-medium text-xs uppercase tracking-widest flex items-center gap-3",
               notification.type === "error" ? "bg-rose-500 text-white" : "bg-emerald-500 text-white"
             )}
           >
@@ -89,10 +89,10 @@ const Settings = () => {
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black text-slate-900 tracking-tighter uppercase italic leading-none mb-4">
+          <h1 className="text-5xl font-medium text-slate-900 tracking-tighter uppercase italic leading-none mb-4">
             Platform <span className="text-indigo-600 not-italic uppercase tracking-normal">Settings</span>
           </h1>
-          <p className="text-slate-500 font-bold text-lg">Manage global system architecture and security protocols.</p>
+          <p className="text-slate-500 font-normal text-lg">Manage global system architecture and security protocols.</p>
         </div>
       </div>
 
@@ -105,14 +105,14 @@ const Settings = () => {
                         <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                              <Shield size={20} />
                         </div>
-                        <h3 className="font-black text-slate-900 uppercase tracking-widest text-[11px]">Security & Access</h3>
+                        <h3 className="font-medium text-slate-900 uppercase tracking-widest text-[11px]">Security & Access</h3>
                     </div>
                 </div>
                 <div className="p-12">
                     <div className="flex items-center justify-between p-8 rounded-[2rem] bg-slate-50/50 border border-transparent hover:border-indigo-100 transition-all group">
                         <div className="space-y-1">
-                            <p className="font-black text-slate-900 text-lg tracking-tight">Two-Factor Authentication (2FA)</p>
-                            <p className="text-sm text-slate-400 font-bold">Require a secondary code for all Super Admin login attempts.</p>
+                            <p className="font-medium text-slate-900 text-lg tracking-tight">Two-Factor Authentication (2FA)</p>
+                            <p className="text-sm text-slate-400 font-normal">Require a secondary code for all Super Admin login attempts.</p>
                         </div>
                         <button 
                             onClick={() => setSettings({...settings, two_factor_enabled: !settings.two_factor_enabled})}
@@ -136,24 +136,24 @@ const Settings = () => {
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                          <Database size={20} />
                     </div>
-                    <h3 className="font-black text-slate-900 uppercase tracking-widest text-[11px]">General Configuration</h3>
+                    <h3 className="font-medium text-slate-900 uppercase tracking-widest text-[11px]">General Configuration</h3>
                 </div>
                 <div className="p-12 space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-4">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
                                 <Globe size={12} /> Platform Display Name
                             </label>
                             <input 
                                 type="text" 
                                 value={settings.platform_name}
                                 onChange={(e) => setSettings({...settings, platform_name: e.target.value})}
-                                className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-lg placeholder:text-slate-200"
+                                className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-lg placeholder:text-slate-200"
                                 placeholder="Store Name"
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
                                 <Bell size={12} /> Global Commission (%)
                             </label>
                             <div className="relative">
@@ -161,16 +161,16 @@ const Settings = () => {
                                     type="number" 
                                     value={settings.global_commission}
                                     onChange={(e) => setSettings({...settings, global_commission: e.target.value})}
-                                    className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-emerald-600 transition-all text-lg"
+                                    className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-emerald-600 transition-all text-lg"
                                 />
-                                <span className="absolute right-8 top-1/2 -translate-y-1/2 font-black text-slate-300">%</span>
+                                <span className="absolute right-8 top-1/2 -translate-y-1/2 font-medium text-slate-300">%</span>
                             </div>
                         </div>
                     </div>
 
                     {/* New Prominent Save Button */}
                     <div className="flex items-center justify-between pt-10 border-t border-slate-50">
-                        <div className="flex items-center gap-2 text-emerald-500 font-bold text-sm">
+                        <div className="flex items-center gap-2 text-emerald-500 font-normal text-sm">
                             {notification?.type === 'success' && (
                                 <motion.span 
                                     initial={{ opacity: 0, x: -10 }}
@@ -185,7 +185,7 @@ const Settings = () => {
                             onClick={handleUpdate}
                             disabled={saving}
                             className={clsx(
-                                "flex items-center gap-4 px-10 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 disabled:opacity-40",
+                                "flex items-center gap-4 px-10 py-5 rounded-[1.5rem] font-medium text-xs uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 disabled:opacity-40",
                                 saving ? "bg-slate-100 text-slate-400" : "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1"
                             )}
                         >
@@ -203,22 +203,22 @@ const Settings = () => {
                 <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
                 
                 <div className="space-y-6 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/10 text-[10px] font-medium uppercase tracking-widest">
                         System Core v2.4.0
                     </div>
-                    <h4 className="text-4xl font-black italic tracking-tighter leading-tight">Architecture <br/>Updates</h4>
-                    <p className="text-indigo-100 text-sm font-bold leading-relaxed opacity-80">Your platform kernel is regularly optimized for high-volume commerce operations.</p>
+                    <h4 className="text-4xl font-medium italic tracking-tighter leading-tight">Architecture <br/>Updates</h4>
+                    <p className="text-indigo-100 text-sm font-normal leading-relaxed opacity-80">Your platform kernel is regularly optimized for high-volume commerce operations.</p>
                 </div>
 
                 <div className="space-y-6 relative z-10">
-                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-indigo-200">
+                    <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-widest text-indigo-200">
                         <span>Last Check: Today</span>
                         <span>{updating ? "Analyzing..." : "Stable"}</span>
                     </div>
                     <button 
                         onClick={handleCheckUpdates}
                         disabled={updating}
-                        className="w-full py-5 bg-white text-indigo-600 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                        className="w-full py-5 bg-white text-indigo-600 rounded-[2rem] font-medium text-xs uppercase tracking-widest shadow-2xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
                         {updating ? <RefreshCw className="animate-spin" size={16} /> : <RefreshCw size={16} />}
                         {updating ? "Connecting to Node..." : "Check for Updates"}
@@ -232,8 +232,8 @@ const Settings = () => {
                      <SettingsIcon size={24} />
                 </div>
                 <div className="space-y-2">
-                    <h5 className="font-black uppercase tracking-widest text-[11px] text-slate-500">Registry Note</h5>
-                    <p className="text-xs font-bold leading-relaxed opacity-60 italic">These settings affect all vendors and users globally. Any modifications here will override previous localized defaults.</p>
+                    <h5 className="font-medium uppercase tracking-widest text-[11px] text-slate-500">Registry Note</h5>
+                    <p className="text-xs font-normal leading-relaxed opacity-60 italic">These settings affect all vendors and users globally. Any modifications here will override previous localized defaults.</p>
                 </div>
             </div>
         </div>

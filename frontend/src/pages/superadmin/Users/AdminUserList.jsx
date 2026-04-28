@@ -32,7 +32,7 @@ const AdminUserList = () => {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">User <span className="text-indigo-600 not-italic uppercase tracking-normal">Direct</span></h1>
+          <h1 className="text-3xl font-medium text-slate-900 tracking-tight uppercase italic">User <span className="text-indigo-600 not-italic uppercase tracking-normal">Direct</span></h1>
           <p className="mt-1 text-slate-500 font-medium lowercase">Aggregated database of cross-platform merchant and customer profiles.</p>
         </div>
         
@@ -53,14 +53,14 @@ const AdminUserList = () => {
             <div className="absolute top-0 left-0 w-full h-1.5 bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <div className="w-24 h-24 rounded-full bg-slate-50 p-1 border-4 border-slate-100 mb-6 group-hover:border-slate-800 transition-all duration-500 overflow-hidden relative">
-                <div className="w-full h-full bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-black text-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-700 uppercase italic">
+                <div className="w-full h-full bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-medium text-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-700 uppercase italic">
                     {user.user?.name?.charAt(0) || user.name?.charAt(0) || "U"}
                 </div>
             </div>
 
             <div className="mb-8">
-                <h3 className="text-lg font-black tracking-tight mb-1">{user.user?.name || user.name || "Anonymous User"}</h3>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
+                <h3 className="text-lg font-medium tracking-tight mb-1">{user.user?.name || user.name || "Anonymous User"}</h3>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
                     <Shield size={12} strokeWidth={3} /> {user.role || "Vendor"}
                 </span>
             </div>
@@ -69,20 +69,20 @@ const AdminUserList = () => {
                 <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-2 text-slate-400 group-hover:text-white/40">
                         <Mail size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-widest tracking-tighter">Endpoint</span>
+                        <span className="text-[10px] font-medium uppercase tracking-widest tracking-tighter">Endpoint</span>
                     </div>
-                    <span className="text-xs font-bold truncate max-w-[150px]">{user.user?.email || user.email || "hidden@quanstore.net"}</span>
+                    <span className="text-xs font-normal truncate max-w-[150px]">{user.user?.email || user.email || "hidden@quanstore.net"}</span>
                 </div>
                 <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-2 text-slate-400 group-hover:text-white/40">
                         <Calendar size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Enrolled</span>
+                        <span className="text-[10px] font-medium uppercase tracking-widest">Enrolled</span>
                     </div>
-                    <span className="text-xs font-bold">{new Date().toLocaleDateString()}</span>
+                    <span className="text-xs font-normal">{new Date().toLocaleDateString()}</span>
                 </div>
             </div>
 
-            <button className="mt-8 text-xs font-black uppercase tracking-[0.2em] text-slate-300 hover:text-white transition-colors flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all lg:translate-y-4 group-hover:translate-y-0">
+            <button className="mt-8 text-xs font-medium uppercase tracking-[0.2em] text-slate-300 hover:text-white transition-colors flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all lg:translate-y-4 group-hover:translate-y-0">
                 Audit Profile <MoreHorizontal size={14} />
             </button>
           </div>
