@@ -22,28 +22,32 @@ const ProductCard = ({ product }) => {
     }
   };
 
+  const calculateDiscount = () => {
+    if (product.discount_percentage) return product.discount_percentage;
+    if (product.discount_price && product.discount_price < product.price) {
+      return Math.round(((product.price - product.discount_price) / product.price) * 100);
+    }
+    return null;
+  };
+
+  const discount = calculateDiscount();
+
   return (
-    <div className="group bg-white rounded-3xl border border-slate-200 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
+    <div className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300">
       
-      <div className="relative aspect-square overflow-hidden bg-brand-soft-gray">
+      <div className="relative aspect-[4/5] overflow-hidden bg-slate-50">
         <img 
           src={product.primary_image || product.images?.[0]?.image || 'https://placehold.co/400'} 
           alt={product.name} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
 
-        {product.discount_price && product.discount_price < product.price && (
-          <div className="absolute top-4 left-4 bg-brand-pink text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg shadow-brand-pink/20 uppercase tracking-widest">
-            {product.discount_percentage}% OFF
-          </div>
-        )}
-
         {/* Action Buttons Overlay */}
-        <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 bg-gradient-to-t from-white/80 backdrop-blur-sm">
+        <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 bg-gradient-to-t from-white/80 backdrop-blur-sm z-10">
           <div className="flex gap-2">
             <button 
               onClick={() => handleAddToCart(product.id)}
-              className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white h-11 rounded-xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest shadow-xl shadow-brand-purple/20 transition-all active:scale-95"
+              className="flex-1 bg-primary-600 hover:bg-primary-700 text-white h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wide shadow-md transition-all active:scale-95"
             >
               <ShoppingCart size={16} />
               Add to Cart
@@ -51,7 +55,7 @@ const ProductCard = ({ product }) => {
 
             <Link 
               to={`/products/${product.id}`}
-              className="w-11 h-11 bg-brand-purple-light text-brand-purple rounded-xl flex items-center justify-center shadow-lg hover:bg-brand-purple hover:text-white transition-all"
+              className="w-10 h-10 bg-white text-primary-600 border border-primary-200 rounded-lg flex items-center justify-center shadow-sm hover:bg-primary-50 transition-all"
             >
               <Eye size={18} />
             </Link>
@@ -60,28 +64,38 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Details */}
-      <div className="p-6">
-        <div className="flex items-center gap-1 text-brand-orange mb-3">
-          <Star size={14} fill="currentColor" />
-          <span className="text-xs font-black">{product.rating || '4.5'}</span>
-        </div>
-
+      <div className="p-4">
         <Link to={`/products/${product.id}`}>
-          <h3 className="font-black text-brand-navy group-hover:text-brand-purple transition-colors line-clamp-1">{product.name}</h3>
+          <h3 className="text-[15px] font-medium text-slate-600 group-hover:text-primary-600 transition-colors line-clamp-1 mb-2">
+            {product.name}
+          </h3>
         </Link>
 
-        <p className="text-[10px] font-black text-brand-text-gray uppercase tracking-widest mt-1">{product.category_name}</p>
-
-        <div className="flex items-baseline gap-2 mt-4">
-          <span className="font-black text-brand-purple text-xl tracking-tighter">
-            ₹{(product.discount_price && product.discount_price < product.price ? product.discount_price : product.price).toLocaleString()}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[22px] font-bold text-slate-800 tracking-tight">
+            ₹{Math.round(product.discount_price && product.discount_price < product.price ? product.discount_price : product.price).toLocaleString('en-IN')}
           </span>
 
-          {product.discount_price && product.discount_price < product.price && (
-            <span className="line-through text-slate-300 text-sm font-bold">
-              ₹{product.price.toLocaleString()}
-            </span>
+          {discount && (
+            <>
+              <span className="text-sm text-slate-400 line-through">
+                ₹{Math.round(product.price).toLocaleString('en-IN')}
+              </span>
+              <span className="text-sm font-semibold text-brand-orange">
+                {discount}% off
+              </span>
+            </>
           )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-brand-orange text-white px-1.5 py-0.5 rounded text-xs font-bold">
+            <span>{product.rating || '4.0'}</span>
+            <Star size={10} fill="currentColor" strokeWidth={1} />
+          </div>
+          <span className="text-xs font-medium text-slate-500">
+            {product.reviews_count || '45669'} Reviews
+          </span>
         </div>
       </div>
 

@@ -21,7 +21,7 @@ const Footer = () => {
             <p className="text-sm font-medium mb-8 max-w-sm leading-relaxed">
               Your one-stop online shopping destination. We provide a pure premium shopping experience with curated essentials.
             </p>
-            <div className="flex flex-col gap-4 text-sm font-bold">
+            <div className="flex flex-col gap-4 text-sm">
               <a href="tel:+919876543210" className="flex items-center gap-4 hover:text-brand-purple transition-all group">
                 <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all">
                   <Phone size={18} />
@@ -43,7 +43,7 @@ const Footer = () => {
             {/* SHOP */}
             <div className="flex flex-col">
               <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Shop</h3>
-              <ul className="space-y-4 text-sm font-bold">
+              <ul className="space-y-4 text-sm">
                 <li><Link to="/products" className="text-white/60 hover:text-brand-purple transition-all">New Arrivals</Link></li>
                 <li><Link to="/categories" className="text-white/60 hover:text-brand-purple transition-all">Categories</Link></li>
                 <li><Link to="/products" className="text-white/60 hover:text-brand-purple transition-all">Best Sellers</Link></li>
@@ -54,7 +54,7 @@ const Footer = () => {
             {/* HELP */}
             <div className="flex flex-col">
               <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Help</h3>
-              <ul className="space-y-4 text-sm font-bold">
+              <ul className="space-y-4 text-sm">
                 <li><Link to="/track-order" className="text-white/60 hover:text-brand-purple transition-all">Track Order</Link></li>
                 <li><Link to="/shipping" className="text-white/60 hover:text-brand-purple transition-all">Shipping Info</Link></li>
                 <li><Link to="/returns" className="text-white/60 hover:text-brand-purple transition-all">Returns</Link></li>
@@ -65,7 +65,7 @@ const Footer = () => {
             {/* COMPANY */}
             <div className="flex flex-col">
               <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Company</h3>
-              <ul className="space-y-4 text-sm font-bold">
+              <ul className="space-y-4 text-sm">
                 <li><Link to="/about-us" className="text-white/60 hover:text-brand-purple transition-all">About Us</Link></li>
                 <li><Link to="/careers" className="text-white/60 hover:text-brand-purple transition-all">Careers</Link></li>
                 <li><Link to="/become-seller" className="text-white/60 hover:text-brand-purple transition-all">Sell with Us</Link></li>
@@ -76,7 +76,7 @@ const Footer = () => {
             {/* FOLLOW US */}
             <div className="flex flex-col">
               <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Follow Us</h3>
-              <ul className="space-y-4 text-sm font-bold">
+              <ul className="space-y-4 text-sm ">
                 <li><a href="#" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Globe size={18} /> Facebook</a></li>
                 <li><a href="#" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Camera size={18} /> Instagram</a></li>
                 <li><a href="#" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><MessageCircle size={18} /> Twitter</a></li>

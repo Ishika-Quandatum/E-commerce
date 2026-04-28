@@ -18,6 +18,8 @@ class Product(models.Model):
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     stock = models.IntegerField(default=0)
+    
+    shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     quantity = models.FloatField(default=1)  
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='pcs')

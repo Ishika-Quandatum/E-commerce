@@ -20,7 +20,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'price', 'discount_price', 'discount_percentage',
             'stock', 'quantity', 'unit', 'category', 'category_name', 'category_slug',
-            'rating', 'is_featured', 'is_deal', 'created_at', 'images', 'image'
+            'rating', 'is_featured', 'is_deal', 'created_at', 'images', 'image', 'shipping_charge'
         ]
 
     discount_percentage = serializers.SerializerMethodField()
@@ -57,7 +57,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'price', 'discount_price', 'stock', 'quantity', 'unit',
             'category', 'category_name', 'rating', 'is_featured',
-            'is_deal', 'primary_image', 'discount_percentage',
+            'is_deal', 'primary_image', 'discount_percentage', 'shipping_charge'
         ]
 
     def get_primary_image(self, obj):

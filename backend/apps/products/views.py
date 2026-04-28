@@ -34,10 +34,12 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         category_param = self.request.query_params.get('category')
         if category_param:
-            if category_param.isdigit():
-                queryset = queryset.filter(category__id=category_param)
-            else:
-                queryset = queryset.filter(category__slug=category_param)
+            categories = [c.strip() for c in category_param.split(',') if c.strip()]
+            if categories:
+                if categories[0].isdigit():
+                    queryset = queryset.filter(category__id__in=categories)
+                else:
+                    queryset = queryset.filter(category__slug__in=categories)
                 
         search = self.request.query_params.get('search')
         if search:
@@ -57,6 +59,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         max_price = self.request.query_params.get('max_price')
         if max_price and max_price.isdigit():
             queryset = queryset.filter(price__lte=max_price)
+            
+        sort_by = self.request.query_params.get('sort')
+        if sort_by == 'price_asc':
+            queryset = queryset.order_by('price')
+        elif sort_by == 'price_desc':
+            queryset = queryset.order_by('-price')
+        elif sort_by == 'newest':
+            queryset = queryset.order_by('-created_at')
+        elif sort_by == 'popularity':
+            queryset = queryset.order_by('-rating')
             
         return queryset
 

@@ -66,7 +66,7 @@ const Navbar = () => {
               )}
             </Link>
             <div className="hidden md:flex items-center gap-8">
-              <Link to="/products" className="text-brand-navy/70 hover:text-brand-purple font-bold transition-all text-sm uppercase tracking-widest relative group">
+              <Link to="/products" className="text-brand-navy/70 hover:text-brand-purple transition-all text-sm uppercase tracking-widest relative group">
                 Shop
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-purple transition-all group-hover:w-full" />
               </Link>
@@ -78,7 +78,7 @@ const Navbar = () => {
                 <button 
                   onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
                   className={clsx(
-                    "text-brand-navy/70 hover:text-brand-purple font-bold transition-all text-sm uppercase tracking-widest relative group flex items-center gap-1",
+                    "text-brand-navy/70 hover:text-brand-purple transition-all text-sm uppercase tracking-widest relative group flex items-center gap-1",
                     isMegaMenuOpen && "text-brand-purple"
                   )}
                 >
