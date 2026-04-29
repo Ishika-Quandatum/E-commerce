@@ -16,10 +16,10 @@ class PromotionBannerViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # Public view: Only currently active banners (allowing a small buffer for timezone issues)
+        # Public view: Only currently active banners
         if self.action == 'list' and not self.request.query_params.get('vendor_view'):
             now = timezone.now()
-            return queryset.filter(end_date__gte=now)
+            return queryset.filter(start_date__lte=now, end_date__gte=now)
             
         # Vendor view: Only their own banners
         if self.request.query_params.get('vendor_view') == 'true':

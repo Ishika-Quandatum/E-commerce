@@ -27,7 +27,9 @@ const Home = () => {
     const fetchInitial = async () => {
       try {
         const catRes = await productService.getCategories();
-        setCategories(catRes.data);
+        // Handle both paginated and non-paginated responses
+        const categoryData = Array.isArray(catRes.data) ? catRes.data : (catRes.data.results || []);
+        setCategories(categoryData);
       } catch (err) {
         console.error("Error fetching home data", err);
       } finally {
@@ -49,9 +51,12 @@ const Home = () => {
           sort: filters.sort
         };
         const res = await productService.getProducts(params);
-        setFeaturedProducts(res.data);
+        // Handle both paginated and non-paginated responses
+        const productData = Array.isArray(res.data) ? res.data : (res.data.results || []);
+        setFeaturedProducts(productData);
       } catch (err) {
         console.error("Error fetching home products", err);
+        setFeaturedProducts([]);
       } finally {
         setLoadingProducts(false);
       }

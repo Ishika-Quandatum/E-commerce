@@ -35,7 +35,8 @@ const ProductList = () => {
   const fetchInitialData = async () => {
     try {
       const catRes = await productService.getCategories();
-      setCategories(catRes.data);
+      const categoryData = Array.isArray(catRes.data) ? catRes.data : (catRes.data.results || []);
+      setCategories(categoryData);
     } catch (err) {
       console.error("Error fetching categories", err);
     }
@@ -51,9 +52,11 @@ const ProductList = () => {
         sort: filters.sort
       };
       const res = await productService.getProducts(params);
-      setProducts(res.data);
+      const productData = Array.isArray(res.data) ? res.data : (res.data.results || []);
+      setProducts(productData);
     } catch (err) {
       console.error("Error fetching products", err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }

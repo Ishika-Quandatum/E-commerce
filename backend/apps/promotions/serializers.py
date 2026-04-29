@@ -11,8 +11,11 @@ class PromotionBannerSerializer(serializers.ModelSerializer):
         model = PromotionBanner
         fields = [
             'id', 'title', 'short_description', 'offer_price', 'discount_percent', 
-            'image_url', 'background_color', 'priority', 'product', 'product_details', 
-            'vendor_name', 'start_date', 'end_date'
+            'image_url', 'background_color', 'gradient_color_1', 'gradient_color_2',
+            'gradient_direction', 'computed_background', 'title_color', 'description_color',
+            'button_text', 'button_text_color', 'button_bg_color', 'image_position',
+            'border_radius', 'overlay_opacity', 'badge_text', 'priority', 
+            'product', 'product_details', 'vendor_name', 'start_date', 'end_date'
         ]
 
     def get_image_url(self, obj):
@@ -33,6 +36,10 @@ class VendorPromotionBannerSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'product', 'title', 'short_description', 'offer_price', 
             'discount_percent', 'banner_image', 'background_color', 
+            'gradient_color_1', 'gradient_color_2', 'gradient_direction',
+            'title_color', 'description_color', 'button_text', 
+            'button_text_color', 'button_bg_color', 'image_position',
+            'border_radius', 'overlay_opacity', 'badge_text',
             'start_date', 'end_date', 'priority'
         ]
 
