@@ -21,6 +21,7 @@ class RiderWalletTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiderWalletTransaction
         fields = '__all__'
+        read_only_fields = ['rider', 'status', 'created_at', 'verified_at']
 
 class RiderSalaryTransactionSerializer(serializers.ModelSerializer):
     class Meta:
