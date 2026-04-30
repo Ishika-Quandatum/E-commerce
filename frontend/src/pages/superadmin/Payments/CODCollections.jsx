@@ -65,7 +65,7 @@ const CODCollections = () => {
   const totals = {
       pending: collections.filter(c => c.status === 'Pending').reduce((acc, curr) => acc + parseFloat(curr.amount), 0),
       submitted: collections.filter(c => c.status === 'Submitted').reduce((acc, curr) => acc + parseFloat(curr.amount), 0),
-      alerts: collections.filter(c => c.status === 'Pending' && (new Date() - new Date(c.collected_at)) > 86400000).length // Older than 24h
+      alerts: collections.filter(c => c.status === 'Pending' && (new Date() - new Date(c.created_at)) > 86400000).length // Older than 24h
   };
 
   return (
@@ -201,7 +201,7 @@ const CODCollections = () => {
                         <Package size={14} className="text-slate-300" /> #{c.tracking_number}
                       </span>
                       <span className="text-[10px] font-normal text-slate-400 uppercase flex items-center gap-1">
-                        <Calendar size={10} /> {new Date(c.collected_at).toLocaleDateString()}
+                        <Calendar size={10} /> {new Date(c.created_at).toLocaleDateString()}
                       </span>
                     </div>
                   </td>

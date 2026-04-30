@@ -127,7 +127,7 @@ const WalletSalary = () => {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 text-xs font-bold text-slate-400">
-                                                {new Date(tx.collected_at).toLocaleDateString()}
+                                                {new Date(tx.created_at).toLocaleDateString()}
                                             </td>
                                         </tr>
                                     )

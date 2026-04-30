@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from .models import (
     RiderProfile, Shipment, TrackingHistory, Attendance, RiderWallet, 
-    SalaryConfiguration, Transaction, CODCollection, RiderSettlement, 
-    RiderFinancialLog, LiveOrderTracking
+    SalaryConfiguration, Transaction, CODCollection, RiderMonthlySettlement, 
+    RiderWalletTransaction, RiderSalaryTransaction, LiveOrderTracking, RiderFinancialLog
 )
 from apps.users.serializers import UserSerializer
 
@@ -16,15 +16,32 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = '__all__'
 
+class RiderWalletTransactionSerializer(serializers.ModelSerializer):
+    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
+    class Meta:
+        model = RiderWalletTransaction
+        fields = '__all__'
 
+class RiderSalaryTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RiderSalaryTransaction
+        fields = '__all__'
 
+class RiderMonthlySettlementSerializer(serializers.ModelSerializer):
+    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
+    month_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RiderMonthlySettlement
+        fields = '__all__'
+
+    def get_month_display(self, obj):
+        return obj.month.strftime('%B %Y')
 
 class SalaryConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalaryConfiguration
         fields = '__all__'
-
-
 
 class CODCollectionSerializer(serializers.ModelSerializer):
     rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
@@ -41,25 +58,10 @@ class CODCollectionSerializer(serializers.ModelSerializer):
         user = obj.shipment.order.user
         return f"{user.first_name} {user.last_name}" if user.first_name else user.username
 
-
-class RiderSettlementSerializer(serializers.ModelSerializer):
-    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
-    month_display = serializers.SerializerMethodField()
-
-    class Meta:
-        model = RiderSettlement
-        fields = '__all__'
-
-    def get_month_display(self, obj):
-        return obj.month.strftime('%B %Y')
-
-
 class RiderWalletSerializer(serializers.ModelSerializer):
-    transactions = TransactionSerializer(many=True, read_only=True)
     total_orders_delivered = serializers.SerializerMethodField()
-    hold_amount = serializers.SerializerMethodField()
-    recent_cod_transactions = serializers.SerializerMethodField()
-    settlement_summary = serializers.SerializerMethodField()
+    recent_cod_collections = serializers.SerializerMethodField()
+    recent_wallet_submissions = serializers.SerializerMethodField()
     
     class Meta:
         model = RiderWallet
@@ -68,22 +70,13 @@ class RiderWalletSerializer(serializers.ModelSerializer):
     def get_total_orders_delivered(self, obj):
         return Shipment.objects.filter(rider=obj.rider, status='Delivered').count()
 
-    def get_hold_amount(self, obj):
-        return obj.pending_cod_amount
-
-    def get_recent_cod_transactions(self, obj):
-        cods = CODCollection.objects.filter(rider=obj.rider).order_by('-collected_at')[:10]
+    def get_recent_cod_collections(self, obj):
+        cods = CODCollection.objects.filter(rider=obj.rider).order_by('-created_at')[:10]
         return CODCollectionSerializer(cods, many=True).data
 
-    def get_settlement_summary(self, obj):
-        last_settlement = RiderSettlement.objects.filter(rider=obj.rider, status='Paid').order_by('-paid_at').first()
-        return {
-            'total_payable': obj.pending_cod_amount,
-            'total_paid': obj.total_cod_submitted,
-            'pending_amount': obj.pending_cod_amount,
-            'last_settlement_date': last_settlement.paid_at if last_settlement else None
-        }
-
+    def get_recent_wallet_submissions(self, obj):
+        subs = RiderWalletTransaction.objects.filter(rider=obj.rider).order_by('-created_at')[:10]
+        return RiderWalletTransactionSerializer(subs, many=True).data
 
 class RiderProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -103,25 +96,13 @@ class RiderProfileSerializer(serializers.ModelSerializer):
         shipment = obj.assigned_shipments.order_by('-updated_at').first()
         return shipment.updated_at if shipment else getattr(obj, 'join_date', None)
 
-
-class RiderFinancialLogSerializer(serializers.ModelSerializer):
-    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
-
-    class Meta:
-        model = RiderFinancialLog
-        fields = '__all__'
-
 class AdminRiderSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Super Admin to create a Delivery Boy account.
-    Handles nested User account creation with auto-password generation.
-    """
     full_name = serializers.CharField(write_only=True)
     username = serializers.CharField(write_only=True)
     email = serializers.EmailField(write_only=True)
     phone = serializers.CharField(write_only=True)
     address = serializers.CharField(write_only=True, required=False)
-    password = serializers.CharField(read_only=True) # Return the generated password to admin
+    password = serializers.CharField(read_only=True)
 
     class Meta:
         model = RiderProfile
@@ -142,7 +123,6 @@ class AdminRiderSerializer(serializers.ModelSerializer):
         phone = validated_data.pop('phone')
         address = validated_data.pop('address', '')
 
-        # Generate secure password
         alphabet = string.ascii_letters + string.digits
         password = ''.join(secrets.choice(alphabet) for i in range(12))
 
@@ -165,39 +145,8 @@ class AdminRiderSerializer(serializers.ModelSerializer):
                 is_active=True
             )
             
-            # Attaching the password temporarily to the instance so the serializer can return it
             rider_profile.generated_password = password
             return rider_profile
-
-    def update(self, instance, validated_data):
-        from django.db import transaction
-        
-        user = instance.user
-        full_name_input = validated_data.pop('full_name', None)
-        username = validated_data.pop('username', None)
-        email = validated_data.pop('email', None)
-        phone = validated_data.pop('phone', None)
-        address = validated_data.pop('address', None)
-        
-        with transaction.atomic():
-            # Update User fields if provided
-            if full_name_input:
-                parts = full_name_input.split(' ')
-                user.first_name = parts[0]
-                user.last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
-            
-            if username: user.username = username
-            if email: user.email = email
-            if phone: user.phone = phone
-            if address: user.address = address
-            user.save()
-            
-            # Update Profile fields
-            instance.vehicle_type = validated_data.get('vehicle_type', instance.vehicle_type)
-            instance.license_number = validated_data.get('license_number', instance.license_number)
-            instance.save()
-            
-            return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -218,11 +167,54 @@ class ShipmentSerializer(serializers.ModelSerializer):
     phone = serializers.ReadOnlyField(source='order.phone')
     payment_method = serializers.ReadOnlyField(source='order.payment_method')
     order_id = serializers.ReadOnlyField(source='order.id')
+    estimated_earning = serializers.SerializerMethodField()
+    distance = serializers.SerializerMethodField()
     
     class Meta:
         model = Shipment
-        fields = '__all__'
+        fields = [
+            'id', 'order', 'rider', 'tracking_number', 'status', 'delivery_otp', 
+            'parcel_weight', 'label_printed', 'estimated_delivery_time', 
+            'failed_reason', 'created_at', 'updated_at', 'customer_name', 
+            'product_summary', 'address', 'phone', 'payment_method', 'order_id',
+            'estimated_earning', 'distance', 'history'
+        ]
         read_only_fields = ['tracking_number', 'created_at', 'updated_at', 'delivery_otp']
+
+    def get_estimated_earning(self, obj):
+        # Even if unassigned, we show potential earning for the logged-in rider
+        request = self.context.get('request')
+        rider = getattr(request.user, 'rider_profile', None) if request and request.user else None
+        
+        try:
+            config = rider.salary_config
+            return float(config.per_delivery_commission)
+        except:
+            return 40.00
+
+    def get_distance(self, obj):
+        import math
+        request = self.context.get('request')
+        rider = getattr(request.user, 'rider_profile', None) if request and request.user else None
+        
+        if not rider or not rider.current_lat or not rider.current_lng:
+            return 0.0
+            
+        # Distance to Vendor (Pick up point)
+        vendor = obj.order.vendor
+        if not vendor or not vendor.location_lat:
+            return 0.0
+            
+        def haversine(lat1, lon1, lat2, lon2):
+            R = 6371  # earth radius in km
+            phi1, phi2 = math.radians(lat1), math.radians(lat2)
+            dphi = math.radians(lat2 - lat1)
+            dlambda = math.radians(lon2 - lon1)
+            a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
+            return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        dist = haversine(rider.current_lat, rider.current_lng, vendor.location_lat, vendor.location_lng)
+        return round(dist, 1)
 
     def get_customer_name(self, obj):
         user = obj.order.user
@@ -241,4 +233,11 @@ class ShipmentSerializer(serializers.ModelSerializer):
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance
+        fields = '__all__'
+
+class RiderFinancialLogSerializer(serializers.ModelSerializer):
+    rider_name = serializers.ReadOnlyField(source='rider.user.get_full_name')
+
+    class Meta:
+        model = RiderFinancialLog
         fields = '__all__'

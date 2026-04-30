@@ -27,10 +27,10 @@ const RiderSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Dashboard", path: "/rider", icon: LayoutDashboard },
     { name: "My Orders", path: "/rider/orders", icon: ShoppingBag },
     { name: "Live Tracking", path: "/rider/tracking", icon: MapPin },
-    { name: "Earnings", path: "/rider/earnings", icon: DollarSign },
+    { name: "Wallet / COD", path: "/rider/wallet", icon: Wallet },
+    { name: "Salary / Earnings", path: "/rider/earnings", icon: DollarSign },
     { name: "Notifications", path: "/rider/notifications", icon: Bell },
     { name: "Attendance", path: "/rider/attendance", icon: Clock },
-    { name: "Wallet / Salary", path: "/rider/wallet", icon: Wallet },
     { name: "Profile", path: "/rider/profile", icon: UserCircle },
     { name: "Settings", path: "/rider/settings", icon: Settings },
   ];

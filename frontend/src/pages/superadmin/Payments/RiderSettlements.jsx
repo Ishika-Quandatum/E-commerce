@@ -74,10 +74,8 @@ const RiderSettlements = () => {
   };
 
   const totals = {
-      paid: settlements.filter(s => s.status === 'Paid').reduce((acc, curr) => acc + (parseFloat(curr.final_payable) || 0), 0),
-      pending: settlements.filter(s => s.status === 'Pending').reduce((acc, curr) => acc + (parseFloat(curr.final_payable) || 0), 0),
       ridersCount: [...new Set(settlements.map(s => s.rider))].length,
-      totalIncentives: settlements.reduce((acc, curr) => acc + (parseFloat(curr.incentives) || 0), 0)
+      totalIncentives: settlements.reduce((acc, curr) => acc + (parseFloat(curr.per_order_incentive) || 0), 0)
   };
 
   if (loading && settlements.length === 0) {
@@ -130,14 +128,14 @@ const RiderSettlements = () => {
           </div>
           <div className="bg-emerald-50 rounded-[2.5rem] p-8 border border-emerald-100/50 shadow-sm">
               <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-600/60 mb-4">Total Paid</p>
-              <h4 className="text-3xl font-medium tracking-tighter text-emerald-700">₹{totals.paid.toLocaleString()}</h4>
+              <h4 className="text-3xl font-medium tracking-tighter text-emerald-700">₹{settlements.filter(s => s.status === 'Paid').reduce((acc, curr) => acc + (parseFloat(curr.final_salary) || 0), 0).toLocaleString()}</h4>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-emerald-600/60 uppercase tracking-widest">
                   <CheckCircle2 size={12} /> {settlements.filter(s => s.status === 'Paid').length} Fully Settled
               </div>
           </div>
           <div className="bg-amber-50 rounded-[2.5rem] p-8 border border-amber-100/50 shadow-sm">
               <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-amber-600/60 mb-4">Pending Payroll</p>
-              <h4 className="text-3xl font-medium tracking-tighter text-amber-700">₹{totals.pending.toLocaleString()}</h4>
+              <h4 className="text-3xl font-medium tracking-tighter text-amber-700">₹{settlements.filter(s => s.status === 'Pending').reduce((acc, curr) => acc + (parseFloat(curr.final_salary) || 0), 0).toLocaleString()}</h4>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-amber-600/60 uppercase tracking-widest">
                   <Clock size={12} /> {settlements.filter(s => s.status === 'Pending').length} Pending Payouts
               </div>
@@ -211,7 +209,7 @@ const RiderSettlements = () => {
                     </div>
                   </td>
                   <td className="px-10 py-8">
-                     <div className="text-lg font-medium text-slate-900">{s.total_deliveries}</div>
+                     <div className="text-lg font-medium text-slate-900">{s.completed_deliveries}</div>
                      <div className="text-[10px] font-normal text-emerald-500 uppercase tracking-widest">Tasks Done</div>
                   </td>
                   <td className="px-10 py-8">
@@ -222,23 +220,23 @@ const RiderSettlements = () => {
                         </div>
                         <div className="flex justify-between w-48 text-[11px] font-normal">
                             <span className="text-slate-400 uppercase tracking-tighter">Incentives</span>
-                            <span className="text-emerald-500">+₹{parseFloat(s.incentives).toLocaleString()}</span>
+                            <span className="text-emerald-500">+₹{parseFloat(s.per_order_incentive).toLocaleString()}</span>
                         </div>
-                        {parseFloat(s.bonus) > 0 && (
+                        {parseFloat(s.attendance_bonus) > 0 && (
                             <div className="flex justify-between w-48 text-[11px] font-normal">
                                 <span className="text-slate-400 uppercase tracking-tighter">Bonus</span>
-                                <span className="text-indigo-500">+₹{parseFloat(s.bonus).toLocaleString()}</span>
+                                <span className="text-indigo-500">+₹{parseFloat(s.attendance_bonus).toLocaleString()}</span>
                             </div>
                         )}
                         <div className="flex justify-between w-48 text-[11px] font-normal border-t border-dashed border-slate-100 pt-1 mt-1">
                             <span className="text-rose-400 uppercase tracking-tighter">Deductions</span>
-                            <span className="text-rose-500">-₹{parseFloat(s.deductions).toLocaleString()}</span>
+                            <span className="text-rose-500">-₹{(parseFloat(s.late_penalty) + parseFloat(s.cash_shortage_deduction)).toLocaleString()}</span>
                         </div>
                     </div>
                   </td>
                   <td className="px-10 py-8">
                     <div className="text-center">
-                        <div className="text-xl font-medium text-slate-900 tracking-tighter">₹{parseFloat(s.final_payable).toLocaleString()}</div>
+                        <div className="text-xl font-medium text-slate-900 tracking-tighter">₹{parseFloat(s.final_salary).toLocaleString()}</div>
                         <span className={clsx(
                             "px-3 py-1 rounded-lg text-[9px] font-medium uppercase tracking-widest",
                             s.status === 'Paid' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"

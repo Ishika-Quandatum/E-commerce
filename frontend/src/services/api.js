@@ -133,6 +133,15 @@ export const riderService = {
   acceptShipment: (id) => api.post(`tracking/shipments/${id}/accept_shipment/`),
   updateStatus: (id, status) => api.patch(`tracking/shipments/${id}/update_dispatch_status/`, { status }),
   markDelivered: (id) => api.post(`tracking/shipments/${id}/mark_delivered/`),
+  
+  // New Finance APIs
+  getWallet: () => api.get('tracking/riders/wallet/'),
+  submitWalletCOD: (data) => api.post('tracking/wallet-transactions/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getWalletTransactions: (params) => api.get('tracking/wallet-transactions/', { params }),
+  getSalaryTransactions: (params) => api.get('tracking/salary-transactions/', { params }),
+  getSettlements: (params) => api.get('tracking/settlements/', { params }),
+  verifyCODSubmission: (id, data) => api.post(`tracking/wallet-transactions/${id}/verify_submission/`, data),
+  paySalary: (id) => api.post(`tracking/settlements/${id}/pay_salary/`),
 };
 
 export const platformService = {

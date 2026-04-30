@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from decimal import Decimal
 from apps.products.serializers import ProductListSerializer
 from .models import Cart, CartItem
 
@@ -27,13 +28,13 @@ class CartSerializer(serializers.ModelSerializer):
         read_only_fields = ['user']
 
     def get_total(self, obj):
-        return sum(item.subtotal for item in obj.items.all())
+        return sum((item.subtotal for item in obj.items.all()), Decimal('0.00'))
 
     def get_total_tax(self, obj):
-        return sum((item.subtotal * ((item.product.tax or 0) / 100)) for item in obj.items.all())
+        return sum(((item.subtotal * (Decimal(str(item.product.tax or 0)) / Decimal('100'))) for item in obj.items.all()), Decimal('0.00'))
 
     def get_total_shipping(self, obj):
-        return sum(((item.product.shipping_charge or 0) * item.quantity) for item in obj.items.all())
+        return sum(((Decimal(str(item.product.shipping_charge or 0)) * item.quantity) for item in obj.items.all()), Decimal('0.00'))
 
     def get_grand_total(self, obj):
         return self.get_total(obj) + self.get_total_tax(obj) + self.get_total_shipping(obj)

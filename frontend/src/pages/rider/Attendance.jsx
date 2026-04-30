@@ -5,7 +5,7 @@ import {
   Calendar, 
   CheckCircle2, 
   AlertCircle,
-  History,
+  History as HistoryIcon,
   Timer,
   ChevronRight
 } from "lucide-react";
@@ -168,7 +168,7 @@ const Attendance = () => {
                 <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400">
-                            <History size={24} />
+                            <HistoryIcon size={24} />
                         </div>
                         <h3 className="text-xl font-black font-title text-slate-900 tracking-tight">Personal Attendance Logs</h3>
                     </div>

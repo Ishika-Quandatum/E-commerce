@@ -184,9 +184,15 @@ const MyOrders = () => {
                                     </h3>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-lg font-black text-emerald-600">$12.50</div>
+                                    <div className="text-lg font-black text-emerald-600">₹{parseFloat(order.estimated_earning || 0).toLocaleString()}</div>
                                     <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1 justify-end uppercase">
-                                        <Clock size={10} /> 15 mins ago
+                                        <Clock size={10} /> {(() => {
+                                            const diff = Math.floor((new Date() - new Date(order.created_at)) / 1000);
+                                            if (diff < 60) return "Just now";
+                                            if (diff < 3600) return `${Math.floor(diff / 60)} mins ago`;
+                                            if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+                                            return `${Math.floor(diff / 86400)} days ago`;
+                                        })()}
                                     </div>
                                 </div>
                             </div>
@@ -217,7 +223,7 @@ const MyOrders = () => {
                                         <Clock size={18} className="text-slate-400" />
                                         <div className="overflow-hidden">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter truncate">Distance</p>
-                                            <p className="text-xs font-bold text-slate-700">3.2 km</p>
+                                            <p className="text-xs font-bold text-slate-700">{order.distance || 0} km</p>
                                         </div>
                                     </div>
                                 </div>

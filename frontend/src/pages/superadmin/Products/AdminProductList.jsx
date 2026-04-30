@@ -177,18 +177,18 @@ const AdminProductList = () => {
   );
 
   return (
-    <div className="p-1 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="p-2 sm:p-4 lg:p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 max-w-[1600px] mx-auto">
       
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Products Management</h1>
-          <p className="text-slate-500 font-medium mt-1">Manage all products across the platform</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Products Management</h1>
+          <p className="text-slate-500 font-medium mt-1 text-sm sm:text-base">Manage all products across the platform</p>
         </div>
         <div className="flex items-center gap-3">
             <button 
               onClick={handleExport}
-              className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm active:scale-95"
             >
                 <FileDown size={18} />
                 <span>Export</span>
@@ -197,7 +197,7 @@ const AdminProductList = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
         <StatCard 
           title="Total Products" 
           value={stats.total_products} 
@@ -236,10 +236,10 @@ const AdminProductList = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/40 space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 shadow-xl shadow-slate-200/40 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
           {/* Search */}
-          <div className="lg:col-span-1 space-y-2">
+          <div className="sm:col-span-2 lg:col-span-1 space-y-2">
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Search</label>
             <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
@@ -255,7 +255,7 @@ const AdminProductList = () => {
 
           {/* Category Dropdown */}
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Select Category</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Category</label>
             <div className="relative">
                 <select 
                     className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer"
@@ -271,7 +271,7 @@ const AdminProductList = () => {
 
           {/* Vendor Dropdown */}
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Select Vendor</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Vendor</label>
             <div className="relative">
                 <select 
                     className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer"
@@ -304,7 +304,7 @@ const AdminProductList = () => {
 
           {/* Stock Status Dropdown */}
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Stock Status</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Stock</label>
             <div className="relative">
                 <select 
                     className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer"
@@ -321,8 +321,8 @@ const AdminProductList = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-end">
-            <div className="lg:col-span-4 space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 sm:gap-6 items-end">
+            <div className="xl:col-span-4 space-y-2">
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Price Range</label>
                 <div className="grid grid-cols-2 gap-3">
                     <input 
@@ -342,9 +342,9 @@ const AdminProductList = () => {
                 </div>
             </div>
             
-            <div className="lg:col-span-5 space-y-2">
+            <div className="xl:col-span-5 space-y-2">
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Date Range</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input 
                         type="date" 
                         className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none cursor-pointer"
@@ -360,20 +360,20 @@ const AdminProductList = () => {
                 </div>
             </div>
 
-            <div className="flex items-center gap-3 lg:col-span-3">
+            <div className="flex flex-col sm:flex-row items-center gap-3 xl:col-span-3">
                 <button 
                   onClick={fetchProducts}
-                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
+                  className="w-full flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
                 >
                     <Filter size={18} />
-                    <span>Filters</span>
+                    <span>Apply Filters</span>
                 </button>
                 <button 
                   onClick={handleReset}
-                  className="flex items-center justify-center gap-2 bg-slate-100 text-slate-600 px-6 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-100 text-slate-600 px-6 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
                 >
                     <RefreshCw size={18} />
-                    <span>Reset</span>
+                    <span className="sm:hidden lg:inline">Reset</span>
                 </button>
             </div>
         </div>
@@ -381,14 +381,14 @@ const AdminProductList = () => {
 
       {/* Tabs and Content */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 px-2 pb-1">
-            <div className="flex items-center gap-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 px-2 pb-1 gap-4">
+            <div className="flex items-center gap-4 sm:gap-8 overflow-x-auto no-scrollbar pb-1">
                 {["All Products", "Active", "Inactive", "Out of Stock", "Low Stock"].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => setFilters({...filters, tab})}
                         className={clsx(
-                            "pb-4 text-sm font-bold transition-all relative",
+                            "pb-4 text-sm font-bold transition-all relative whitespace-nowrap",
                             filters.tab === tab ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
                         )}
                     >
@@ -396,7 +396,7 @@ const AdminProductList = () => {
                     </button>
                 ))}
             </div>
-            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl self-end sm:self-center">
                 <button 
                     onClick={() => setViewMode("list")}
                     className={clsx(
@@ -420,13 +420,13 @@ const AdminProductList = () => {
 
         {/* Dynamic View */}
         {loading ? (
-            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-32 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse shadow-sm">
+            <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-[2.5rem] p-16 sm:p-32 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse shadow-sm">
                 Updating Registry...
             </div>
         ) : products.length > 0 ? (
             viewMode === "list" ? (
-                <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
-                    <table className="w-full border-collapse">
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-[2.5rem] overflow-hidden shadow-sm overflow-x-auto no-scrollbar">
+                    <table className="w-full border-collapse min-w-[1000px]">
                         <thead>
                             <tr className="bg-slate-50/50">
                                 <th className="px-8 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">Product</th>
@@ -443,12 +443,12 @@ const AdminProductList = () => {
                                 <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 p-1 flex-shrink-0 flex items-center justify-center">
+                                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-50 rounded-xl sm:rounded-2xl overflow-hidden border border-slate-100 p-1 flex-shrink-0 flex items-center justify-center">
                                                 {p.primary_image ? (
                                                     <img 
                                                         src={p.primary_image.startsWith('http') ? p.primary_image : `http://127.0.0.1:8000${p.primary_image}`} 
                                                         alt="" 
-                                                        className="w-full h-full object-cover rounded-xl"
+                                                        className="w-full h-full object-cover rounded-lg sm:rounded-xl"
                                                         onError={(e) => {
                                                             e.target.src = "https://placehold.co/100x100?text=No+Image";
                                                         }}
@@ -506,9 +506,9 @@ const AdminProductList = () => {
                     </table>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {products.map(p => (
-                        <div key={p.id} className="bg-white border border-slate-100 rounded-[2.5rem] p-6 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all group relative overflow-hidden">
+                        <div key={p.id} className="bg-white border border-slate-100 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all group relative overflow-hidden">
                             <div className="absolute top-4 right-4 z-10">
                                 <span className={clsx(
                                     "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm",
@@ -517,12 +517,12 @@ const AdminProductList = () => {
                                     {p.status}
                                 </span>
                             </div>
-                            <div className="aspect-square bg-slate-50 rounded-3xl overflow-hidden border border-slate-100 p-2 mb-6 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
+                            <div className="aspect-square bg-slate-50 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-100 p-2 mb-4 sm:mb-6 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
                                 {p.primary_image ? (
                                     <img 
                                         src={p.primary_image.startsWith('http') ? p.primary_image : `http://127.0.0.1:8000${p.primary_image}`} 
                                         alt="" 
-                                        className="w-full h-full object-cover rounded-2xl"
+                                        className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
                                         onError={(e) => {
                                             e.target.src = "https://placehold.co/300x300?text=No+Image";
                                         }}
@@ -534,19 +534,19 @@ const AdminProductList = () => {
                             <div className="space-y-3">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.category_name}</p>
-                                    <h4 className="text-lg font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h4>
+                                    <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">SKU: {p.sku || "N/A"}</p>
                                 </div>
                                 <div className="flex items-center justify-between pt-2">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-500">{p.vendor_name}</p>
-                                        <div className="flex items-center gap-1.5 mt-1">
-                                            <span className="text-xl font-black text-slate-900">₹{p.discount_price || p.price}</span>
-                                            {p.discount_price && <span className="text-xs text-slate-300 line-through">₹{p.price}</span>}
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] sm:text-xs font-bold text-slate-500 truncate">{p.vendor_name}</p>
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+                                            <span className="text-lg sm:text-xl font-black text-slate-900">₹{p.discount_price || p.price}</span>
+                                            {p.discount_price && <span className="text-[10px] sm:text-xs text-slate-300 line-through">₹{p.price}</span>}
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-bold text-slate-900">{p.stock} Qty</p>
+                                    <div className="text-right flex-shrink-0">
+                                        <p className="text-[10px] sm:text-xs font-bold text-slate-900">{p.stock} Qty</p>
                                         <p className={clsx(
                                             "text-[9px] font-bold uppercase tracking-tighter",
                                             p.stock === 0 ? "text-rose-500" : p.stock <= 10 ? "text-amber-500" : "text-emerald-500"
@@ -561,7 +561,7 @@ const AdminProductList = () => {
                 </div>
             )
         ) : (
-            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-32 text-center shadow-sm">
+            <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-[2.5rem] p-16 sm:p-32 text-center shadow-sm">
                 <div className="flex flex-col items-center gap-4">
                     <AlertCircle size={48} className="text-slate-200" />
                     <p className="text-slate-400 font-bold uppercase tracking-widest">No assets found matching the registry</p>
@@ -570,28 +570,28 @@ const AdminProductList = () => {
         )}
 
         {/* Pagination */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 px-2 sm:px-4">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest text-center lg:text-left">
                 Showing {Math.min((page - 1) * pageSize + 1, totalItems)} to {Math.min(page * pageSize, totalItems)} of {totalItems} products
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={() => setPage(prev => Math.max(1, prev - 1))}
                         disabled={page === 1}
-                        className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all"
+                        className="p-2 sm:p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all active:scale-95"
                     >
                         <ChevronLeft size={20} />
                     </button>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[200px] sm:max-w-none">
                         {[...Array(Math.min(5, Math.ceil(totalItems / pageSize)))].map((_, i) => {
-                            const pNum = i + 1; // Simplistic for now
+                            const pNum = i + 1;
                             return (
                                 <button 
                                     key={pNum}
                                     onClick={() => setPage(pNum)}
                                     className={clsx(
-                                        "w-10 h-10 rounded-xl font-bold text-sm transition-all",
+                                        "min-w-[40px] h-10 rounded-xl font-bold text-sm transition-all active:scale-95",
                                         page === pNum ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" : "text-slate-400 hover:bg-slate-50"
                                     )}
                                 >
@@ -599,20 +599,20 @@ const AdminProductList = () => {
                                 </button>
                             );
                         })}
-                        {Math.ceil(totalItems / pageSize) > 5 && <span className="px-2 text-slate-300">...</span>}
+                        {Math.ceil(totalItems / pageSize) > 5 && <span className="px-1 text-slate-300">...</span>}
                     </div>
                     <button 
                         onClick={() => setPage(prev => Math.min(Math.ceil(totalItems / pageSize), prev + 1))}
                         disabled={page >= Math.ceil(totalItems / pageSize)}
-                        className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all"
+                        className="p-2 sm:p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all active:scale-95"
                     >
                         <ChevronRight size={20} />
                     </button>
                 </div>
                 
-                <div className="relative group">
+                <div className="relative group w-full sm:w-auto">
                     <select 
-                        className="pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 appearance-none outline-none cursor-pointer hover:bg-slate-50 transition-all"
+                        className="w-full sm:w-auto pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 appearance-none outline-none cursor-pointer hover:bg-slate-50 transition-all"
                         value={pageSize}
                         onChange={(e) => {
                             setPageSize(parseInt(e.target.value));

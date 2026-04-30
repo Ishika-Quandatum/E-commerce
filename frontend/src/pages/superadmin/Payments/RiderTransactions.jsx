@@ -10,7 +10,7 @@ import {
   Bike,
   CheckCircle2,
   AlertTriangle,
-  History,
+  History as HistoryIcon,
   IndianRupee,
   Eye,
   ArrowRight
@@ -200,7 +200,7 @@ const RiderTransactions = () => {
               <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-10">
                   <div className="flex items-center justify-between mb-10">
                       <h3 className="font-medium text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
-                          <History size={16} className="text-indigo-500" /> Recent Logs
+                          <HistoryIcon size={16} className="text-indigo-500" /> Recent Logs
                       </h3>
                       <button className="text-[10px] font-medium text-brand-blue uppercase tracking-widest hover:underline">Full Audit</button>
                   </div>

@@ -5,7 +5,8 @@ import RiderLayout from "../components/rider/RiderLayout";
 import RiderDashboard from "../pages/rider/RiderDashboard";
 import MyOrders from "../pages/rider/MyOrders";
 import Attendance from "../pages/rider/Attendance";
-import WalletSalary from "../pages/rider/WalletSalary";
+import RiderWallet from "../pages/rider/RiderWallet";
+import RiderEarnings from "../pages/rider/RiderEarnings";
 import ActiveDelivery from "../pages/rider/ActiveDelivery";
 import RiderProfile from "../pages/rider/RiderProfile";
 
@@ -36,7 +37,8 @@ const RiderRoutes = () => {
         <Route index element={<RiderDashboard />} />
         <Route path="orders" element={<MyOrders />} />
         <Route path="attendance" element={<Attendance />} />
-        <Route path="wallet" element={<WalletSalary />} />
+        <Route path="wallet" element={<RiderWallet />} />
+        <Route path="earnings" element={<RiderEarnings />} />
         <Route path="tracking" element={<Placeholder title="Live Tracking" />} />
         <Route path="notifications" element={<Placeholder title="Notifications" />} />
         <Route path="profile" element={<RiderProfile />} />
