@@ -259,6 +259,8 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         formData.images.forEach(file => {
           data.append('images', file);
         });
+      } else if (key === 'shipping_charge') {
+        data.append(key, formData[key] === "" ? "0" : formData[key]);
       } else if (formData[key] !== null && formData[key] !== "") {
         data.append(key, formData[key]);
       }

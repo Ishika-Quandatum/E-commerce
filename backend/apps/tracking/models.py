@@ -135,6 +135,7 @@ class RiderWalletTransaction(models.Model):
     ]
     
     rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE, related_name='wallet_transactions')
+    cod_collection = models.ForeignKey(CODCollection, on_delete=models.SET_NULL, null=True, blank=True, related_name='submissions')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=50, choices=METHOD_CHOICES)
     reference_number = models.CharField(max_length=100, blank=True)

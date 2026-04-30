@@ -448,7 +448,7 @@ class RiderViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role != 'rider':
             return Response({'error': 'Unauthorized'}, status=403)
-        wallet = RiderWallet.objects.get(rider__user=user)
+        wallet, _ = RiderWallet.objects.get_or_create(rider__user=user, defaults={'rider': user.rider_profile})
         return Response(RiderWalletSerializer(wallet).data)
 
     @action(detail=False, methods=['get'])
@@ -560,6 +560,22 @@ class RiderWalletTransactionViewSet(viewsets.ModelViewSet):
         if user.role == 'rider':
             return self.queryset.filter(rider__user=user)
         return self.queryset
+
+    def perform_create(self, serializer):
+        rider = self.request.user.rider_profile
+        instance = serializer.save(rider=rider)
+        
+        # If linked to a specific COD collection, update its status
+        cod_id = self.request.data.get('cod_collection')
+        if cod_id:
+            try:
+                cod = CODCollection.objects.get(id=cod_id, rider=rider)
+                cod.status = 'Submitted'
+                cod.submitted_at = timezone.now()
+                cod.submitted_amount = instance.amount
+                cod.save()
+            except CODCollection.DoesNotExist:
+                pass
 
     @action(detail=True, methods=['post'])
     def verify_submission(self, request, pk=None):

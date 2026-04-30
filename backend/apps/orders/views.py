@@ -32,15 +32,18 @@ class OrderViewSet(viewsets.ModelViewSet):
             
         return queryset.filter(user=user)
 
-    def perform_create(self, serializer):
-        # 1. Get user's cart
-        cart, created = Cart.objects.get_or_create(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # We override create because we might create multiple orders (one per vendor)
+        cart, created = Cart.objects.get_or_create(user=request.user)
         cart_items = cart.items.all()
 
         if not cart_items.exists():
-            return
+            return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 2. Group items by vendor
+        # Group items by vendor
         vendor_items = {}
         for item in cart_items:
             vendor = item.product.vendor
@@ -48,14 +51,21 @@ class OrderViewSet(viewsets.ModelViewSet):
                 vendor_items[vendor] = []
             vendor_items[vendor].append(item)
 
-        # 3. Create an order per vendor
+        created_orders = []
+        # Create an order per vendor
         for vendor, items in vendor_items.items():
-            vendor_total = sum((i.product.discount_price or i.product.price) * i.quantity for i in items)
+            product_total = sum((i.product.discount_price or i.product.price) * i.quantity for i in items)
+            shipping_total = sum(getattr(i.product, 'shipping_charge', 0) or 0 for i in items)
+            tax_total = sum(((i.product.discount_price or i.product.price) * i.quantity * (getattr(i.product, 'tax', 0) or 0)) / 100 for i in items)
+            
+            final_total = product_total + shipping_total + tax_total
             
             order = Order.objects.create(
-                user=self.request.user,
+                user=request.user,
                 vendor=vendor,
-                total_price=vendor_total,
+                total_price=final_total,
+                shipping_charge=shipping_total,
+                tax_amount=tax_total,
                 payment_method=serializer.validated_data['payment_method'],
                 address=serializer.validated_data['address'],
                 phone=serializer.validated_data['phone'],
@@ -73,19 +83,22 @@ class OrderViewSet(viewsets.ModelViewSet):
             transaction_id = str(uuid.uuid4()).replace('-', '').upper()[:16]
             Payment.objects.create(
                 order=order,
-                user=self.request.user,
-                amount=vendor_total,
+                user=request.user,
+                amount=final_total,
                 method=order.payment_method,
                 status='Pending',
                 transaction_id=transaction_id
             )
+            created_orders.append(order)
 
-        # 4. Clear the cart
+        # Clear the cart
         cart.items.all().delete()
         
-        # Note: We don't call serializer.save() because we're creating multiple orders manually.
-        # This might mean serializer.data won't contain the created orders, 
-        # but the frontend usually navigates away or relies on the status code.
+        return Response(OrderSerializer(created_orders, many=True).data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer):
+        # Logic moved to create() to handle multi-vendor orders properly
+        pass
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def update_status(self, request, pk=None):

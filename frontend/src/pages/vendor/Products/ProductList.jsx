@@ -229,6 +229,7 @@ const ProductList = () => {
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Shipping</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
                 <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -271,6 +272,9 @@ const ProductList = () => {
                         <div className="text-xs text-emerald-600 font-bold hidden sm:block">Offer: ₹{p.discount_price}</div>
                       )}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-500">
+                      ₹{p.shipping_charge || "0.00"}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className={`inline-flex items-center w-fit px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${p.stock > 10 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : p.stock > 0 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-red-50 text-red-700 border-red-100 shadow-sm shadow-red-200'}`}>
@@ -282,6 +286,14 @@ const ProductList = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                       {/* VIEW DETAILS */}
+                       <button 
+                        onClick={() => navigate(`/products/${p.id}`)}
+                        className="inline-flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-95"
+                        title="View Details"
+                      >
+                        <ImageIcon size={18} />
+                      </button>
                        {/* INLINE EDIT TRIGGER */}
                       <button 
                         onClick={() => setActiveEditProduct(p)}

@@ -25,7 +25,8 @@ const RiderWallet = () => {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showPayModal, setShowPayModal] = useState(false);
-    const [filter, setFilter] = useState("All");
+    const [activeCodId, setActiveCodId] = useState(null);
+    const [filter, setFilter] = useState("Collections");
 
     // Pay Modal State
     const [paymentData, setPaymentData] = useState({
@@ -57,11 +58,14 @@ const RiderWallet = () => {
         }
     };
 
-    const handlePayNow = () => {
+    const handlePayNow = (cod = null) => {
         setPaymentData({
             ...paymentData,
-            amount: wallet?.pending_cod_amount || ""
+            amount: cod ? cod.amount : (wallet?.pending_cod_amount || ""),
+            reference_number: "",
+            notes: ""
         });
+        setActiveCodId(cod ? cod.id : null);
         setShowPayModal(true);
     };
 
@@ -76,6 +80,9 @@ const RiderWallet = () => {
             if (paymentData.screenshot) {
                 formData.append('screenshot', paymentData.screenshot);
             }
+            if (activeCodId) {
+                formData.append('cod_collection', activeCodId);
+            }
 
             await riderService.submitWalletCOD(formData);
             toast.success("COD submission recorded! Awaiting admin verification.");
@@ -87,16 +94,16 @@ const RiderWallet = () => {
     };
 
     const stats = [
-        { title: "Today COD Collected", value: wallet?.total_cod_collected || 0, sub: "Last 24h", icon: <Banknote />, color: "bg-indigo-50 text-indigo-600" },
+        { title: "Today COD Collected", value: wallet?.total_cod_collected || 0, sub: "Revenue", icon: <Banknote />, color: "bg-indigo-50 text-indigo-600" },
         { title: "Pending to Submit", value: wallet?.pending_cod_amount || 0, sub: "Cash in Hand", icon: <Clock />, color: "bg-amber-50 text-amber-600", highlight: true },
-        { title: "Awaiting Approval", value: transactions.filter(t => t.status === 'Submitted').reduce((acc, t) => acc + parseFloat(t.amount), 0), sub: "Submitted", icon: <ArrowRight />, color: "bg-blue-50 text-blue-600" },
-        { title: "Verified by Admin", value: wallet?.total_cod_submitted || 0, sub: "Settled", icon: <CheckCircle2 />, color: "bg-emerald-50 text-emerald-600" },
+        { title: "Submitted Amount", value: wallet?.total_cod_submitted || 0, sub: "To Admin", icon: <CheckCircle2 />, color: "bg-emerald-50 text-emerald-600" },
+        { title: "Today's Earnings", value: wallet?.today_earnings || 0, sub: "Your Profit", icon: <IndianRupee />, color: "bg-brand-purple/5 text-brand-purple" },
         { title: "Shortage / Diff", value: wallet?.shortage_amount || 0, sub: "Audit Result", icon: <AlertTriangle />, color: "bg-rose-50 text-rose-600" },
     ];
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
-            <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin" />
             <p className="font-bold text-slate-400 animate-pulse uppercase tracking-widest text-xs">Syncing Ledger...</p>
         </div>
     );
@@ -107,19 +114,19 @@ const RiderWallet = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight font-title">
-                        Wallet / <span className="text-indigo-600">COD Collections</span>
+                        Wallet / <span className="text-brand-purple">COD Collections</span>
                     </h1>
                     <p className="text-slate-500 font-medium mt-1">Manage customer cash collections and platform settlements.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button 
                         onClick={handlePayNow}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
+                        className="flex items-center gap-2 bg-brand-purple text-white px-6 py-4 rounded-2xl font-bold text-sm hover:scale-[1.02] transition-all shadow-xl shadow-brand-purple/20 active:scale-95"
                     >
                         <Plus size={18} />
                         <span>Pay to Admin</span>
                     </button>
-                    <button className="p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:bg-slate-50 transition-all">
+                    <button className="p-4 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:text-brand-purple transition-all shadow-sm">
                         <FileDown size={20} />
                     </button>
                 </div>
@@ -156,18 +163,19 @@ const RiderWallet = () => {
             )}
 
             {/* Main Table */}
+            {/* Main Ledger */}
             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-center gap-6">
-                        <h3 className="text-xl font-black text-slate-900 font-title">Submission History</h3>
+                        <h3 className="text-xl font-black text-slate-900 font-title">COD Ledger</h3>
                         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
-                            {["All", "Submitted", "Verified", "Rejected"].map(t => (
+                            {["Collections", "Submissions"].map(t => (
                                 <button 
                                     key={t}
                                     onClick={() => setFilter(t)}
                                     className={clsx(
                                         "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
-                                        filter === t ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                        filter === t ? "bg-white text-brand-purple shadow-sm" : "text-slate-400 hover:text-slate-600"
                                     )}
                                 >
                                     {t}
@@ -179,8 +187,8 @@ const RiderWallet = () => {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input 
                             type="text" 
-                            placeholder="Search Ref ID..."
-                            className="pl-12 pr-6 py-3 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none w-full md:w-64 transition-all"
+                            placeholder="Search ID..."
+                            className="pl-12 pr-6 py-3 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-brand-purple outline-none w-full md:w-64 transition-all"
                         />
                     </div>
                 </div>
@@ -189,58 +197,120 @@ const RiderWallet = () => {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">
-                                <th className="px-8 py-5">Date & ID</th>
-                                <th className="px-8 py-5">Amount</th>
-                                <th className="px-8 py-5">Method</th>
-                                <th className="px-8 py-5">Reference</th>
-                                <th className="px-8 py-5">Status</th>
-                                <th className="px-8 py-5 text-right">Actions</th>
+                                {filter === "Collections" ? (
+                                    <>
+                                        <th className="px-8 py-5">Order ID</th>
+                                        <th className="px-8 py-5">Date</th>
+                                        <th className="px-8 py-5">Customer Name</th>
+                                        <th className="px-8 py-5 text-right">Product Amount</th>
+                                        <th className="px-8 py-5 text-right">Shipping</th>
+                                        <th className="px-8 py-5 text-right">Tax</th>
+                                        <th className="px-8 py-5 text-right">Total Collected</th>
+                                        <th className="px-8 py-5 text-right">Payable to Admin</th>
+                                        <th className="px-8 py-5">Status</th>
+                                        <th className="px-8 py-5 text-right">Actions</th>
+                                    </>
+                                ) : (
+                                    <>
+                                        <th className="px-8 py-5">Submission ID</th>
+                                        <th className="px-8 py-5">Amount</th>
+                                        <th className="px-8 py-5">Method</th>
+                                        <th className="px-8 py-5">Reference</th>
+                                        <th className="px-8 py-5">Status</th>
+                                        <th className="px-8 py-5 text-right">Actions</th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {transactions.filter(t => filter === "All" || t.status === filter).length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="px-8 py-20 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
-                                                <HistoryIcon size={32} />
-                                            </div>
-                                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No submission records found</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                transactions.filter(t => filter === "All" || t.status === filter).map((tx) => (
-                                    <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-8 py-5">
-                                            <div className="text-sm font-bold text-slate-900">#{tx.id.toString().padStart(6, '0')}</div>
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase">{new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                                        </td>
-                                        <td className="px-8 py-5 text-sm font-black text-slate-900">₹{parseFloat(tx.amount).toLocaleString()}</td>
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                                                <CreditCard size={14} className="text-slate-400" />
-                                                {tx.payment_method}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5 text-xs font-bold text-slate-400 font-mono">{tx.reference_number || "N/A"}</td>
-                                        <td className="px-8 py-5">
-                                            <span className={clsx(
-                                                "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                tx.status === 'Verified' ? "bg-emerald-50 text-emerald-600" :
-                                                tx.status === 'Submitted' ? "bg-blue-50 text-blue-600" :
-                                                "bg-rose-50 text-rose-600"
-                                            )}>
-                                                {tx.status === 'Submitted' ? 'Awaiting Approval' : tx.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5 text-right">
-                                            <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
-                                                <ArrowRight size={18} />
-                                            </button>
-                                        </td>
+                            {filter === "Collections" ? (
+                                (wallet?.recent_cod_collections || []).length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="px-8 py-20 text-center text-slate-300 uppercase font-black tracking-widest text-xs">No collections found</td>
                                     </tr>
-                                ))
+                                ) : (
+                                    (wallet?.recent_cod_collections || []).map((cod) => (
+                                        <tr key={cod.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-8 py-6">
+                                                <span className="text-sm font-black text-slate-900 group-hover:text-brand-purple transition-colors">#{cod.tracking_number?.slice(-8)}</span>
+                                            </td>
+                                            <td className="px-8 py-6 text-xs font-bold text-slate-400">
+                                                {new Date(cod.order_date).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className="text-sm font-bold text-slate-600">{cod.customer_name}</span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right font-bold text-slate-700">
+                                                ₹{parseFloat(cod.product_amount).toLocaleString()}
+                                            </td>
+                                            <td className="px-8 py-6 text-right font-bold text-slate-500">
+                                                ₹{parseFloat(cod.shipping_charge).toLocaleString()}
+                                            </td>
+                                            <td className="px-8 py-6 text-right font-bold text-slate-500">
+                                                ₹{parseFloat(cod.tax).toLocaleString()}
+                                            </td>
+                                            <td className="px-8 py-6 text-right font-black text-slate-900">
+                                                ₹{parseFloat(cod.amount).toLocaleString()}
+                                            </td>
+                                            <td className="px-8 py-6 text-right font-black text-brand-purple">
+                                                ₹{parseFloat(cod.amount).toLocaleString()}
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className={clsx(
+                                                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter",
+                                                    cod.status === 'Pending' ? "bg-amber-100 text-amber-700" : 
+                                                    cod.status === 'Submitted' ? "bg-blue-100 text-blue-700" :
+                                                    "bg-emerald-100 text-emerald-700"
+                                                )}>
+                                                    {cod.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <button 
+                                                    className="text-xs font-black text-brand-purple hover:underline"
+                                                    onClick={() => handlePayNow(cod)}
+                                                >
+                                                    Pay Now
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )
+                            ) : (
+                                transactions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="px-8 py-20 text-center text-slate-300 uppercase font-black tracking-widest text-xs">No submissions found</td>
+                                    </tr>
+                                ) : (
+                                    transactions.map((tx) => (
+                                        <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-black text-slate-900">SUB-#{tx.id}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{new Date(tx.created_at).toLocaleString()}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6 text-sm font-black text-brand-purple">₹{parseFloat(tx.amount).toLocaleString()}</td>
+                                            <td className="px-8 py-6 text-xs font-bold text-slate-600">{tx.payment_method}</td>
+                                            <td className="px-8 py-6 text-xs font-bold text-slate-400">{tx.reference_number || "N/A"}</td>
+                                            <td className="px-8 py-6">
+                                                <span className={clsx(
+                                                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter",
+                                                    tx.status === 'Submitted' ? "bg-blue-100 text-blue-700" : 
+                                                    tx.status === 'Verified' ? "bg-emerald-100 text-emerald-700" : 
+                                                    "bg-rose-100 text-rose-700"
+                                                )}>
+                                                    {tx.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <button className="p-2 text-slate-400 hover:text-brand-purple transition-all">
+                                                    <FileDown size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )
                             )}
                         </tbody>
                     </table>
@@ -254,7 +324,7 @@ const RiderWallet = () => {
                     <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center">
                                     <IndianRupee size={24} />
                                 </div>
                                 <div>
@@ -273,7 +343,7 @@ const RiderWallet = () => {
                                 <input 
                                     type="number" 
                                     required
-                                    className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-xl font-black focus:ring-2 focus:ring-indigo-600 outline-none transition-all"
+                                    className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-xl font-black focus:ring-2 focus:ring-brand-purple outline-none transition-all"
                                     value={paymentData.amount}
                                     onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
                                 />
@@ -283,13 +353,13 @@ const RiderWallet = () => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Payment Method</label>
                                     <select 
-                                        className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-600 outline-none appearance-none cursor-pointer"
+                                        className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-brand-purple outline-none appearance-none cursor-pointer"
                                         value={paymentData.payment_method}
                                         onChange={(e) => setPaymentData({...paymentData, payment_method: e.target.value})}
                                     >
-                                        <option>UPI</option>
-                                        <option>Bank Transfer</option>
-                                        <option>Cash Handover</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="Bank Transfer">Bank Transfer</option>
+                                        <option value="Cash Handover">Cash Handover</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
@@ -297,7 +367,7 @@ const RiderWallet = () => {
                                     <input 
                                         type="text" 
                                         placeholder="UTR / Ref No."
-                                        className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-600 outline-none"
+                                        className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-brand-purple outline-none"
                                         value={paymentData.reference_number}
                                         onChange={(e) => setPaymentData({...paymentData, reference_number: e.target.value})}
                                     />
@@ -325,7 +395,7 @@ const RiderWallet = () => {
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Notes</label>
                                 <textarea 
-                                    className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none resize-none"
+                                    className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-brand-purple outline-none resize-none"
                                     rows="2"
                                     placeholder="Any additional info..."
                                     value={paymentData.notes}
@@ -335,7 +405,7 @@ const RiderWallet = () => {
 
                             <button 
                                 type="submit"
-                                className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 mt-4"
+                                className="w-full bg-brand-purple text-white py-4 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:scale-[1.02] transition-all active:scale-95 mt-4"
                             >
                                 Confirm Submission
                             </button>

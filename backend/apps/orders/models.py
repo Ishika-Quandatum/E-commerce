@@ -17,6 +17,8 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     payment_method = models.CharField(max_length=50)
     address = models.TextField()
@@ -52,7 +54,7 @@ class Order(models.Model):
         platform_settings = PlatformSetting.get_settings()
         
         commission_rate = platform_settings.global_commission
-        product_amount = self.total_price # Simple case: total price belongs to vendor
+        product_amount = self.total_price - self.shipping_charge - self.tax_amount
         commission_amount = (product_amount * commission_rate) / 100
         final_amount = product_amount - commission_amount
         transaction_id = f"PAY-{uuid.uuid4().hex[:8].upper()}"
