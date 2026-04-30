@@ -9,14 +9,18 @@ import {
   Truck,
   XCircle,
   Search,
-  ExternalLink
+  ExternalLink,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { adminService, riderService, trackingService } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import clsx from "clsx";
 
 const MyOrders = () => {
     const [activeTab, setActiveTab] = useState("Assigned");
+    const [viewMode, setViewMode] = useState("grid");
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -127,18 +131,38 @@ const MyOrders = () => {
                 ))}
             </div>
 
-            {/* Search/Filter */}
-            <div className="flex items-center gap-4 bg-white px-6 py-4 rounded-[24px] border border-slate-100 shadow-sm max-w-xl">
-                 <Search size={20} className="text-slate-300" />
-                 <input 
-                    type="text" 
-                    placeholder="Search by ID or customer..." 
-                    className="bg-transparent border-none outline-none text-sm w-full font-medium"
-                 />
+            {/* Search/Filter & View Toggle */}
+            <div className="flex flex-col md:flex-row items-center gap-4 justify-between max-w-5xl">
+                <div className="flex items-center gap-4 bg-white px-6 py-4 rounded-[24px] border border-slate-100 shadow-sm w-full md:max-w-xl">
+                     <Search size={20} className="text-slate-300" />
+                     <input 
+                        type="text" 
+                        placeholder="Search by ID or customer..." 
+                        className="bg-transparent border-none outline-none text-sm w-full font-medium"
+                     />
+                </div>
+                
+                <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm self-end md:self-auto">
+                    <button 
+                        onClick={() => setViewMode("grid")}
+                        className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-brand-purple text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
+                    >
+                        <LayoutGrid size={20} />
+                    </button>
+                    <button 
+                        onClick={() => setViewMode("list")}
+                        className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-brand-purple text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
+                    >
+                        <List size={20} />
+                    </button>
+                </div>
             </div>
 
             {/* Orders List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className={viewMode === 'grid' 
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-6" 
+                : "flex flex-col gap-4"
+            }>
                 <AnimatePresence mode="popLayout">
                     {loading ? (
                         [1,2,3,4].map(i => (
@@ -170,22 +194,28 @@ const MyOrders = () => {
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.3 }}
                             key={order.id}
-                            className="bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all flex flex-col overflow-hidden group"
+                            className={clsx(
+                                "bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all flex overflow-hidden group",
+                                viewMode === 'grid' ? "flex-col" : "flex-col md:flex-row items-center"
+                            )}
                         >
-                            {/* Card Header */}
-                            <div className="p-8 border-b border-slate-50 flex justify-between items-start">
+                            {/* Card Header / Left side in list */}
+                            <div className={clsx(
+                                "p-8 border-slate-50 flex justify-between",
+                                viewMode === 'grid' ? "border-b items-start" : "border-b md:border-b-0 md:border-r w-full md:w-72 flex-col gap-2 shrink-0"
+                            )}>
                                 <div>
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order ID</span>
                                         <span className="text-xs font-black text-brand-purple bg-brand-purple/5 px-2 py-1 rounded-lg">#{order.tracking_number?.slice(-6)}</span>
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900 group-hover:text-brand-purple transition-colors">
+                                    <h3 className="text-xl font-black text-slate-900 group-hover:text-brand-purple transition-colors truncate">
                                         {order.customer_name}
                                     </h3>
                                 </div>
-                                <div className="text-right">
+                                <div className={viewMode === 'grid' ? "text-right" : "text-left"}>
                                     <div className="text-lg font-black text-emerald-600">₹{parseFloat(order.estimated_earning || 0).toLocaleString()}</div>
-                                    <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1 justify-end uppercase">
+                                    <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase">
                                         <Clock size={10} /> {(() => {
                                             const diff = Math.floor((new Date() - new Date(order.created_at)) / 1000);
                                             if (diff < 60) return "Just now";
@@ -197,21 +227,27 @@ const MyOrders = () => {
                                 </div>
                             </div>
 
-                            {/* Card Body */}
-                            <div className="p-8 space-y-6 flex-1">
-                                <div className="flex items-start gap-4">
+                            {/* Card Body / Middle in list */}
+                            <div className={clsx(
+                                "p-8 space-y-6 flex-1",
+                                viewMode === 'list' && "flex items-center justify-between gap-8 space-y-0"
+                            )}>
+                                <div className={clsx("flex items-start gap-4", viewMode === 'list' ? "max-w-xs" : "")}>
                                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                                         <MapPin size={20} className="text-brand-blue" />
                                     </div>
                                     <div>
                                         <p className="text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Delivery Address</p>
-                                        <p className="text-sm font-bold text-slate-600 line-clamp-2 leading-relaxed">
+                                        <p className="text-sm font-bold text-slate-600 line-clamp-1 leading-relaxed">
                                             {order.address || "123 Business Way, Commercial Zone, Tech City, 56001"}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className={clsx(
+                                    "grid gap-4",
+                                    viewMode === 'grid' ? "grid-cols-2" : "flex items-center gap-8"
+                                )}>
                                     <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3">
                                         <Package size={18} className="text-slate-400" />
                                         <div className="overflow-hidden">
@@ -229,8 +265,11 @@ const MyOrders = () => {
                                 </div>
                             </div>
 
-                            {/* Card Footer Actions */}
-                            <div className="px-8 pb-8 flex items-center gap-3">
+                            {/* Card Footer Actions / Right in list */}
+                            <div className={clsx(
+                                "px-8 pb-8 flex items-center gap-3",
+                                viewMode === 'grid' ? "" : "pb-8 md:pb-0 md:pr-8 w-full md:w-auto"
+                            )}>
                                 <a 
                                     href={`tel:${order.phone || '555-0199'}`}
                                     className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
@@ -241,7 +280,7 @@ const MyOrders = () => {
                                 {activeTab === "Assigned" && (
                                     <button 
                                         onClick={() => handleAction(order.id, 'Picked Up')}
-                                        className="flex-[2] bg-brand-orange hover:bg-brand-orange-hover text-white px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-orange/20 active:scale-95"
+                                        className="flex-[2] bg-brand-orange hover:bg-brand-orange-hover text-white px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-orange/20 active:scale-95 min-w-[140px]"
                                     >
                                         <Truck size={18} /> Mark Picked Up
                                     </button>
@@ -250,14 +289,14 @@ const MyOrders = () => {
                                 {activeTab === "Picked Up" && (
                                     <button 
                                         onClick={() => handleAction(order.id, 'Delivered')}
-                                        className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                                        className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 min-w-[160px]"
                                     >
                                         <CheckCircle2 size={18} /> Complete Delivery
                                     </button>
                                 )}
 
                                 {activeTab === "New" && (
-                                    <div className="flex gap-2 flex-[2]">
+                                    <div className="flex gap-2 flex-[2] min-w-[180px]">
                                          <button 
                                             className="flex-1 bg-rose-500 text-white p-4 rounded-2xl flex justify-center items-center shadow-lg shadow-rose-500/20"
                                             onClick={() => handleAction(order.id, 'Rejected')}
