@@ -8,12 +8,14 @@ class PaymentSerializer(serializers.ModelSerializer):
     customer_name = serializers.SerializerMethodField()
     customer_email = serializers.ReadOnlyField(source='user.email')
     customer_phone = serializers.ReadOnlyField(source='order.phone')
+    vendor_name = serializers.ReadOnlyField(source='order.vendor.shop_name')
 
     class Meta:
         model = Payment
         fields = [
             'id', 'order', 'order_id', 'user', 'username', 'customer_name', 'customer_email', 'customer_phone',
-            'amount', 'method', 'status', 'transaction_id',
+            'vendor_name', 'amount', 'method', 'status', 'transaction_id', 'gateway_reference',
+            'refund_transaction_id', 'refund_reason',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['user', 'transaction_id', 'created_at', 'updated_at']

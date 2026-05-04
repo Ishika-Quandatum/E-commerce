@@ -7,9 +7,13 @@ from apps.vendors.models import Vendor
 class Payment(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
-        ('Completed', 'Completed'),
-        ('Failed', 'Failed'),
+        ('Paid', 'Paid'),
+        ('COD Pending', 'COD Pending'),
+        ('COD Collected', 'COD Collected'),
         ('Refunded', 'Refunded'),
+        ('Failed', 'Failed'),
+        ('Cancelled', 'Cancelled'),
+        ('Chargeback', 'Chargeback'),
     )
     METHOD_CHOICES = (
         ('cod', 'Cash on Delivery'),
@@ -24,6 +28,9 @@ class Payment(models.Model):
     method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='cod')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    gateway_reference = models.CharField(max_length=255, blank=True, null=True)
+    refund_transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    refund_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,11 +45,14 @@ class VendorPayout(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
         ('Paid', 'Paid'),
+        ('Hold', 'Hold'),
         ('Failed', 'Failed'),
     )
     METHOD_CHOICES = (
         ('bank_transfer', 'Bank Transfer'),
         ('upi', 'UPI'),
+        ('wallet', 'Wallet'),
+        ('manual', 'Manual'),
     )
 
     transaction_id = models.CharField(max_length=255, unique=True)
@@ -55,7 +65,9 @@ class VendorPayout(models.Model):
     final_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     payout_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
     method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='bank_transfer')
+    reference_number = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

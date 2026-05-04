@@ -13,7 +13,8 @@ import {
   MoreVertical,
   ExternalLink,
   Phone,
-  MapPin
+  MapPin,
+  AlertCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 

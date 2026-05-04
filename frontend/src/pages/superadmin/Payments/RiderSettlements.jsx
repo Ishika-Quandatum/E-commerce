@@ -75,7 +75,9 @@ const RiderSettlements = () => {
 
   const totals = {
       ridersCount: [...new Set(settlements.map(s => s.rider))].length,
-      totalIncentives: settlements.reduce((acc, curr) => acc + (parseFloat(curr.per_order_incentive) || 0), 0)
+      totalIncentives: settlements.reduce((acc, curr) => acc + (parseFloat(curr.per_order_incentive) || 0), 0),
+      paid: settlements.filter(s => s.status === 'Paid').reduce((acc, curr) => acc + (parseFloat(curr.final_salary) || 0), 0),
+      pending: settlements.filter(s => s.status === 'Pending').reduce((acc, curr) => acc + (parseFloat(curr.final_salary) || 0), 0)
   };
 
   if (loading && settlements.length === 0) {

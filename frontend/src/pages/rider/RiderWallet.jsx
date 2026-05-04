@@ -14,6 +14,7 @@ import {
   IndianRupee,
   X,
   Plus,
+  Package,
   History as HistoryIcon
 } from "lucide-react";
 import { riderService } from "../../services/api";
@@ -27,6 +28,8 @@ const RiderWallet = () => {
     const [showPayModal, setShowPayModal] = useState(false);
     const [activeCodId, setActiveCodId] = useState(null);
     const [filter, setFilter] = useState("Collections");
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [showViewModal, setShowViewModal] = useState(false);
 
     // Pay Modal State
     const [paymentData, setPaymentData] = useState({
@@ -63,10 +66,16 @@ const RiderWallet = () => {
             ...paymentData,
             amount: cod ? cod.amount : (wallet?.pending_cod_amount || ""),
             reference_number: "",
-            notes: ""
+            notes: "",
+            payment_method: "UPI"
         });
         setActiveCodId(cod ? cod.id : null);
         setShowPayModal(true);
+    };
+
+    const handleViewDetails = (item) => {
+        setSelectedItem(item);
+        setShowViewModal(true);
     };
 
     const handleSubmitPayment = async (e) => {
@@ -94,11 +103,11 @@ const RiderWallet = () => {
     };
 
     const stats = [
-        { title: "Today COD Collected", value: wallet?.total_cod_collected || 0, sub: "Revenue", icon: <Banknote />, color: "bg-indigo-50 text-indigo-600" },
-        { title: "Pending to Submit", value: wallet?.pending_cod_amount || 0, sub: "Cash in Hand", icon: <Clock />, color: "bg-amber-50 text-amber-600", highlight: true },
-        { title: "Submitted Amount", value: wallet?.total_cod_submitted || 0, sub: "To Admin", icon: <CheckCircle2 />, color: "bg-emerald-50 text-emerald-600" },
-        { title: "Today's Earnings", value: wallet?.today_earnings || 0, sub: "Your Profit", icon: <IndianRupee />, color: "bg-brand-purple/5 text-brand-purple" },
-        { title: "Shortage / Diff", value: wallet?.shortage_amount || 0, sub: "Audit Result", icon: <AlertTriangle />, color: "bg-rose-50 text-rose-600" },
+        { title: "COD Collected", value: wallet?.total_cod_collected || 0, sub: "Cash received from customers", icon: <Banknote />, color: "bg-indigo-50 text-indigo-600" },
+        { title: "Pending to Submit", value: wallet?.pending_cod_amount || 0, sub: "Cash currently with rider", icon: <Clock />, color: "bg-amber-50 text-amber-600", highlight: true },
+        { title: "Submitted Amount", value: wallet?.total_cod_submitted || 0, sub: "Handed over to admin", icon: <CheckCircle2 />, color: "bg-emerald-50 text-emerald-600" },
+        { title: "Today's Earnings", value: wallet?.today_earnings || 0, sub: "Delivery income today", icon: <IndianRupee />, color: "bg-brand-purple/5 text-brand-purple" },
+        { title: "Shortage / Difference", value: wallet?.shortage_amount || 0, sub: wallet?.shortage_amount > 0 ? "Missing cash mismatch" : "No mismatch found", icon: <AlertTriangle />, color: wallet?.shortage_amount > 0 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-400" },
     ];
 
     if (loading) return (
@@ -149,18 +158,31 @@ const RiderWallet = () => {
                 ))}
             </div>
 
-            {/* Warning for pending cash */}
-            {wallet?.pending_cod_amount > 0 && (
-                <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-4 text-amber-800">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-                        <AlertTriangle size={20} />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold">Pending Cash Submission</p>
-                        <p className="text-xs font-medium opacity-80">Please submit ₹{wallet.pending_cod_amount} collected from customers to avoid penalties or account suspension.</p>
-                    </div>
+            {/* Settlement Status Alert */}
+            <div className={clsx(
+                "p-4 rounded-2xl flex items-center gap-4 border transition-all",
+                (wallet?.pending_cod_amount || 0) > 0 
+                    ? "bg-amber-50 border-amber-100 text-amber-800 shadow-lg shadow-amber-500/5" 
+                    : "bg-emerald-50 border-emerald-100 text-emerald-800"
+            )}>
+                <div className={clsx(
+                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                    (wallet?.pending_cod_amount || 0) > 0 ? "bg-amber-100" : "bg-emerald-100"
+                )}>
+                    {(wallet?.pending_cod_amount || 0) > 0 ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}
                 </div>
-            )}
+                <div>
+                    <p className="text-sm font-bold">
+                        {(wallet?.pending_cod_amount || 0) > 0 ? "Pending Cash Submission" : "All COD Collections Settled"}
+                    </p>
+                    <p className="text-xs font-medium opacity-80">
+                        {(wallet?.pending_cod_amount || 0) > 0 
+                            ? `Please submit ₹${parseFloat(wallet.pending_cod_amount).toLocaleString()} collected from customers to avoid account suspension.`
+                            : "Excellent! You have no outstanding cash to submit to the admin."
+                        }
+                    </p>
+                </div>
+            </div>
 
             {/* Main Table */}
             {/* Main Ledger */}
@@ -169,7 +191,7 @@ const RiderWallet = () => {
                     <div className="flex items-center gap-6">
                         <h3 className="text-xl font-black text-slate-900 font-title">COD Ledger</h3>
                         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
-                            {["Collections", "Submissions"].map(t => (
+                            {["Collections", "Pending", "Submissions"].map(t => (
                                 <button 
                                     key={t}
                                     onClick={() => setFilter(t)}
@@ -201,6 +223,7 @@ const RiderWallet = () => {
                                     <>
                                         <th className="px-8 py-5">Order ID</th>
                                         <th className="px-8 py-5">Date</th>
+                                        <th className="px-8 py-5">Payment Method</th>
                                         <th className="px-8 py-5">Customer Name</th>
                                         <th className="px-8 py-5 text-right">Product Amount</th>
                                         <th className="px-8 py-5 text-right">Shipping</th>
@@ -223,19 +246,34 @@ const RiderWallet = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {filter === "Collections" ? (
-                                (wallet?.recent_cod_collections || []).length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" className="px-8 py-20 text-center text-slate-300 uppercase font-black tracking-widest text-xs">No collections found</td>
-                                    </tr>
-                                ) : (
-                                    (wallet?.recent_cod_collections || []).map((cod) => (
+                            {filter !== "Submissions" ? (
+                                (() => {
+                                    const collections = wallet?.recent_cod_collections || [];
+                                    const filtered = filter === "Pending" 
+                                        ? collections.filter(c => c.status === 'Pending')
+                                        : collections;
+                                    
+                                    if (filtered.length === 0) return (
+                                        <tr>
+                                            <td colSpan="10" className="px-8 py-20 text-center text-slate-300 uppercase font-black tracking-widest text-xs">No {filter.toLowerCase()} found</td>
+                                        </tr>
+                                    );
+
+                                    return filtered.map((cod) => (
                                         <tr key={cod.id} className="hover:bg-slate-50/50 transition-colors group">
                                             <td className="px-8 py-6">
                                                 <span className="text-sm font-black text-slate-900 group-hover:text-brand-purple transition-colors">#{cod.tracking_number?.slice(-8)}</span>
                                             </td>
                                             <td className="px-8 py-6 text-xs font-bold text-slate-400">
                                                 {new Date(cod.order_date).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className={clsx(
+                                                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase",
+                                                    cod.payment_method === 'COD' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                                                )}>
+                                                    {cod.payment_method}
+                                                </span>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <span className="text-sm font-bold text-slate-600">{cod.customer_name}</span>
@@ -253,7 +291,7 @@ const RiderWallet = () => {
                                                 ₹{parseFloat(cod.amount).toLocaleString()}
                                             </td>
                                             <td className="px-8 py-6 text-right font-black text-brand-purple">
-                                                ₹{parseFloat(cod.amount).toLocaleString()}
+                                                ₹{cod.payment_method === 'COD' ? parseFloat(cod.amount).toLocaleString() : "0"}
                                             </td>
                                             <td className="px-8 py-6">
                                                 <span className={clsx(
@@ -266,16 +304,25 @@ const RiderWallet = () => {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6 text-right">
-                                                <button 
-                                                    className="text-xs font-black text-brand-purple hover:underline"
-                                                    onClick={() => handlePayNow(cod)}
-                                                >
-                                                    Pay Now
-                                                </button>
+                                                {cod.payment_method === 'COD' && cod.status === 'Pending' ? (
+                                                    <button 
+                                                        className="text-xs font-black text-brand-purple hover:underline"
+                                                        onClick={() => handlePayNow(cod)}
+                                                    >
+                                                        Pay Now
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => handleViewDetails(cod)}
+                                                        className="text-xs font-bold text-slate-400 hover:text-brand-purple transition-colors"
+                                                    >
+                                                        View
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
-                                    ))
-                                )
+                                    ));
+                                })()
                             ) : (
                                 transactions.length === 0 ? (
                                     <tr>
@@ -410,6 +457,109 @@ const RiderWallet = () => {
                                 Confirm Submission
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* View Details Modal */}
+            {showViewModal && selectedItem && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowViewModal(false)} />
+                    <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-2xl flex items-center justify-center">
+                                    <Package size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900 font-title">Order Details</h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">#{selectedItem.tracking_number || selectedItem.id}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowViewModal(false)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-8 space-y-6">
+                            {/* Determine if it's a Collection or Submission */}
+                            {selectedItem.tracking_number ? (
+                                <>
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Customer</p>
+                                            <p className="font-bold text-slate-900">{selectedItem.customer_name || "N/A"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Payment Method</p>
+                                            <p className="font-bold text-slate-900">{selectedItem.payment_method}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Product Amount</p>
+                                            <p className="font-bold text-slate-900">₹{parseFloat(selectedItem.product_amount || 0).toLocaleString()}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Shipping + Tax</p>
+                                            <p className="font-bold text-slate-900">₹{(parseFloat(selectedItem.shipping_charge || 0) + parseFloat(selectedItem.tax || 0)).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="pt-6 border-t border-slate-50">
+                                        <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Collected</p>
+                                                <p className="text-2xl font-black text-slate-900">₹{parseFloat(selectedItem.amount || 0).toLocaleString()}</p>
+                                            </div>
+                                            <div className={clsx(
+                                                "px-4 py-2 rounded-xl text-xs font-black uppercase",
+                                                selectedItem.status === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                                            )}>
+                                                {selectedItem.status}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Settlement Method</p>
+                                            <p className="font-bold text-slate-900">{selectedItem.payment_method}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reference ID</p>
+                                            <p className="font-bold text-slate-900">{selectedItem.reference_number || "N/A"}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rider Notes</p>
+                                            <p className="text-sm font-medium text-slate-600 bg-slate-50 p-4 rounded-2xl italic">"{selectedItem.notes || "No notes provided"}"</p>
+                                        </div>
+                                    </div>
+                                    <div className="pt-6 border-t border-slate-50">
+                                        <div className="flex justify-between items-center bg-brand-purple/5 p-4 rounded-2xl">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Submitted Amount</p>
+                                                <p className="text-2xl font-black text-brand-purple">₹{parseFloat(selectedItem.amount || 0).toLocaleString()}</p>
+                                            </div>
+                                            <div className={clsx(
+                                                "px-4 py-2 rounded-xl text-xs font-black uppercase",
+                                                selectedItem.status === 'Verified' ? "bg-emerald-100 text-emerald-700" : 
+                                                selectedItem.status === 'Submitted' ? "bg-blue-100 text-blue-700" : "bg-rose-100 text-rose-700"
+                                            )}>
+                                                {selectedItem.status}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="p-8 bg-slate-50/50 flex justify-end">
+                            <button 
+                                onClick={() => setShowViewModal(false)}
+                                className="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

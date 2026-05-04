@@ -12,6 +12,7 @@ class Order(models.Model):
         ('Processing', 'Processing'),
         ('Shipped', 'Shipped'),
         ('Delivered', 'Delivered'),
+        ('Returned', 'Returned'),
         ('Cancelled', 'Cancelled'),
     )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -38,6 +39,9 @@ class Order(models.Model):
         
         if self.status == 'Delivered' and old_status != 'Delivered':
             self.create_vendor_payout()
+        
+        if self.status == 'Returned' and old_status != 'Returned':
+            self.hold_vendor_payout()
 
     def create_vendor_payout(self):
         from apps.payments.models import VendorPayout
@@ -59,6 +63,9 @@ class Order(models.Model):
         final_amount = product_amount - commission_amount
         transaction_id = f"PAY-{uuid.uuid4().hex[:8].upper()}"
 
+        from django.utils import timezone
+        due_date = timezone.now() + timezone.timedelta(days=7) # Default 7 days payout cycle
+
         VendorPayout.objects.create(
             transaction_id=transaction_id,
             vendor=self.vendor,
@@ -68,8 +75,16 @@ class Order(models.Model):
             commission_rate=commission_rate,
             commission_amount=commission_amount,
             final_amount=final_amount,
-            status='Pending'
+            status='Pending',
+            due_date=due_date
         )
+
+    def hold_vendor_payout(self):
+        from apps.payments.models import VendorPayout
+        payout = VendorPayout.objects.filter(order=self).first()
+        if payout and payout.status != 'Paid':
+            payout.status = 'Hold'
+            payout.save()
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"

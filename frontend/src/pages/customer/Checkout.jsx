@@ -14,7 +14,7 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     address: '',
     phone: '',
-    payment_method: 'UPI',
+    payment_method: 'upi',
     card_name: '',
     card_number: ''
   });
@@ -118,14 +118,17 @@ const Checkout = () => {
                 <h3 className="text-xl font-bold text-slate-800">Payment Selection</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {['UPI / Card', 'Cash on Delivery'].map((method) => (
+                {[
+                  { id: 'upi', label: 'UPI / Card' },
+                  { id: 'cod', label: 'Cash on Delivery' }
+                ].map((method) => (
                   <button
-                    key={method}
+                    key={method.id}
                     type="button"
-                    onClick={() => setFormData({ ...formData, payment_method: method })}
-                    className={`flex items-center justify-center h-16 rounded-2xl border-2 font-bold transition-all ${formData.payment_method === method ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-slate-100 hover:border-slate-200 text-slate-500'}`}
+                    onClick={() => setFormData({ ...formData, payment_method: method.id })}
+                    className={`flex items-center justify-center h-16 rounded-2xl border-2 font-bold transition-all ${formData.payment_method === method.id ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-slate-100 hover:border-slate-200 text-slate-500'}`}
                   >
-                    {method}
+                    {method.label}
                   </button>
                 ))}
               </div>

@@ -50,7 +50,13 @@ class CODCollectionSerializer(serializers.ModelSerializer):
     tracking_number = serializers.ReadOnlyField(source='shipment.tracking_number')
     order_id = serializers.ReadOnlyField(source='shipment.order.id')
     order_date = serializers.ReadOnlyField(source='shipment.order.created_at')
-    payment_method = serializers.ReadOnlyField(source='shipment.order.payment_method')
+    def get_payment_method(self, obj):
+        method = obj.shipment.order.payment_method
+        if method == 'Cash on Delivery':
+            return 'COD'
+        return 'Online'
+    
+    payment_method = serializers.SerializerMethodField()
     
     # Financial Breakdown
     product_amount = serializers.SerializerMethodField()
@@ -85,6 +91,11 @@ class RiderWalletSerializer(serializers.ModelSerializer):
     recent_wallet_submissions = serializers.SerializerMethodField()
     today_earnings = serializers.SerializerMethodField()
     
+    # Dynamic calculations to ensure accuracy
+    total_cod_collected = serializers.SerializerMethodField()
+    total_cod_submitted = serializers.SerializerMethodField()
+    pending_cod_amount = serializers.SerializerMethodField()
+
     class Meta:
         model = RiderWallet
         fields = '__all__'
@@ -94,11 +105,11 @@ class RiderWalletSerializer(serializers.ModelSerializer):
 
     def get_recent_cod_collections(self, obj):
         cods = CODCollection.objects.filter(rider=obj.rider).order_by('-created_at')[:20]
-        return CODCollectionSerializer(cods, many=True).data
+        return CODCollectionSerializer(cods, many=True, context=self.context).data
 
     def get_recent_wallet_submissions(self, obj):
         subs = RiderWalletTransaction.objects.filter(rider=obj.rider).order_by('-created_at')[:10]
-        return RiderWalletTransactionSerializer(subs, many=True).data
+        return RiderWalletTransactionSerializer(subs, many=True, context=self.context).data
 
     def get_today_earnings(self, obj):
         from django.db.models import Sum
@@ -109,6 +120,24 @@ class RiderWalletSerializer(serializers.ModelSerializer):
             created_at__date=today
         ).aggregate(total=Sum('amount'))['total'] or 0
         return float(earnings)
+
+    def get_total_cod_collected(self, obj):
+        from django.db.models import Sum
+        total = CODCollection.objects.filter(rider=obj.rider).aggregate(total=Sum('amount'))['total'] or 0
+        return float(total)
+
+    def get_total_cod_submitted(self, obj):
+        from django.db.models import Sum
+        total = RiderWalletTransaction.objects.filter(
+            rider=obj.rider, 
+            status='Verified'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        return float(total)
+
+    def get_pending_cod_amount(self, obj):
+        collected = self.get_total_cod_collected(obj)
+        submitted = self.get_total_cod_submitted(obj)
+        return collected - submitted
 
 class RiderProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
