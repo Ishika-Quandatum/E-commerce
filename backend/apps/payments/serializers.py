@@ -34,6 +34,7 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
 class VendorPayoutSerializer(serializers.ModelSerializer):
     vendor_name = serializers.ReadOnlyField(source='vendor.shop_name')
     order_id = serializers.ReadOnlyField(source='order.id')
+    order_payment_method = serializers.ReadOnlyField(source='order.payment_method')
 
     class Meta:
         model = VendorPayout

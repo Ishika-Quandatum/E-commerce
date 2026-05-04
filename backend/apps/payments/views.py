@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status, filters
+from rest_framework import viewsets, permissions, status, filters, pagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import uuid
@@ -6,7 +6,14 @@ import csv
 from django.http import HttpResponse
 from django.db.models import Sum, Count
 from .models import Payment, VendorPayout
+from apps.vendors.models import Vendor
 from .serializers import PaymentSerializer, CreatePaymentSerializer, VendorPayoutSerializer
+
+
+class VendorPayoutPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
@@ -142,6 +149,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
 class VendorPayoutViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = VendorPayoutSerializer
+    pagination_class = VendorPayoutPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['id', 'order__id', 'vendor__shop_name', 'transaction_id']
 
@@ -165,21 +173,77 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
         end_date = self.request.query_params.get('end_date')
         min_amount = self.request.query_params.get('min_amount')
         max_amount = self.request.query_params.get('max_amount')
+        order_id = self.request.query_params.get('order_id')
+        month = self.request.query_params.get('month')
+        year = self.request.query_params.get('year')
         
         if vendor_id:
             queryset = queryset.filter(vendor_id=vendor_id)
         if status_param and status_param != 'All':
             queryset = queryset.filter(status=status_param)
+            
+        # Date Range vs Month/Year filtering
         if start_date:
             queryset = queryset.filter(created_at__date__gte=start_date)
         if end_date:
             queryset = queryset.filter(created_at__date__lte=end_date)
+            
+        if not start_date and not end_date:
+            if month:
+                queryset = queryset.filter(created_at__month=month)
+            if year:
+                queryset = queryset.filter(created_at__year=year)
+                
         if min_amount:
             queryset = queryset.filter(final_amount__gte=min_amount)
         if max_amount:
             queryset = queryset.filter(final_amount__lte=max_amount)
+        if order_id:
+            queryset = queryset.filter(order__id=order_id)
+            
+        # Sorting
+        sort_by = self.request.query_params.get('sort_by', '-created_at')
+        if sort_by:
+            queryset = queryset.order_by(sort_by)
             
         return queryset
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def vendor_payout_stats(self, request):
+        user = request.user
+        if user.role != 'vendor':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        vendor = getattr(user, 'vendor_profile', None)
+        if not vendor:
+            return Response({'error': 'Vendor profile not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        from django.utils import timezone
+        from django.db.models import Sum
+        import calendar
+        
+        now = timezone.now()
+        month = int(request.query_params.get('month', now.month))
+        year = int(request.query_params.get('year', now.year))
+        
+        first_day = now.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        last_day_num = calendar.monthrange(year, month)[1]
+        last_day = now.replace(year=year, month=month, day=last_day_num, hour=23, minute=59, second=59, microsecond=999999)
+        
+        payouts = VendorPayout.objects.filter(vendor=vendor)
+        
+        total_earnings = payouts.filter(status='Paid').aggregate(Sum('final_amount'))['final_amount__sum'] or 0
+        pending_amount = payouts.filter(status__in=['Pending', 'Hold']).aggregate(Sum('final_amount'))['final_amount__sum'] or 0
+        commission_deducted = payouts.aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
+        month_earnings = payouts.filter(status='Paid', payout_date__range=[first_day, last_day]).aggregate(Sum('final_amount'))['final_amount__sum'] or 0
+
+        return Response({
+            'total_earnings': float(total_earnings),
+            'pending_amount': float(pending_amount),
+            'commission_deducted': float(commission_deducted),
+            'month_earnings': float(month_earnings),
+            'selected_period': first_day.strftime('%B %Y')
+        })
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
     def dashboard_stats(self, request):
@@ -250,15 +314,14 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
     def download_statement(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        
+        payouts = self.get_queryset()
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="vendor_payout_statement.csv"'
         
         writer = csv.writer(response)
-        writer.writerow(['Payout ID', 'Vendor', 'Order ID', 'Gross Amount', 'Commission', 'Net Payable', 'Status', 'Due Date', 'Payout Date', 'Method', 'Reference'])
+        writer.writerow(['Transaction ID', 'Vendor', 'Order ID', 'Total Amount', 'Commission', 'Final Amount', 'Status', 'Due Date', 'Payout Date', 'Method', 'Reference'])
         
-        for p in queryset:
+        for p in payouts:
             writer.writerow([
                 p.transaction_id,
                 p.vendor.shop_name,
@@ -273,4 +336,34 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
                 p.reference_number
             ])
             
+        return response
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def download_invoice(self, request, pk=None):
+        payout = self.get_object()
+        
+        # Security check: Ensure vendor can only download their own invoice
+        if request.user.role == 'vendor' and payout.vendor.user != request.user:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="Invoice_{payout.transaction_id}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['PAYMENT INVOICE'])
+        writer.writerow([])
+        writer.writerow(['Transaction ID', payout.transaction_id])
+        writer.writerow(['Date', payout.created_at.strftime('%Y-%m-%d')])
+        writer.writerow(['Vendor', payout.vendor.shop_name])
+        writer.writerow(['Order Reference', f"ORD#{payout.order.id}"])
+        writer.writerow([])
+        writer.writerow(['Description', 'Amount'])
+        writer.writerow(['Product Valuation', payout.total_amount])
+        writer.writerow(['Platform Commission', f"-{payout.commission_amount}"])
+        writer.writerow(['---', '---'])
+        writer.writerow(['NET PAYABLE', payout.final_amount])
+        writer.writerow([])
+        writer.writerow(['Status', payout.status])
+        writer.writerow(['Reference No', payout.reference_number or 'Awaiting'])
+        
         return response

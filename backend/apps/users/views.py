@@ -66,17 +66,32 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class DashboardStatsView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        total_revenue = Order.objects.filter(status='Delivered').aggregate(Sum('total_price'))['total_price__sum'] or 0
-        total_vendors = User.objects.filter(role='vendor').count()
-        total_products = Product.objects.count()
-        total_orders = Order.objects.count()
+        user = request.user
+        orders = Order.objects.all()
+        products = Product.objects.all()
+        
+        if user.role == 'vendor':
+            vendor = getattr(user, 'vendor_profile', None)
+            if vendor:
+                orders = orders.filter(vendor=vendor)
+                products = products.filter(vendor=vendor)
+            else:
+                orders = orders.none()
+                products = products.none()
+        elif user.role not in ['admin', 'superadmin'] and not user.is_staff:
+             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+        total_revenue = orders.filter(status='Delivered').aggregate(Sum('total_price'))['total_price__sum'] or 0
+        total_products = products.count()
+        total_orders = orders.count()
+        total_vendors = User.objects.filter(role='vendor').count() if user.role in ['admin', 'superadmin'] else 0
 
         return Response({
-            'total_revenue': total_revenue,
-            'total_vendors': total_vendors,
+            'total_revenue': float(total_revenue),
             'total_products': total_products,
             'total_orders': total_orders,
+            'total_vendors': total_vendors,
         })

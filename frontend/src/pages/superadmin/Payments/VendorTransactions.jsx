@@ -256,7 +256,7 @@ const VendorTransactions = () => {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden px-4 md:px-0"
           >
-            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Search Merchant</label>
                     <div className="relative">
@@ -266,7 +266,7 @@ const VendorTransactions = () => {
                             placeholder="Order ID or Vendor..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-purple-400 transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-purple-400 transition-all placeholder:text-slate-300"
                         />
                     </div>
                 </div>
@@ -275,7 +275,7 @@ const VendorTransactions = () => {
                     <select 
                         value={vendorFilter} 
                         onChange={(e) => setVendorFilter(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-purple-400 transition-all appearance-none"
+                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-purple-400 transition-all appearance-none cursor-pointer"
                     >
                         <option value="">All Vendors</option>
                         {vendors.map(v => <option key={v.id} value={v.id}>{v.shop_name}</option>)}
@@ -283,14 +283,14 @@ const VendorTransactions = () => {
                 </div>
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Status Protocol</label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                         {['All', 'Pending', 'Paid', 'Hold'].map(s => (
                             <button 
                                 key={s}
                                 onClick={() => setStatusFilter(s)}
                                 className={clsx(
-                                    "px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-tighter transition-all flex-1",
-                                    statusFilter === s ? "bg-purple-600 text-white" : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                                    "px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-tighter transition-all flex-1 min-w-[60px]",
+                                    statusFilter === s ? "bg-purple-600 text-white shadow-md shadow-purple-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100"
                                 )}
                             >
                                 {s}
@@ -300,19 +300,24 @@ const VendorTransactions = () => {
                 </div>
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Date Range</label>
-                    <div className="flex gap-2">
-                        <input 
-                            type="date" 
-                            value={dateRange.start}
-                            onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-                            className="w-full px-3 py-3 bg-slate-50 border-none rounded-xl text-[10px] focus:ring-2 focus:ring-purple-400"
-                        />
-                        <input 
-                            type="date" 
-                            value={dateRange.end}
-                            onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-                            className="w-full px-3 py-3 bg-slate-50 border-none rounded-xl text-[10px] focus:ring-2 focus:ring-purple-400"
-                        />
+                    <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                            <input 
+                                type="date" 
+                                value={dateRange.start}
+                                onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
+                                className="w-full pl-3 pr-2 py-3 bg-slate-50 border-none rounded-xl text-[11px] focus:ring-2 focus:ring-purple-400 cursor-pointer"
+                            />
+                        </div>
+                        <span className="text-slate-300 font-bold">-</span>
+                        <div className="relative flex-1">
+                            <input 
+                                type="date" 
+                                value={dateRange.end}
+                                onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
+                                className="w-full pl-3 pr-2 py-3 bg-slate-50 border-none rounded-xl text-[11px] focus:ring-2 focus:ring-purple-400 cursor-pointer"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -374,7 +379,15 @@ const VendorTransactions = () => {
                     <td className="px-6 py-6">
                         <div className="flex flex-col">
                             <span className="font-bold text-slate-700 tracking-tight text-sm">ORD-{p.order_id}</span>
-                            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">{p.transaction_id}</span>
+                            <div className="flex items-center gap-1.5 mt-1">
+                                <span className={clsx(
+                                    "text-[9px] font-black px-2 py-0.5 rounded-md border uppercase",
+                                    p.order_payment_method?.toLowerCase().includes('cod') ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-blue-50 text-blue-600 border-blue-100"
+                                )}>
+                                    {p.order_payment_method}
+                                </span>
+                                <span className="text-[10px] font-medium text-slate-300 uppercase tracking-tighter">#{p.transaction_id.slice(-8)}</span>
+                            </div>
                         </div>
                     </td>
                     <td className="px-6 py-6">

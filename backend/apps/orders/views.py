@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status, filters
+from rest_framework import viewsets, permissions, status, filters, pagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Order, OrderItem
@@ -7,8 +7,14 @@ from apps.cart.models import Cart
 from apps.payments.models import Payment
 import uuid
 
+class OrderPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = OrderPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['id', 'user__username', 'user__first_name', 'user__last_name', 'address']
 
@@ -27,10 +33,17 @@ class OrderViewSet(viewsets.ModelViewSet):
         if user.role == 'vendor':
             vendor = getattr(user, 'vendor_profile', None)
             if vendor:
-                return queryset.filter(vendor=vendor)
-            return Order.objects.none()
+                queryset = queryset.filter(vendor=vendor)
+            else:
+                queryset = queryset.none()
+        elif user.role not in ['superadmin', 'admin'] and not user.is_staff:
+            queryset = queryset.filter(user=user)
+
+        status_param = self.request.query_params.get('status')
+        if status_param and status_param != 'All':
+            queryset = queryset.filter(status=status_param)
             
-        return queryset.filter(user=user)
+        return queryset.order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

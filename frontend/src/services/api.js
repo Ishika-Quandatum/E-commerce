@@ -111,10 +111,12 @@ export const paymentService = {
   bulkExportPayments: () => api.get('payments/bulk_export/', { responseType: 'blob' }),
   getVendorPayouts: (params) => api.get('payments/vendor-payouts/', { params }),
   getVendorPayoutStats: () => api.get('payments/vendor-payouts/dashboard_stats/'),
+  getVendorPayoutStatsForVendor: (params) => api.get('payments/vendor-payouts/vendor_payout_stats/', { params }),
   updatePayoutStatus: (id, data) => api.post(`payments/vendor-payouts/${id}/mark_as_paid/`, data),
   holdPayout: (id) => api.post(`payments/vendor-payouts/${id}/hold/`),
   approvePayout: (id) => api.post(`payments/vendor-payouts/${id}/approve/`),
   bulkPayout: (data) => api.post('payments/vendor-payouts/bulk_payout/', data),
+  downloadPayoutInvoice: (id) => api.get(`payments/vendor-payouts/${id}/download_invoice/`, { responseType: 'blob' }),
   downloadPayoutStatement: (params) => api.get('payments/vendor-payouts/download_statement/', { params, responseType: 'blob' }),
   
   // Rider Finance
