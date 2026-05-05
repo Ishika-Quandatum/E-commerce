@@ -118,7 +118,7 @@ const Profile = () => {
                       )}
                       <div className="text-right">
                         <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Total Price</p>
-                        <p className="text-lg font-black text-brand-purple">${order.total_price}</p>
+                        <p className="text-lg font-black text-brand-purple">₹{order.total_price}</p>
                       </div>
                     </div>
                   </div>
@@ -162,9 +162,19 @@ const Profile = () => {
         </p>
       </div>
 
-      {/* Price */}
-      <div className="text-sm font-bold text-primary-600">
-        ₹{item.price}
+      {/* Review / Price */}
+      <div className="flex flex-col items-end gap-2">
+        <div className="text-sm font-bold text-primary-600">
+          ₹{item.price}
+        </div>
+        {order.status === 'Delivered' && (
+          <button
+            onClick={() => navigate(`/products/${item.product.id}?write_review=true`)}
+            className="text-[10px] font-black text-white bg-brand-blue px-3 py-1.5 rounded-lg uppercase tracking-tighter hover:bg-slate-900 transition-all shadow-md shadow-brand-blue/10"
+          >
+            Write Review
+          </button>
+        )}
       </div>
     </div>
   ))}

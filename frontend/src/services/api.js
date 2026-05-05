@@ -44,6 +44,13 @@ export const authService = {
   changePassword: (data) => api.post('users/change-password/', data),
 };
 
+export const addressService = {
+  getAddresses: () => api.get('users/addresses/'),
+  createAddress: (data) => api.post('users/addresses/', data),
+  updateAddress: (id, data) => api.patch(`users/addresses/${id}/`, data),
+  deleteAddress: (id) => api.delete(`users/addresses/${id}/`),
+};
+
 export const productService = {
   getCategories: (params) => api.get('categories/', { params }),
   getProducts: (params) => api.get('products/', { params }),
@@ -102,6 +109,8 @@ export const adminService = {
   autoAssignRider: (id) => api.post(`tracking/shipments/${id}/assign_nearest_rider/`),
   updateShipmentStatus: (id, status) => api.patch(`tracking/shipments/${id}/update_dispatch_status/`, { status }),
   getProductStats: () => api.get('products/admin_stats/'),
+  addRiderBonus: (id, data) => api.post(`tracking/riders/${id}/add_bonus/`, data),
+  updateRiderSalaryConfig: (id, data) => api.post(`tracking/riders/${id}/update_salary_config/`, data),
 };
 
 export const trackingService = {

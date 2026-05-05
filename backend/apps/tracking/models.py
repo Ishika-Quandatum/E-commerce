@@ -201,6 +201,22 @@ class RiderMonthlySettlement(models.Model):
         return f"Salary: {self.rider.user.username} - {self.month.strftime('%B %Y')}"
 
 
+class RiderIncentive(models.Model):
+    INCENTIVE_TYPES = [
+        ('Milestone', 'Milestone Bonus'),
+        ('PeakHour', 'Peak Hour Bonus'),
+        ('Manual', 'Manual Admin Bonus'),
+    ]
+    rider = models.ForeignKey(RiderProfile, on_delete=models.CASCADE, related_name='incentives')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    reason = models.CharField(max_length=255)
+    incentive_type = models.CharField(max_length=50, choices=INCENTIVE_TYPES, default='Manual')
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.incentive_type} Incentive: {self.amount} for {self.rider.user.username}"
+
+
 class RiderFinancialLog(models.Model):
     TYPE_CHOICES = [
         ('Incentive', 'Delivery Incentive'),

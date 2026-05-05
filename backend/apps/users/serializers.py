@@ -1,15 +1,23 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, UserAddress
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 
 
+class UserAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAddress
+        fields = '__all__'
+        read_only_fields = ['user']
+
 class UserSerializer(serializers.ModelSerializer):
     vendor_status = serializers.SerializerMethodField()
 
+    addresses = UserAddressSerializer(many=True, read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_superuser', 'vendor_status', 'phone', 'address', 'avatar']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_superuser', 'vendor_status', 'phone', 'address', 'avatar', 'addresses']
         read_only_fields = ['id', 'is_staff', 'is_superuser', 'vendor_status']
 
     def get_vendor_status(self, obj):

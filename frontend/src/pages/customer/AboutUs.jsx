@@ -58,7 +58,7 @@ const AboutUs = () => {
       <section className="relative min-h-[80vh] flex items-center bg-brand-purple-light py-20">
         <div className="absolute inset-0 z-0 opacity-30">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-purple rounded-full blur-[120px] -mr-64 -mt-64" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-pink rounded-full blur-[100px] -ml-48 -mb-48" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-orange/10 rounded-full blur-[100px] -ml-48 -mb-48" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
@@ -295,7 +295,7 @@ const AboutUs = () => {
         <div className="max-w-7xl mx-auto bg-brand-purple rounded-[3.5rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-[0_40px_80px_-20px_rgba(109,40,217,0.4)]">
           <div className="absolute inset-0 opacity-20">
              <div className="absolute top-0 left-0 w-96 h-96 bg-brand-orange rounded-full blur-[100px] -ml-48 -mt-48" />
-             <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-pink rounded-full blur-[100px] -mr-48 -mb-48" />
+             <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-orange/10 rounded-full blur-[100px] -mr-48 -mb-48" />
           </div>
           
           <div className="relative z-10 max-w-3xl mx-auto">

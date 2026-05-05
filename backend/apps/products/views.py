@@ -82,6 +82,20 @@ class ProductViewSet(viewsets.ModelViewSet):
         if max_price and max_price.isdigit():
             queryset = queryset.filter(price__lte=max_price)
             
+        min_rating = self.request.query_params.get('min_rating')
+        if min_rating:
+            try:
+                queryset = queryset.filter(rating__gte=float(min_rating))
+            except ValueError:
+                pass
+
+        max_rating = self.request.query_params.get('max_rating')
+        if max_rating:
+            try:
+                queryset = queryset.filter(rating__lte=float(max_rating))
+            except ValueError:
+                pass
+            
         start_date = self.request.query_params.get('start_date')
         if start_date:
             queryset = queryset.filter(created_at__date__gte=start_date)
@@ -341,9 +355,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(user=user)
+        review = serializer.save(user=user)
         
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Handle images
+        if hasattr(request, 'FILES'):
+            images = request.FILES.getlist('images')
+            for image in images:
+                ReviewImage.objects.create(review=review, image=image)
+        
+        # Re-serialize to include fresh images
+        full_serializer = self.get_serializer(review)
+        return Response(full_serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.AllowAny])
     def helpful(self, request, pk=None):

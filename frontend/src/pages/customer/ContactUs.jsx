@@ -15,7 +15,7 @@ const ContactUs = () => {
       {/* Hero Section */}
       <section className="bg-brand-navy py-24 text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple rounded-full blur-[120px] opacity-20 -mr-48 -mt-48" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-pink rounded-full blur-[100px] opacity-10 -ml-32 -mb-32" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-orange/10 rounded-full blur-[100px] opacity-10 -ml-32 -mb-32" />
         
         <div className="relative z-10 max-w-3xl mx-auto px-4">
           <motion.span 

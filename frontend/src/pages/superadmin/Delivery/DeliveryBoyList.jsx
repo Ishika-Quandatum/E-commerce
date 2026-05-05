@@ -20,6 +20,9 @@ import {
 import { adminService } from "../../../services/api";
 import AddDeliveryBoyModal from "../../../components/superadmin/Delivery/AddDeliveryBoyModal";
 import EditDeliveryBoyModal from "../../../components/superadmin/Delivery/EditDeliveryBoyModal";
+import SalaryConfigModal from "../../../components/superadmin/Delivery/SalaryConfigModal";
+import ManualBonusModal from "../../../components/superadmin/Delivery/ManualBonusModal";
+import { DollarSign, Gift } from "lucide-react";
 import clsx from "clsx";
 
 const StatCard = ({ title, value, icon: Icon, color, subtext }) => (
@@ -41,6 +44,8 @@ const DeliveryBoyList = () => {
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showSalaryModal, setShowSalaryModal] = useState(false);
+    const [showBonusModal, setShowBonusModal] = useState(false);
     const [selectedRider, setSelectedRider] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [actionError, setActionError] = useState("");
@@ -234,12 +239,34 @@ const DeliveryBoyList = () => {
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button 
                                                 onClick={() => handleEdit(rider)}
+                                                title="Edit Profile"
                                                 className="p-2 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
                                             >
                                                 <Edit size={16} />
                                             </button>
                                             <button 
+                                                onClick={() => {
+                                                    setSelectedRider(rider);
+                                                    setShowSalaryModal(true);
+                                                }}
+                                                title="Salary Configuration"
+                                                className="p-2 bg-slate-50 text-slate-400 hover:text-emerald-600 rounded-lg transition-colors"
+                                            >
+                                                <DollarSign size={16} />
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    setSelectedRider(rider);
+                                                    setShowBonusModal(true);
+                                                }}
+                                                title="Give Bonus"
+                                                className="p-2 bg-slate-50 text-slate-400 hover:text-amber-600 rounded-lg transition-colors"
+                                            >
+                                                <Gift size={16} />
+                                            </button>
+                                            <button 
                                                 onClick={() => handleDelete(rider.id)}
+                                                title="Delete Rider"
                                                 className="p-2 bg-slate-50 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={16} />
@@ -272,6 +299,20 @@ const DeliveryBoyList = () => {
             <EditDeliveryBoyModal 
                 isOpen={showEditModal}
                 onClose={() => setShowEditModal(false)}
+                rider={selectedRider}
+                onSuccess={fetchData}
+            />
+
+            <SalaryConfigModal 
+                isOpen={showSalaryModal}
+                onClose={() => setShowSalaryModal(false)}
+                rider={selectedRider}
+                onSuccess={fetchData}
+            />
+
+            <ManualBonusModal 
+                isOpen={showBonusModal}
+                onClose={() => setShowBonusModal(false)}
                 rider={selectedRider}
                 onSuccess={fetchData}
             />

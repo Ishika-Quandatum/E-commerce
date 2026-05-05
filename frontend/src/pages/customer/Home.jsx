@@ -44,12 +44,16 @@ const Home = () => {
       setLoadingProducts(true);
       try {
         const params = {
-          is_featured: true,
           category: filters.category.join(','),
           search: filters.search,
           max_price: filters.priceRange[1],
+          min_rating: filters.rating > 0 ? filters.rating : undefined,
           sort: filters.sort
         };
+        // If no filters are applied, show featured products by default
+        if (filters.category.length === 0 && !filters.search && filters.rating === 0) {
+          params.is_featured = true;
+        }
         const res = await productService.getProducts(params);
         // Handle both paginated and non-paginated responses
         const productData = Array.isArray(res.data) ? res.data : (res.data.results || []);
@@ -105,19 +109,19 @@ const Home = () => {
       
       {/* Trust Badges */}
       <section className="max-w-7xl mx-auto px-4 mt-2">
-        <div className="border border-pink-200 rounded-lg py-4 px-6 bg-white shadow-sm flex flex-wrap justify-between items-center text-sm font-medium text-brand-navy">
-          <div className="flex items-center gap-2 flex-1 justify-center border-r border-pink-100 last:border-0">
-            <RefreshCcw size={18} className="text-brand-purple" />
+        <div className="border border-brand-orange/30 rounded-lg py-4 px-6 bg-white shadow-sm flex flex-wrap justify-between items-center text-sm font-medium text-brand-navy">
+          <div className="flex items-center gap-2 flex-1 justify-center border-r border-brand-orange/10 last:border-0">
+            <RefreshCcw size={18} className="text-brand-orange" />
             <span className="hidden sm:inline">7 Days Easy Return</span>
             <span className="sm:hidden text-xs">Easy Return</span>
           </div>
-          <div className="flex items-center gap-2 flex-1 justify-center border-r border-pink-100 last:border-0">
-            <Banknote size={18} className="text-brand-purple" />
+          <div className="flex items-center gap-2 flex-1 justify-center border-r border-brand-orange/10 last:border-0">
+            <Banknote size={18} className="text-brand-orange" />
             <span className="hidden sm:inline">Cash on Delivery</span>
             <span className="sm:hidden text-xs">COD</span>
           </div>
           <div className="flex items-center gap-2 flex-1 justify-center">
-            <Tag size={18} className="text-brand-purple" />
+            <Tag size={18} className="text-brand-orange" />
             <span className="hidden sm:inline">Lowest Prices</span>
             <span className="sm:hidden text-xs">Lowest Price</span>
           </div>

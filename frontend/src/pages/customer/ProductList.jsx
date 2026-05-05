@@ -49,6 +49,7 @@ const ProductList = () => {
         category: filters.category.join(','),
         search: filters.search,
         max_price: filters.priceRange[1],
+        min_rating: filters.rating > 0 ? filters.rating : undefined,
         sort: filters.sort
       };
       const res = await productService.getProducts(params);

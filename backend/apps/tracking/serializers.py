@@ -252,15 +252,22 @@ class ShipmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['tracking_number', 'created_at', 'updated_at', 'delivery_otp']
 
     def get_estimated_earning(self, obj):
-        # Even if unassigned, we show potential earning for the logged-in rider
-        request = self.context.get('request')
-        rider = getattr(request.user, 'rider_profile', None) if request and request.user else None
-        
         try:
-            config = rider.salary_config
-            return float(config.per_delivery_commission)
-        except:
-            return 40.00
+            # Always try to use the assigned rider's config first
+            rider = obj.rider
+            if not rider:
+                # Fallback to logged-in rider (for new task queue)
+                request = self.context.get('request')
+                rider = getattr(request.user, 'rider_profile', None) if request and request.user else None
+            
+            if rider:
+                from apps.tracking.models import SalaryConfiguration
+                config, _ = SalaryConfiguration.objects.get_or_create(rider=rider)
+                return float(config.per_delivery_commission)
+            
+            return 40.0 # Global fallback if no rider context at all
+        except Exception as e:
+            return 40.0
 
     def get_distance(self, obj):
         import math

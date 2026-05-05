@@ -91,7 +91,6 @@ class Review(models.Model):
     
     rating = models.IntegerField(default=5)
     comment = models.TextField(blank=True, null=True)
-    images = models.ImageField(upload_to='reviews/', blank=True, null=True)
     
     is_approved = models.BooleanField(default=True)
     helpful_votes = models.IntegerField(default=0)
@@ -113,3 +112,11 @@ class Review(models.Model):
         product = self.product
         super().delete(*args, **kwargs)
         product.update_rating()
+
+
+class ReviewImage(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='reviews/')
+
+    def __str__(self):
+        return f"Image for {self.review.id}"

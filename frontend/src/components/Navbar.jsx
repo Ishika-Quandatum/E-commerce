@@ -199,20 +199,20 @@ const Navbar = () => {
               />
             </div>
 
-            <Link to="/cart" className="relative p-2.5 text-brand-navy/70 hover:text-brand-purple transition-all bg-brand-soft-gray rounded-2xl border border-slate-100 group">
+            <Link to="/cart" className="relative p-2.5 text-brand-navy/70 hover:text-brand-orange transition-all bg-brand-soft-gray rounded-2xl border border-slate-100 group">
               <ShoppingCart size={22} className="group-hover:scale-110 transition-transform" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-pink text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg min-w-[20px] text-center shadow-lg shadow-brand-pink/40">
+                <span className="absolute -top-1 -right-1 bg-brand-orange text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg min-w-[20px] text-center shadow-lg shadow-brand-orange/40">
                   {cartCount}
                 </span>
               )}
             </Link>
             {user ? (
               <div className="relative group">
-                <Link to="/profile" className="relative p-2.5 text-brand-navy/70 hover:text-brand-purple transition-all bg-brand-soft-gray rounded-2xl border border-slate-100 flex items-center justify-center">
+                <Link to="/profile" className="relative p-2.5 text-brand-navy/70 hover:text-brand-orange transition-all bg-brand-soft-gray rounded-2xl border border-slate-100 flex items-center justify-center">
                   <User size={22} className="group-hover:scale-110 transition-transform" />
                   {user?.unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-brand-pink text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg min-w-[20px] text-center shadow-lg shadow-brand-pink/40">
+                    <span className="absolute -top-1 -right-1 bg-brand-orange text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg min-w-[20px] text-center shadow-lg shadow-brand-orange/40">
                       {user.unreadCount}
                     </span>
                   )}

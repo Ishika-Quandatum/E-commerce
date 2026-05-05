@@ -44,7 +44,7 @@ class ShipmentViewSet(viewsets.ModelViewSet):
             rider__isnull=True
         ).select_related('order', 'order__user').prefetch_related('order__items', 'order__items__product')
         
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -247,53 +247,103 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         order_id = shipment.order.id
         platform_name = "RainbowStore" # Fallback if context not available in backend
         
-        # COD Collection Logic
+        # 1. COD Collection Logic (If applicable)
         p_method = shipment.order.payment_method.lower()
         if 'cod' in p_method or 'cash' in p_method:
-            # Create COD Collection record
-            cod, created = CODCollection.objects.get_or_create(
+            CODCollection.objects.get_or_create(
                 shipment=shipment,
                 rider=shipment.rider,
                 defaults={'amount': shipment.order.total_price}
             )
+
+        # 2. Universal Delivery Earning Logic (COD + UPI)
+        from apps.tracking.models import RiderWallet, SalaryConfiguration, RiderSalaryTransaction, RiderIncentive
+        from decimal import Decimal
+        
+        try:
+            wallet, _ = RiderWallet.objects.get_or_create(rider=shipment.rider)
+            config, _ = SalaryConfiguration.objects.get_or_create(rider=shipment.rider)
             
-            # Update Rider Wallet pending amount
-            try:
-                from apps.tracking.models import RiderWallet, SalaryConfiguration, RiderSalaryTransaction
-                
-                wallet, _ = RiderWallet.objects.get_or_create(rider=shipment.rider)
-                config, _ = SalaryConfiguration.objects.get_or_create(rider=shipment.rider)
-                
-                delivery_earning = config.per_delivery_commission
-                if delivery_earning == 0:
-                    delivery_earning = Decimal('40.00') # Fallback
-                
-                # Update Wallet
+            delivery_earning = config.per_delivery_commission or Decimal('0.00')
+            
+            # Update Wallet balance
+            wallet.total_earned += delivery_earning
+            wallet.current_balance += delivery_earning
+            if 'cod' in p_method or 'cash' in p_method:
                 wallet.total_cod_collected += Decimal(str(shipment.order.total_price))
                 wallet.pending_cod_amount += Decimal(str(shipment.order.total_price))
-                wallet.total_earned += delivery_earning
-                wallet.current_balance += delivery_earning
-                wallet.save()
-                
-                # Professional Salary Transaction
-                RiderSalaryTransaction.objects.create(
-                    rider=shipment.rider,
-                    order=shipment.order,
-                    amount=delivery_earning,
-                    transaction_type='Delivery Earnings',
-                    description=f'Earnings for Order #{shipment.order.id}',
-                    status='Pending'
-                )
-            except Exception as e:
-                import traceback
-                print(f"[ERROR] Rider Finance update failed: {e}")
-                traceback.print_exc()
+            wallet.save()
             
-            print(f"[COD] Recorded {shipment.order.total_price} for Rider {shipment.rider.user.username}")
+            # Create Salary Transaction record
+            RiderSalaryTransaction.objects.create(
+                rider=shipment.rider,
+                order=shipment.order,
+                amount=delivery_earning,
+                transaction_type='Delivery Earnings',
+                description=f'Earning for delivering order #{shipment.order.id}',
+                status='Pending'
+            )
+
+            # 3. Automatic Incentive System
+            self._calculate_incentives(shipment.rider)
+            
+        except Exception as e:
+            print(f"[ERROR] Rider Finance update failed: {e}")
 
         print(f"\n[SMS SIMULATION] >>> Sent to {customer_phone}: Hello! Your order #{order_id} from {platform_name} has been successfully delivered by our partner. Enjoy your purchase!\n")
 
-        return Response({'status': 'Delivery Successful', 'sms_sent': True})
+        return Response({'status': 'Delivered successfully', 'earning': float(delivery_earning)})
+
+    def _calculate_incentives(self, rider):
+        """Internal logic for Milestone and Peak Hour bonuses"""
+        from django.utils import timezone
+        from decimal import Decimal
+        from apps.tracking.models import RiderIncentive, RiderSalaryTransaction, Shipment
+        
+        now = timezone.now()
+        
+        # A. Milestone Bonus (10 deliveries = ₹100)
+        delivered_count = Shipment.objects.filter(rider=rider, status='Delivered').count()
+        if delivered_count == 10:
+            bonus_amount = Decimal('100.00')
+            RiderIncentive.objects.create(
+                rider=rider,
+                amount=bonus_amount,
+                reason="10 Deliveries Milestone Reached",
+                incentive_type='Milestone'
+            )
+            RiderSalaryTransaction.objects.create(
+                rider=rider,
+                amount=bonus_amount,
+                transaction_type='Peak Hour Bonus', 
+                description="Milestone Bonus: 10 Deliveries Completed",
+                status='Pending'
+            )
+            # Update wallet
+            rider.wallet.total_earned += bonus_amount
+            rider.wallet.current_balance += bonus_amount
+            rider.wallet.save()
+
+        # B. Peak Hour Bonus (6:00 PM to 9:00 PM = ₹20)
+        if 18 <= now.hour < 21:
+            peak_bonus = Decimal('20.00')
+            RiderIncentive.objects.create(
+                rider=rider,
+                amount=peak_bonus,
+                reason=f"Peak Hour Delivery Bonus ({now.strftime('%H:%M')})",
+                incentive_type='PeakHour'
+            )
+            RiderSalaryTransaction.objects.create(
+                rider=rider,
+                amount=peak_bonus,
+                transaction_type='Peak Hour Bonus',
+                description=f"Peak Hour Incentive at {now.strftime('%H:%M')}",
+                status='Pending'
+            )
+            # Update wallet
+            rider.wallet.total_earned += peak_bonus
+            rider.wallet.current_balance += peak_bonus
+            rider.wallet.save()
 
     @action(detail=True, methods=['post'], url_path='rider-location')
     def rider_location(self, request, pk=None):
@@ -413,7 +463,67 @@ class RiderViewSet(viewsets.ModelViewSet):
     def available_riders(self, request):
         # In a real app, we'd filter by distance and current load
         riders = self.queryset.filter(is_active=True)
-        return Response(self.serializer_class(riders, many=True).data)
+        return Response(self.serializer_class(riders, many=True, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'])
+    def add_bonus(self, request, pk=None):
+        if request.user.role not in ['superadmin', 'admin']:
+            return Response({'error': 'Unauthorized'}, status=403)
+            
+        rider = self.get_object()
+        amount = request.data.get('amount')
+        reason = request.data.get('reason', 'Manual Admin Bonus')
+        
+        if not amount:
+            return Response({'error': 'Amount is required'}, status=400)
+            
+        from decimal import Decimal
+        from apps.tracking.models import RiderIncentive, RiderSalaryTransaction
+        
+        amount_dec = Decimal(str(amount))
+        
+        # Create records
+        RiderIncentive.objects.create(
+            rider=rider,
+            amount=amount_dec,
+            reason=reason,
+            incentive_type='Manual'
+        )
+        RiderSalaryTransaction.objects.create(
+            rider=rider,
+            amount=amount_dec,
+            transaction_type='Referral Bonus', # Using existing choice for Manual
+            description=f"Admin Bonus: {reason}",
+            status='Pending'
+        )
+        
+        # Update wallet
+        wallet = rider.wallet
+        wallet.total_earned += amount_dec
+        wallet.current_balance += amount_dec
+        wallet.save()
+        
+        return Response({'status': 'Bonus added successfully', 'new_balance': float(wallet.current_balance)})
+
+    @action(detail=True, methods=['post'])
+    def update_salary_config(self, request, pk=None):
+        if request.user.role not in ['superadmin', 'admin']:
+            return Response({'error': 'Unauthorized'}, status=403)
+            
+        rider = self.get_object()
+        per_delivery = request.data.get('per_delivery_commission')
+        base_salary = request.data.get('monthly_fixed_salary')
+        
+        from apps.tracking.models import SalaryConfiguration
+        config, _ = SalaryConfiguration.objects.get_or_create(rider=rider)
+        
+        if per_delivery is not None:
+            config.per_delivery_commission = per_delivery
+        if base_salary is not None:
+            config.monthly_fixed_salary = base_salary
+            
+        config.save()
+        return Response({'status': 'Salary configuration updated', 'per_delivery': float(config.per_delivery_commission)})
 
     @action(detail=False, methods=['get'])
     def active_tasks(self, request):
@@ -422,7 +532,7 @@ class RiderViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Unauthorized'}, status=403)
         # Include 'Delivered' so Completed tab can show history
         tasks = Shipment.objects.filter(rider__user=user, status__in=['Assigned', 'Picked Up', 'In Transit', 'Reached', 'Delivered'])
-        return Response(ShipmentSerializer(tasks, many=True).data)
+        return Response(ShipmentSerializer(tasks, many=True, context={'request': request}).data)
 
     def destroy(self, request, *args, **kwargs):
         from django.db import transaction

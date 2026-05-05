@@ -1,10 +1,16 @@
 from rest_framework import serializers
 from apps.categories.serializers import CategorySerializer
-from .models import Product, ProductImage, Brand, Review
+from .models import Product, ProductImage, Brand, Review, ReviewImage
+
+class ReviewImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewImage
+        fields = ['id', 'image']
 
 class ReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.ReadOnlyField(source='user.get_full_name')
     user_avatar = serializers.SerializerMethodField()
+    images = ReviewImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Review
@@ -13,10 +19,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def get_user_avatar(self, obj):
         request = self.context.get('request')
-        if obj.user and hasattr(obj.user, 'profile') and obj.user.profile.avatar:
+        if obj.user and obj.user.avatar:
             if request:
-                return request.build_absolute_uri(obj.user.profile.avatar.url)
-            return obj.user.profile.avatar.url
+                return request.build_absolute_uri(obj.user.avatar.url)
+            return obj.user.avatar.url
         return None
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -42,6 +48,8 @@ class ProductSerializer(serializers.ModelSerializer):
     rating = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
     reviews = serializers.SerializerMethodField()
     review_metrics = serializers.SerializerMethodField()
+    can_review = serializers.SerializerMethodField()
+    eligibility_message = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -51,7 +59,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'stock', 'quantity', 'unit', 'category', 'category_name', 'category_slug',
             'subcategory', 'subcategory_name', 'brand', 'brand_name',
             'rating', 'is_featured', 'is_deal', 'created_at', 'images', 'image', 'shipping_charge',
-            'reviews', 'review_metrics'
+            'reviews', 'review_metrics', 'can_review', 'eligibility_message'
         ]
 
     discount_percentage = serializers.SerializerMethodField()
@@ -79,6 +87,42 @@ class ProductSerializer(serializers.ModelSerializer):
             breakdown[i] = round((count / total) * 100)
             
         return {'total': total, 'breakdown': breakdown}
+
+    def get_can_review(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user or request.user.is_anonymous:
+            return False
+        
+        # Check if already reviewed
+        if obj.reviews.filter(user=request.user).exists():
+            return False
+
+        from apps.orders.models import OrderItem
+        return OrderItem.objects.filter(
+            order__user=request.user, 
+            order__status='Delivered', 
+            product=obj
+        ).exists()
+
+    def get_eligibility_message(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user or request.user.is_anonymous:
+            return "Please login to review this product."
+        
+        if obj.reviews.filter(user=request.user).exists():
+            return "You have already reviewed this product."
+
+        from apps.orders.models import OrderItem
+        delivered_item = OrderItem.objects.filter(
+            order__user=request.user, 
+            order__status='Delivered', 
+            product=obj
+        ).order_by('-order__created_at').first()
+        
+        if delivered_item:
+            return f"You can review this product because your order has been delivered on {delivered_item.order.updated_at.strftime('%B %d, %Y')}."
+        
+        return "You can only review products you have purchased and received."
 
     def create(self, validated_data):
         image = validated_data.pop('image', None)
