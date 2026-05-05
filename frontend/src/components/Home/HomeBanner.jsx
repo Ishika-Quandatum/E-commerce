@@ -145,7 +145,7 @@ const HomeBanner = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .custom-swiper-pagination .swiper-pagination-bullet {
           background: #e2e8f0 !important;
           width: 6px !important;

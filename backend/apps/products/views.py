@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
-from .models import Product, ProductImage, Brand
-from .serializers import ProductSerializer, ProductListSerializer, BrandSerializer
+from .models import Product, ProductImage, Brand, Review
+from .serializers import ProductSerializer, ProductListSerializer, BrandSerializer, ReviewSerializer
 from .pagination import StandardResultsSetPagination
 
 class BrandViewSet(viewsets.ModelViewSet):
@@ -276,3 +276,79 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        queryset = Review.objects.all()
+        
+        # Super admin sees all, including unapproved. Customers only see approved.
+        user = self.request.user
+        if not (user.is_authenticated and user.role in ['admin', 'superadmin']):
+            queryset = queryset.filter(is_approved=True)
+
+        product_id = self.request.query_params.get('product')
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+            
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+            
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        product_id = request.data.get('product')
+        order_id = request.data.get('order')
+        user = request.user
+        
+        if not product_id:
+            return Response({'error': 'Product ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from apps.orders.models import Order, OrderItem
+        
+        if order_id:
+            try:
+                order = Order.objects.get(id=order_id, user=user)
+            except Order.DoesNotExist:
+                return Response({'error': 'Order not found or does not belong to you'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Auto-find a delivered order for this product
+            order_items = OrderItem.objects.filter(order__user=user, order__status='Delivered', product_id=product_id).order_by('-order__created_at')
+            if not order_items.exists():
+                return Response({'error': 'You can only review products you have purchased and received.'}, status=status.HTTP_400_BAD_REQUEST)
+            order = order_items.first().order
+            
+        if order.status != 'Delivered':
+            return Response({'error': 'You can only review products from delivered orders'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if not OrderItem.objects.filter(order=order, product_id=product_id).exists():
+            return Response({'error': 'This product is not part of the specified order'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if Review.objects.filter(user=user, product_id=product_id).exists():
+            return Response({'error': 'You have already reviewed this product.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Add order to request data
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        data['order'] = order.id
+        
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=user)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.AllowAny])
+    def helpful(self, request, pk=None):
+        review = self.get_object()
+        review.helpful_votes += 1
+        review.save(update_fields=['helpful_votes'])
+        return Response({'status': 'Helpful vote counted', 'helpful_votes': review.helpful_votes})
+

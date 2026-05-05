@@ -20,7 +20,8 @@ import clsx from "clsx";
 
 const MyOrders = () => {
     const [activeTab, setActiveTab] = useState("Assigned");
-    const [viewMode, setViewMode] = useState("grid");
+    const [viewMode, setViewMode] = useState("list");
+    const [searchTerm, setSearchTerm] = useState("");
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -103,6 +104,22 @@ const MyOrders = () => {
         }
     };
 
+    const filteredOrders = (orders || []).filter(o => {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = !searchTerm || 
+            (o.customer_name && o.customer_name.toLowerCase().includes(searchLower)) || 
+            (o.tracking_number && o.tracking_number.toLowerCase().includes(searchLower)) ||
+            (o.id && String(o.id).includes(searchLower));
+        
+        if (!matchesSearch) return false;
+
+        if (activeTab === "New") return true;
+        if (activeTab === "Assigned") return o.status === "Assigned";
+        if (activeTab === "Picked Up") return o.status === "In Transit" || o.status === "Picked Up";
+        if (activeTab === "Delivered") return o.status === "Delivered";
+        return false;
+    });
+
     return (
         <div className="space-y-8 pb-20">
             {/* Header */}
@@ -139,6 +156,8 @@ const MyOrders = () => {
                         type="text" 
                         placeholder="Search by ID or customer..." 
                         className="bg-transparent border-none outline-none text-sm w-full font-medium"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                      />
                 </div>
                 
@@ -168,25 +187,13 @@ const MyOrders = () => {
                         [1,2,3,4].map(i => (
                             <div key={i} className="bg-white h-64 rounded-[32px] animate-pulse border border-slate-100" />
                         ))
-                    ) : orders.filter(o => {
-                        if (activeTab === "New") return true; // open_queue returns only new tasks
-                        if (activeTab === "Assigned") return o.status === "Assigned";
-                        if (activeTab === "Picked Up") return o.status === "In Transit" || o.status === "Picked Up";
-                        if (activeTab === "Delivered") return o.status === "Delivered";
-                        return false;
-                    }).length === 0 ? (
+                    ) : filteredOrders.length === 0 ? (
                         <div className="col-span-full py-20 bg-white rounded-[32px] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
                             <Package size={64} className="mb-4 opacity-10" />
-                            <p className="font-bold text-lg text-slate-500">No orders in this category</p>
-                            <p className="text-sm">New assignments will appear here automatically.</p>
+                            <p className="font-bold text-lg text-slate-500">No orders found</p>
+                            <p className="text-sm">Try adjusting your search or check another tab.</p>
                         </div>
-                    ) : orders.filter(o => {
-                        if (activeTab === "New") return true;
-                        if (activeTab === "Assigned") return o.status === "Assigned";
-                        if (activeTab === "Picked Up") return o.status === "In Transit" || o.status === "Picked Up";
-                        if (activeTab === "Delivered") return o.status === "Delivered";
-                        return false;
-                    }).map((order, idx) => (
+                    ) : filteredOrders.map((order, idx) => (
                         <motion.div
                             layout
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -252,7 +259,15 @@ const MyOrders = () => {
                                         <Package size={18} className="text-slate-400" />
                                         <div className="overflow-hidden">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter truncate">Payment</p>
-                                            <p className="text-xs font-bold text-slate-700">{order.payment_method || 'COD'}</p>
+                                            <p className="text-xs font-bold text-slate-700">
+                                                {(() => {
+                                                    if (!order.payment_method) return 'Cash on Delivery';
+                                                    const m = order.payment_method.toLowerCase();
+                                                    if (m === 'cod' || m.includes('cash')) return 'Cash on Delivery';
+                                                    if (m === 'upi' || m.includes('card') || m.includes('online')) return 'UPI / Card';
+                                                    return order.payment_method;
+                                                })()}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3">

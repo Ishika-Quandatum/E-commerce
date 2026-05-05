@@ -177,7 +177,9 @@ const CODCollections = () => {
                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100">Order & Date</th>
                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100">Delivery Boy</th>
                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100">Customer</th>
-                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100">Amount</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Product</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Shipping</th>
+                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100">Total COD</th>
                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Status</th>
                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Actions</th>
               </tr>
@@ -186,12 +188,12 @@ const CODCollections = () => {
               {loading ? (
                 [1,2,3,4,5].map(i => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan="6" className="px-10 py-8"><div className="h-4 bg-slate-100 rounded-full w-full"></div></td>
+                    <td colSpan="8" className="px-10 py-8"><div className="h-4 bg-slate-100 rounded-full w-full"></div></td>
                   </tr>
                 ))
               ) : collections.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-10 py-20 text-center text-slate-400 font-normal">No collection records found.</td>
+                  <td colSpan="8" className="px-10 py-20 text-center text-slate-400 font-normal">No collection records found.</td>
                 </tr>
               ) : collections.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group">
@@ -217,6 +219,8 @@ const CODCollections = () => {
                     </div>
                   </td>
                   <td className="px-10 py-8 text-sm font-normal text-slate-600">{c.customer_name}</td>
+                  <td className="px-10 py-8 text-center font-medium text-slate-400">₹{parseFloat(c.product_amount || 0).toLocaleString()}</td>
+                  <td className="px-10 py-8 text-center font-medium text-slate-400">₹{parseFloat(c.shipping_charge || 0).toLocaleString()}</td>
                   <td className="px-10 py-8">
                     <div className="text-lg font-medium text-slate-900">₹{parseFloat(c.amount).toLocaleString()}</div>
                     <div className="text-[10px] font-medium text-indigo-400 uppercase tracking-widest">{c.payment_method}</div>

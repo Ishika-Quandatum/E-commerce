@@ -15,7 +15,7 @@ const Profile = () => {
     const fetchOrders = async () => {
       try {
         const res = await orderService.getUserOrders();
-        setOrders(res.data);
+        setOrders(Array.isArray(res.data) ? res.data : (res.data?.results || []));
       } catch (err) {
         console.error("Error fetching orders", err);
       } finally {

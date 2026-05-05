@@ -13,7 +13,9 @@ import {
   ArrowRight,
   Clock,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  X,
+  Printer
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { paymentService } from "../../../services/api";
@@ -25,6 +27,7 @@ const RiderSettlements = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [runPayrollLoading, setRunPayrollLoading] = useState(false);
+  const [selectedPayslip, setSelectedPayslip] = useState(null);
   const navigate = useNavigate();
 
   const fetchSettlements = async () => {
@@ -61,9 +64,12 @@ const RiderSettlements = () => {
     }
   };
 
-  const handlePayRider = async (id) => {
-    const method = window.prompt("Enter payment method (Bank Transfer / UPI / Cash):", "Bank Transfer");
-    if (!method) return;
+  const handlePayRider = async (id, predefinedMethod = null) => {
+    let method = predefinedMethod;
+    if (!method) {
+        method = window.prompt("Enter payment method (Bank Transfer / UPI / Cash):", "Bank Transfer");
+        if (!method) return;
+    }
 
     try {
         await paymentService.payRider(id, { method });
@@ -249,18 +255,35 @@ const RiderSettlements = () => {
                   </td>
                   <td className="px-10 py-8 text-right">
                     {s.status === 'Pending' ? (
-                        <button 
-                            onClick={() => handlePayRider(s.id)}
-                            className="bg-brand-blue text-white px-8 py-3 rounded-2xl text-xs font-medium uppercase tracking-widest hover:bg-slate-900 transition-all flex items-center gap-2 ml-auto shadow-lg shadow-brand-blue/20 active:scale-95"
-                        >
-                            Pay Rider <ArrowRight size={14} />
-                        </button>
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                            <button 
+                                onClick={() => handlePayRider(s.id, 'UPI')}
+                                className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm"
+                            >
+                                Pay via UPI
+                            </button>
+                            <button 
+                                onClick={() => handlePayRider(s.id, 'Bank Transfer')}
+                                className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 transition-all shadow-sm"
+                            >
+                                Pay via Bank
+                            </button>
+                            <button 
+                                onClick={() => handlePayRider(s.id, 'Cash')}
+                                className="bg-brand-blue text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-900 transition-all shadow-sm flex items-center gap-1"
+                            >
+                                <CheckCircle2 size={12} /> Mark Paid
+                            </button>
+                        </div>
                     ) : (
                         <div className="flex flex-col items-end">
-                            <button className="text-slate-400 hover:text-brand-blue transition-colors px-4 py-3 rounded-xl border border-slate-100 font-medium text-[10px] uppercase tracking-widest flex items-center gap-2 ml-auto">
+                            <button 
+                                onClick={() => setSelectedPayslip(s)}
+                                className="text-slate-400 hover:text-brand-blue transition-colors px-4 py-3 rounded-xl border border-slate-100 font-medium text-[10px] uppercase tracking-widest flex items-center gap-2 ml-auto"
+                            >
                                 <FileText size={14} /> View Payslip
                             </button>
-                            <span className="text-[9px] font-normal text-slate-300 mt-1 uppercase tracking-tighter italic">{s.payment_method}</span>
+                            {s.payment_method && <span className="text-[9px] font-normal text-slate-300 mt-1 uppercase tracking-tighter italic">{s.payment_method}</span>}
                         </div>
                     )}
                   </td>
@@ -275,6 +298,148 @@ const RiderSettlements = () => {
           </table>
         </div>
       </div>
+
+      {/* Payslip Modal */}
+      {selectedPayslip && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+              <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                  {/* Modal Header */}
+                  <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 print:hidden">
+                      <div>
+                          <h3 className="text-lg font-medium text-slate-900">Rider Payslip</h3>
+                          <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">Official Payment Record</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <button 
+                              onClick={() => window.print()}
+                              className="p-3 bg-white border border-slate-200 rounded-full hover:bg-slate-50 transition-all text-slate-600"
+                              title="Print Payslip"
+                          >
+                              <Printer size={16} />
+                          </button>
+                          <button 
+                              onClick={() => setSelectedPayslip(null)} 
+                              className="p-3 bg-white border border-slate-200 rounded-full hover:bg-slate-50 transition-all text-slate-600"
+                          >
+                              <X size={16} />
+                          </button>
+                      </div>
+                  </div>
+
+                  {/* Printable Payslip Content */}
+                  <div className="p-8 overflow-y-auto flex-1 print:p-0 print:block" id="payslip-content">
+                      <div className="border border-slate-200 rounded-2xl p-8 print:border-none print:p-4">
+                          {/* Header */}
+                          <div className="flex justify-between items-start border-b border-slate-100 pb-6 mb-6">
+                              <div>
+                                  <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-tighter">Payslip</h2>
+                                  <p className="text-sm font-medium text-slate-500 mt-1">{selectedPayslip.month_display}</p>
+                              </div>
+                              <div className="text-right">
+                                  <h3 className="text-lg font-medium text-brand-blue">{selectedPayslip.rider_name}</h3>
+                                  <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Rider ID: #{selectedPayslip.rider}</p>
+                              </div>
+                          </div>
+
+                          {/* Earnings & Deductions Grid */}
+                          <div className="grid grid-cols-2 gap-8 mb-8">
+                              {/* Earnings */}
+                              <div>
+                                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-50 pb-2">Earnings</h4>
+                                  <div className="space-y-3 text-sm">
+                                      <div className="flex justify-between">
+                                          <span className="text-slate-600">Base Salary</span>
+                                          <span className="font-medium">₹{parseFloat(selectedPayslip.base_salary).toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                          <span className="text-slate-600">Incentives</span>
+                                          <span className="font-medium text-emerald-600">₹{parseFloat(selectedPayslip.per_order_incentive).toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                          <span className="text-slate-600">Bonus</span>
+                                          <span className="font-medium text-indigo-600">₹{parseFloat(selectedPayslip.attendance_bonus).toLocaleString()}</span>
+                                      </div>
+                                  </div>
+                              </div>
+
+                              {/* Deductions */}
+                              <div>
+                                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-50 pb-2">Deductions</h4>
+                                  <div className="space-y-3 text-sm">
+                                      <div className="flex justify-between">
+                                          <span className="text-slate-600">COD Shortage</span>
+                                          <span className="font-medium text-rose-600">₹{parseFloat(selectedPayslip.cash_shortage_deduction).toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                          <span className="text-slate-600">Penalty</span>
+                                          <span className="font-medium text-rose-600">₹{parseFloat(selectedPayslip.late_penalty).toLocaleString()}</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* Final Summary */}
+                          <div className="bg-slate-50 rounded-xl p-6 mb-8 border border-slate-100">
+                              <div className="flex justify-between items-center mb-2">
+                                  <span className="text-sm font-medium text-slate-600 uppercase tracking-wider">Total Earnings</span>
+                                  <span className="font-semibold text-slate-900">
+                                      ₹{(parseFloat(selectedPayslip.base_salary) + parseFloat(selectedPayslip.per_order_incentive) + parseFloat(selectedPayslip.attendance_bonus)).toLocaleString()}
+                                  </span>
+                              </div>
+                              <div className="flex justify-between items-center pb-4 border-b border-slate-200">
+                                  <span className="text-sm font-medium text-slate-600 uppercase tracking-wider">Total Deductions</span>
+                                  <span className="font-semibold text-rose-600">
+                                      -₹{(parseFloat(selectedPayslip.cash_shortage_deduction) + parseFloat(selectedPayslip.late_penalty)).toLocaleString()}
+                                  </span>
+                              </div>
+                              <div className="flex justify-between items-center pt-4">
+                                  <span className="text-base font-bold text-slate-900 uppercase tracking-widest">Net Payable</span>
+                                  <span className="text-2xl font-bold text-brand-blue tracking-tighter">
+                                      ₹{parseFloat(selectedPayslip.final_salary).toLocaleString()}
+                                  </span>
+                              </div>
+                          </div>
+
+                          {/* Payment Info */}
+                          <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-6">
+                              <div>
+                                  <span className="text-slate-400 uppercase tracking-widest block mb-1">Status</span>
+                                  <span className="inline-flex items-center gap-1 font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                                      <CheckCircle2 size={12} /> {selectedPayslip.status}
+                                  </span>
+                              </div>
+                              <div>
+                                  <span className="text-slate-400 uppercase tracking-widest block mb-1">Payment Method</span>
+                                  <span className="font-medium text-slate-900">{selectedPayslip.payment_method || 'Bank Transfer'}</span>
+                              </div>
+                              <div className="text-right">
+                                  <span className="text-slate-400 uppercase tracking-widest block mb-1">Paid Date</span>
+                                  <span className="font-medium text-slate-900">
+                                      {selectedPayslip.paid_at ? new Date(selectedPayslip.paid_at).toLocaleDateString() : 'Pending'}
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  {/* Footer Actions */}
+                  <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 print:hidden">
+                      <button 
+                          onClick={() => setSelectedPayslip(null)}
+                          className="px-6 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200 transition-colors"
+                      >
+                          Close
+                      </button>
+                      <button 
+                          onClick={() => window.print()}
+                          className="px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-brand-blue hover:bg-slate-900 transition-colors shadow-lg shadow-brand-blue/20 flex items-center gap-2"
+                      >
+                          <Download size={16} /> Download PDF
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

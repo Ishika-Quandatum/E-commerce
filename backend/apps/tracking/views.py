@@ -1,3 +1,4 @@
+from django.db import models
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -448,8 +449,55 @@ class RiderViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role != 'rider':
             return Response({'error': 'Unauthorized'}, status=403)
-        wallet, _ = RiderWallet.objects.get_or_create(rider__user=user, defaults={'rider': user.rider_profile})
-        return Response(RiderWalletSerializer(wallet).data)
+        
+        rider = user.rider_profile
+        wallet, _ = RiderWallet.objects.get_or_create(rider=rider)
+        
+        from django.db.models import Sum
+        from decimal import Decimal
+        from django.utils import timezone
+        
+        # 1. Total COD Collected (Lifetime)
+        total_collected = CODCollection.objects.filter(rider=rider).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # 2. Cash In Hand (Truly Pending - Status is 'Pending')
+        pending_in_hand = CODCollection.objects.filter(rider=rider, status='Pending').aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # 3. Submitted Amount (Everything that is NO LONGER in rider's pocket)
+        # Math-consistent: Collected = Submitted + Pending
+        submitted_cash = total_collected - pending_in_hand
+        
+        # 4. Verified Amount (Only what admin has confirmed)
+        verified_cash = CODCollection.objects.filter(rider=rider, status='Verified').aggregate(Sum('submitted_amount'))['submitted_amount__sum'] or Decimal('0.00')
+        
+        # 5. Today's Earnings
+        today = timezone.now().date()
+        today_earnings = RiderSalaryTransaction.objects.filter(
+            rider=rider, 
+            created_at__date=today
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Recent collections for the table
+        cod_qs = CODCollection.objects.filter(rider=rider).order_by('-created_at')
+        recent_collections = cod_qs[:50]
+        
+        # Recent Wallet Transactions (Submissions)
+        recent_subs = RiderWalletTransaction.objects.filter(rider=rider).order_by('-created_at')[:20]
+        
+        data = {
+            'total_cod_collected': total_collected,
+            'pending_cod_amount': pending_in_hand, # This is "Cash currently with rider"
+            'total_cod_submitted': submitted_cash, # This includes both submitted and verified
+            'verified_amount': verified_cash,
+            'today_earnings': today_earnings,
+            'shortage_amount': wallet.shortage_amount,
+            'current_balance': wallet.current_balance,
+            'total_earned': wallet.total_earned,
+            'recent_cod_collections': CODCollectionSerializer(recent_collections, many=True).data,
+            'recent_wallet_submissions': RiderWalletTransactionSerializer(recent_subs, many=True).data
+        }
+        
+        return Response(data)
 
     @action(detail=False, methods=['get'])
     def salary_details(self, request):
@@ -509,7 +557,7 @@ class CODCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = CODCollectionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='mark_submitted')
     def mark_submitted(self, request, pk=None):
         cod = self.get_object()
         if cod.status == 'Submitted':
@@ -576,8 +624,17 @@ class RiderWalletTransactionViewSet(viewsets.ModelViewSet):
                 cod.save()
             except CODCollection.DoesNotExist:
                 pass
+        else:
+            # Global submission: Mark all pending collections as submitted
+            pending_cods = CODCollection.objects.filter(rider=rider, status='Pending')
+            if pending_cods.exists():
+                pending_cods.update(
+                    status='Submitted', 
+                    submitted_at=timezone.now(),
+                    submitted_amount=models.F('amount') # Assume full submission for simplicity in global pay
+                )
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='verify_submission')
     def verify_submission(self, request, pk=None):
         if request.user.role not in ['superadmin', 'admin']:
             return Response({'error': 'Unauthorized'}, status=403)
@@ -623,12 +680,28 @@ class RiderMonthlySettlementViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        queryset = self.queryset
         if user.role == 'rider':
-            return self.queryset.filter(rider__user=user)
-        return self.queryset
+            queryset = queryset.filter(rider__user=user)
+        else:
+            status_filter = self.request.query_params.get('status')
+            search_query = self.request.query_params.get('search')
+            
+            if status_filter:
+                queryset = queryset.filter(status=status_filter)
+            
+            if search_query:
+                from django.db.models import Q
+                queryset = queryset.filter(
+                    Q(rider__user__first_name__icontains=search_query) |
+                    Q(rider__user__last_name__icontains=search_query) |
+                    Q(rider__user__username__icontains=search_query)
+                )
+                
+        return queryset
 
-    @action(detail=True, methods=['post'])
-    def pay_salary(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='pay_rider')
+    def pay_rider(self, request, pk=None):
         if request.user.role not in ['superadmin', 'admin']:
             return Response({'error': 'Unauthorized'}, status=403)
             
@@ -636,16 +709,37 @@ class RiderMonthlySettlementViewSet(viewsets.ModelViewSet):
         if settlement.status == 'Paid':
             return Response({'error': 'Already paid'}, status=400)
             
+        payment_method = request.data.get('method', 'Bank Transfer')
+        
         settlement.status = 'Paid'
+        settlement.payment_method = payment_method
         settlement.paid_at = timezone.now()
         settlement.save()
         
         # Update Wallet balance
-        wallet = settlement.rider.wallet
+        from apps.tracking.models import RiderWallet
+        wallet, _ = RiderWallet.objects.get_or_create(rider=settlement.rider)
         wallet.current_balance -= settlement.final_salary
         wallet.save()
         
-        return Response({'status': 'Salary paid successfully'})
+        # Create Financial Log for the payment
+        from apps.tracking.models import RiderFinancialLog
+        RiderFinancialLog.objects.create(
+            rider=settlement.rider,
+            amount=settlement.final_salary,
+            log_type='Payout',
+            description=f"Monthly Settlement for {settlement.month.strftime('%B %Y')} paid via {payment_method}"
+        )
+        
+        # Update RiderSalaryTransaction status to Paid
+        from apps.tracking.models import RiderSalaryTransaction
+        
+        RiderSalaryTransaction.objects.filter(
+            rider=settlement.rider,
+            status='Pending'
+        ).update(status='Paid')
+        
+        return Response({'status': 'Rider paid successfully'})
 
     @action(detail=False, methods=['post'])
     def run_payroll(self, request):
@@ -666,15 +760,10 @@ class RiderMonthlySettlementViewSet(viewsets.ModelViewSet):
         created_count = 0
         
         for rider in riders:
-            # Check if already exists for this month
-            if RiderMonthlySettlement.objects.filter(rider=rider, month=month_start).exists():
-                continue
-                
-            # Calculate from transactions
+            # Calculate from all pending transactions
             txs = RiderSalaryTransaction.objects.filter(
                 rider=rider, 
-                created_at__date__range=[month_start, month_end],
-                status='Processed'
+                status='Pending'
             )
             
             base_salary = Decimal('0.00')
@@ -686,25 +775,36 @@ class RiderMonthlySettlementViewSet(viewsets.ModelViewSet):
             penalties = txs.filter(transaction_type__icontains='Penalty').aggregate(models.Sum('amount'))['amount__sum'] or Decimal('0.00')
             
             # Cash Shortage from COD collections
-            shortage = rider.cod_collections.filter(status='Shortage', created_at__date__range=[month_start, month_end]).aggregate(models.Sum('amount'))['amount__sum'] or Decimal('0.00')
+            shortage = rider.cod_collections.filter(status='Shortage').aggregate(models.Sum('amount'))['amount__sum'] or Decimal('0.00')
             
             final_salary = base_salary + incentives + bonuses - penalties - shortage
             
-            RiderMonthlySettlement.objects.create(
+            if base_salary == 0 and incentives == 0 and bonuses == 0 and penalties == 0 and shortage == 0:
+                RiderMonthlySettlement.objects.filter(rider=rider, month=month_start, status='Pending').delete()
+                continue
+
+            settlement, created = RiderMonthlySettlement.objects.get_or_create(
                 rider=rider,
                 month=month_start,
-                base_salary=base_salary,
-                per_order_incentive=incentives,
-                attendance_bonus=bonuses,
-                late_penalty=penalties,
-                cash_shortage_deduction=shortage,
-                final_salary=max(final_salary, Decimal('0.00')),
-                completed_deliveries=txs.filter(transaction_type__icontains='Earning').count(),
-                status='Pending'
+                defaults={'status': 'Pending', 'final_salary': Decimal('0.00')}
             )
-            created_count += 1
+
+            if settlement.status != 'Pending':
+                continue
+                
+            settlement.base_salary = base_salary
+            settlement.per_order_incentive = incentives
+            settlement.attendance_bonus = bonuses
+            settlement.late_penalty = penalties
+            settlement.cash_shortage_deduction = shortage
+            settlement.final_salary = max(final_salary, Decimal('0.00'))
+            settlement.completed_deliveries = txs.filter(transaction_type__icontains='Earning').count()
+            settlement.save()
+
+            if created:
+                created_count += 1
             
-        return Response({'status': 'Payroll generated', 'created_count': created_count})
+        return Response({'status': 'Payroll generated/updated', 'created_count': created_count})
 class RiderFinancialLogViewSet(viewsets.ModelViewSet):
     queryset = RiderFinancialLog.objects.all().select_related('rider__user')
     serializer_class = RiderFinancialLogSerializer
@@ -712,6 +812,11 @@ class RiderFinancialLogViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        queryset = self.queryset
         if user.role == 'rider':
-            return self.queryset.filter(rider__user=user)
-        return self.queryset
+            queryset = queryset.filter(rider__user=user)
+        else:
+            rider_id = self.request.query_params.get('rider_id')
+            if rider_id:
+                queryset = queryset.filter(rider_id=rider_id)
+        return queryset

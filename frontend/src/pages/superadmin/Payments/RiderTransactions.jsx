@@ -13,7 +13,8 @@ import {
   History as HistoryIcon,
   IndianRupee,
   Eye,
-  ArrowRight
+  ArrowRight,
+  X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { riderService, paymentService } from "../../../services/api";
@@ -24,6 +25,12 @@ const RiderTransactions = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Ledger Modal State
+  const [selectedRider, setSelectedRider] = useState(null);
+  const [riderLogs, setRiderLogs] = useState([]);
+  const [loadingLedger, setLoadingLedger] = useState(false);
+  
   const navigate = useNavigate();
 
   const fetchData = async () => {
@@ -40,6 +47,19 @@ const RiderTransactions = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchRiderLedger = async (rider) => {
+      setSelectedRider(rider);
+      setLoadingLedger(true);
+      try {
+          const res = await paymentService.getRiderFinancialLogs({ rider_id: rider.id });
+          setRiderLogs(res.data.results || res.data || []);
+      } catch (err) {
+          console.error("Failed to fetch rider ledger");
+      } finally {
+          setLoadingLedger(false);
+      }
   };
 
   useEffect(() => {
@@ -77,35 +97,35 @@ const RiderTransactions = () => {
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
-              <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full -mb-12 -mr-12" />
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400 mb-4">Fleet Total Earned</p>
-              <h4 className="text-3xl font-medium tracking-tighter">₹{stats.totalCollected.toLocaleString()}</h4>
-              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-slate-500 uppercase tracking-widest">
-                  <TrendingUp size={12} /> All-time payouts
+          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+              <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full -mb-12 -mr-12 group-hover:scale-150 transition-transform duration-700" />
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400 mb-4">Total COD Volume</p>
+              <h4 className="text-3xl font-medium tracking-tighter italic">₹{stats.totalCollected.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-slate-500 uppercase tracking-widest italic">
+                  <TrendingUp size={12} /> Lifetime Collections
               </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-amber-600/60 mb-4">Awaiting Submission</p>
-              <h4 className="text-3xl font-medium tracking-tighter text-slate-900">₹{stats.pendingCOD.toLocaleString()}</h4>
-              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-amber-600/60 uppercase tracking-widest">
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm group hover:scale-[1.02] transition-all">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-amber-600/60 mb-4 italic">Pending Submission</p>
+              <h4 className="text-3xl font-medium tracking-tighter text-slate-900 italic">₹{stats.pendingCOD.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-amber-600/60 uppercase tracking-widest italic">
                   <Clock size={12} /> Cash with riders
               </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-rose-600/60 mb-4">Total Shortages</p>
-              <h4 className="text-3xl font-medium tracking-tighter text-slate-900 font-medium">₹{stats.shortages.toLocaleString()}</h4>
-              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-rose-600/60 uppercase tracking-widest">
-                  <AlertTriangle size={12} /> Missing collections
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm group hover:scale-[1.02] transition-all">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-rose-600/60 mb-4 italic">Unresolved Shortages</p>
+              <h4 className="text-3xl font-medium tracking-tighter text-slate-900 font-medium italic">₹{stats.shortages.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-rose-600/60 uppercase tracking-widest italic">
+                  <AlertTriangle size={12} /> Dispute Valuations
               </div>
           </div>
 
-          <div className="bg-brand-blue rounded-[2.5rem] p-8 text-white shadow-xl shadow-brand-blue/20">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/60 mb-4">Current Wallet Bal.</p>
-              <h4 className="text-3xl font-medium tracking-tighter">₹{stats.totalBalance.toLocaleString()}</h4>
-              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-white/60 uppercase tracking-widest">
+          <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-600/20 group hover:scale-[1.02] transition-all">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/60 mb-4 italic">Fleet Wallet Balance</p>
+              <h4 className="text-3xl font-medium tracking-tighter italic">₹{stats.totalBalance.toLocaleString()}</h4>
+              <div className="mt-4 flex items-center gap-2 text-[10px] font-normal text-white/60 uppercase tracking-widest italic">
                   <Wallet size={12} /> Combined Liquidity
               </div>
           </div>
@@ -139,7 +159,9 @@ const RiderTransactions = () => {
                                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-center">Submitted</th>
                                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-center">Pending</th>
                                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-center text-rose-400">Shortage</th>
-                                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-right">Wallet Balance</th>
+                                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-center text-emerald-500">Earnings</th>
+                                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-center text-indigo-500">Incentives</th>
+                                <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-right">Payable (Wallet)</th>
                                 <th className="px-10 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-widest text-right">Action</th>
                             </tr>
                         </thead>
@@ -174,12 +196,21 @@ const RiderTransactions = () => {
                                             ₹{parseFloat(r.wallet?.shortage_amount || 0).toLocaleString()}
                                         </div>
                                     </td>
+                                    <td className="px-10 py-8 text-center">
+                                        <div className="text-sm font-medium text-emerald-600">₹{parseFloat(r.wallet?.total_earned || 0).toLocaleString()}</div>
+                                    </td>
+                                    <td className="px-10 py-8 text-center">
+                                        <div className="text-sm font-medium text-indigo-500">₹{parseFloat(r.wallet?.total_incentives || 0).toLocaleString()}</div>
+                                    </td>
                                     <td className="px-10 py-8 text-right">
                                         <div className="text-lg font-medium text-slate-900 tracking-tighter">₹{parseFloat(r.wallet?.current_balance || 0).toLocaleString()}</div>
                                     </td>
                                     <td className="px-10 py-8 text-right">
-                                        <button className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-brand-blue transition-all hover:shadow-md active:scale-95">
-                                            <Eye size={18} />
+                                        <button 
+                                            onClick={() => fetchRiderLedger(r)}
+                                            className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-600 hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all shadow-sm flex items-center gap-2 ml-auto"
+                                        >
+                                            <Eye size={14} /> View Ledger
                                         </button>
                                     </td>
                                 </tr>
@@ -243,7 +274,7 @@ const RiderTransactions = () => {
                       <h3 className="font-medium uppercase tracking-[0.15em] text-[11px]">Payout Ready</h3>
                   </div>
                   <p className="text-sm font-normal leading-relaxed opacity-80">
-                      Total pending payroll for this cycle is currently being calculated.
+                      There is currently <span className="font-bold text-brand-blue">₹{stats.totalBalance.toLocaleString()}</span> across the fleet wallet ready for the next settlement cycle.
                   </p>
                   <button 
                     onClick={() => navigate("/admin/payments/settlements")}
@@ -254,6 +285,67 @@ const RiderTransactions = () => {
               </div>
           </div>
       </div>
+      
+      {/* Ledger Modal */}
+      {selectedRider && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+              <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh]">
+                  <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                      <div>
+                          <h3 className="text-xl font-medium text-slate-900 font-title">Ledger: {selectedRider.user?.first_name} {selectedRider.user?.last_name}</h3>
+                          <p className="text-xs font-normal text-slate-500 mt-1 uppercase tracking-widest">Complete Financial History</p>
+                      </div>
+                      <button onClick={() => setSelectedRider(null)} className="p-3 bg-white border border-slate-200 rounded-full hover:bg-slate-50 transition-all">
+                          <X size={18} className="text-slate-500" />
+                      </button>
+                  </div>
+                  
+                  <div className="p-8 overflow-y-auto flex-1 bg-slate-50/30">
+                      {loadingLedger ? (
+                          <div className="flex justify-center items-center py-20">
+                              <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin" />
+                          </div>
+                      ) : riderLogs.length === 0 ? (
+                          <p className="text-center text-slate-400 text-xs uppercase tracking-widest py-20">No financial logs found for this rider.</p>
+                      ) : (
+                          <div className="space-y-4">
+                              {riderLogs.map((log) => (
+                                  <div key={log.id} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-start gap-4">
+                                      <div className={clsx(
+                                          "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                                          log.log_type === 'Incentive' ? "bg-emerald-50 text-emerald-600" : 
+                                          log.log_type === 'Payout' ? "bg-brand-blue/10 text-brand-blue" :
+                                          "bg-rose-50 text-rose-600"
+                                      )}>
+                                          {log.log_type === 'Incentive' ? <TrendingUp size={16} /> : 
+                                           log.log_type === 'Payout' ? <Wallet size={16} /> :
+                                           <TrendingDown size={16} />}
+                                      </div>
+                                      <div className="flex-1">
+                                          <div className="flex justify-between items-start">
+                                              <p className="text-xs font-medium text-slate-900 uppercase tracking-wider">{log.log_type}</p>
+                                              <p className={clsx(
+                                                  "text-sm font-medium tracking-tighter",
+                                                  log.log_type === 'Incentive' ? "text-emerald-500" : 
+                                                  log.log_type === 'Payout' ? "text-brand-blue" :
+                                                  "text-rose-500"
+                                              )}>
+                                                  {log.log_type === 'Incentive' ? '+' : '-'}₹{Math.abs(parseFloat(log.amount)).toLocaleString()}
+                                              </p>
+                                          </div>
+                                          <p className="text-xs text-slate-500 mt-1">{log.description}</p>
+                                          <p className="text-[9px] font-medium text-slate-400 mt-2 uppercase tracking-widest flex items-center gap-1">
+                                              <Clock size={10} /> {new Date(log.timestamp).toLocaleDateString()} • {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                          </p>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

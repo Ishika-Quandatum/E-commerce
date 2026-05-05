@@ -33,14 +33,14 @@ import {
 
 const RiderEarnings = () => {
     const [stats, setStats] = useState({
-        today: 450,
-        week: 2840,
-        month: 12450,
-        pending: 3200,
-        paid: 9250,
-        incentives: 1200,
-        bonus: 500,
-        deliveries: 42
+        today: 0,
+        week: 0,
+        month: 0,
+        pending: 0,
+        paid: 0,
+        incentives: 0,
+        bonus: 0,
+        deliveries: 0
     });
     const [transactions, setTransactions] = useState([]);
     const [settlements, setSettlements] = useState([]);
@@ -63,12 +63,27 @@ const RiderEarnings = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [transRes, settRes] = await Promise.all([
+            const [transRes, settRes, walletRes] = await Promise.all([
                 riderService.getSalaryTransactions(),
-                riderService.getSettlements()
+                riderService.getSettlements(),
+                riderService.getWallet()
             ]);
-            setTransactions(transRes.data);
-            setSettlements(settRes.data);
+            
+            const transData = transRes.data?.results || transRes.data || [];
+            const settData = settRes.data?.results || settRes.data || [];
+            const walletData = walletRes.data || {};
+
+            setTransactions(transData);
+            setSettlements(settData);
+            
+            setStats({
+                today: walletData.today_earnings || 0,
+                deliveries: walletData.total_orders_delivered || 0,
+                pending: settData.filter(s => s.status === 'Pending').reduce((acc, s) => acc + parseFloat(s.final_salary || 0), 0),
+                paid: settData.filter(s => s.status === 'Paid').reduce((acc, s) => acc + parseFloat(s.final_salary || 0), 0),
+                bonus: transData.filter(t => t.transaction_type && t.transaction_type.includes('Bonus')).reduce((acc, t) => acc + parseFloat(t.amount || 0), 0),
+                month: settData.reduce((acc, s) => acc + parseFloat(s.final_salary || 0), 0)
+            });
         } catch (err) {
             console.error("Error fetching earnings data", err);
         } finally {

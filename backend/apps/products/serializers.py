@@ -1,6 +1,23 @@
 from rest_framework import serializers
 from apps.categories.serializers import CategorySerializer
-from .models import Product, ProductImage, Brand
+from .models import Product, ProductImage, Brand, Review
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user_name = serializers.ReadOnlyField(source='user.get_full_name')
+    user_avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = ['id', 'user', 'user_name', 'user_avatar', 'order', 'product', 'rating', 'comment', 'images', 'is_approved', 'helpful_votes', 'created_at']
+        read_only_fields = ['user', 'is_approved', 'helpful_votes', 'created_at']
+
+    def get_user_avatar(self, obj):
+        request = self.context.get('request')
+        if obj.user and hasattr(obj.user, 'profile') and obj.user.profile.avatar:
+            if request:
+                return request.build_absolute_uri(obj.user.profile.avatar.url)
+            return obj.user.profile.avatar.url
+        return None
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +39,10 @@ class ProductSerializer(serializers.ModelSerializer):
     brand_name = serializers.ReadOnlyField(source='brand.name')
     image = serializers.ImageField(write_only=True, required=False)
 
+    rating = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
+    reviews = serializers.SerializerMethodField()
+    review_metrics = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = [
@@ -29,7 +50,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'discount_type', 'tax', 'sku', 'status',
             'stock', 'quantity', 'unit', 'category', 'category_name', 'category_slug',
             'subcategory', 'subcategory_name', 'brand', 'brand_name',
-            'rating', 'is_featured', 'is_deal', 'created_at', 'images', 'image', 'shipping_charge'
+            'rating', 'is_featured', 'is_deal', 'created_at', 'images', 'image', 'shipping_charge',
+            'reviews', 'review_metrics'
         ]
 
     discount_percentage = serializers.SerializerMethodField()
@@ -39,6 +61,24 @@ class ProductSerializer(serializers.ModelSerializer):
             discount = ((obj.price - obj.discount_price) / obj.price) * 100
             return round(discount)
         return 0
+
+    def get_reviews(self, obj):
+        # Return only recent 5 approved reviews for the product detail page by default
+        reviews = obj.reviews.filter(is_approved=True).order_by('-created_at')[:5]
+        return ReviewSerializer(reviews, many=True, context=self.context).data
+
+    def get_review_metrics(self, obj):
+        approved_reviews = obj.reviews.filter(is_approved=True)
+        total = approved_reviews.count()
+        if total == 0:
+            return {'total': 0, 'breakdown': {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}}
+        
+        breakdown = {}
+        for i in range(5, 0, -1):
+            count = approved_reviews.filter(rating=i).count()
+            breakdown[i] = round((count / total) * 100)
+            
+        return {'total': total, 'breakdown': breakdown}
 
     def create(self, validated_data):
         image = validated_data.pop('image', None)

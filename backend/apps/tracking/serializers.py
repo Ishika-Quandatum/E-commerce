@@ -52,7 +52,10 @@ class CODCollectionSerializer(serializers.ModelSerializer):
     order_date = serializers.ReadOnlyField(source='shipment.order.created_at')
     def get_payment_method(self, obj):
         method = obj.shipment.order.payment_method
-        if method == 'Cash on Delivery':
+        if not method:
+            return 'COD'
+        m = method.lower()
+        if m == 'cod' or 'cash' in m:
             return 'COD'
         return 'Online'
     
@@ -95,6 +98,7 @@ class RiderWalletSerializer(serializers.ModelSerializer):
     total_cod_collected = serializers.SerializerMethodField()
     total_cod_submitted = serializers.SerializerMethodField()
     pending_cod_amount = serializers.SerializerMethodField()
+    total_incentives = serializers.SerializerMethodField()
 
     class Meta:
         model = RiderWallet
@@ -126,18 +130,23 @@ class RiderWalletSerializer(serializers.ModelSerializer):
         total = CODCollection.objects.filter(rider=obj.rider).aggregate(total=Sum('amount'))['total'] or 0
         return float(total)
 
-    def get_total_cod_submitted(self, obj):
-        from django.db.models import Sum
-        total = RiderWalletTransaction.objects.filter(
-            rider=obj.rider, 
-            status='Verified'
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        return float(total)
-
     def get_pending_cod_amount(self, obj):
+        from django.db.models import Sum
+        pending = CODCollection.objects.filter(rider=obj.rider, status='Pending').aggregate(total=Sum('amount'))['total'] or 0
+        return float(pending)
+
+    def get_total_cod_submitted(self, obj):
         collected = self.get_total_cod_collected(obj)
-        submitted = self.get_total_cod_submitted(obj)
-        return collected - submitted
+        pending = self.get_pending_cod_amount(obj)
+        return collected - pending
+
+    def get_total_incentives(self, obj):
+        from django.db.models import Sum
+        incentives = RiderSalaryTransaction.objects.filter(
+            rider=obj.rider,
+            transaction_type__in=['Distance Bonus', 'Peak Hour Bonus', 'Referral Bonus']
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        return float(incentives)
 
 class RiderProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

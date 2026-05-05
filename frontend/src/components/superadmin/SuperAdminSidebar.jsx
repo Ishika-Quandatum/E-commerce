@@ -35,7 +35,12 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Vendors", path: "/admin/vendors", icon: Users },
     { name: "Categories", path: "/admin/categories", icon: Tags },
-    { name: "Products", path: "/admin/products", icon: Package },
+    { name: "Products", path: "/admin/products", icon: Package,
+      subItems: [
+        { name: "All Products", path: "/admin/products" },
+        { name: "Reviews", path: "/admin/products/reviews" },
+      ]
+    },
     { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
     { name: "Payments", 
       path: "/admin/payments", 

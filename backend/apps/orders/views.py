@@ -93,13 +93,20 @@ class OrderViewSet(viewsets.ModelViewSet):
                     price=item.product.discount_price or item.product.price
                 )
 
+            # Determine initial payment status based on method
+            payment_status = 'Pending'
+            if order.payment_method in ['upi', 'card', 'netbanking']:
+                payment_status = 'Paid'
+            elif order.payment_method == 'cod':
+                payment_status = 'COD Pending'
+
             transaction_id = str(uuid.uuid4()).replace('-', '').upper()[:16]
             Payment.objects.create(
                 order=order,
                 user=request.user,
                 amount=final_total,
                 method=order.payment_method,
-                status='Pending',
+                status=payment_status,
                 transaction_id=transaction_id
             )
             created_orders.append(order)

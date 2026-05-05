@@ -50,6 +50,14 @@ export const productService = {
   getProductDetail: (id) => api.get(`products/${id}/`),
 };
 
+export const reviewService = {
+  getReviews: (params) => api.get('products/reviews/', { params }),
+  createReview: (data) => api.post('products/reviews/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  markHelpful: (id) => api.patch(`products/reviews/${id}/helpful/`),
+  updateReview: (id, data) => api.patch(`products/reviews/${id}/`, data),
+  deleteReview: (id) => api.delete(`products/reviews/${id}/`),
+};
+
 export const cartService = {
   getCart: () => api.get('cart/my_cart/'),
   addToCart: (data) => api.post('cart/add_item/', data),

@@ -65,6 +65,13 @@ class Product(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def update_rating(self):
+        from django.db.models import Avg
+        approved_reviews = self.reviews.filter(is_approved=True)
+        avg = approved_reviews.aggregate(Avg('rating'))['rating__avg']
+        self.rating = round(avg, 2) if avg is not None else 0.0
+        self.save(update_fields=['rating'])
+
     def __str__(self):
         return self.name
 
@@ -75,3 +82,34 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.product.name}"
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='reviews')
+    order = models.ForeignKey('orders.Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviews')
+    
+    rating = models.IntegerField(default=5)
+    comment = models.TextField(blank=True, null=True)
+    images = models.ImageField(upload_to='reviews/', blank=True, null=True)
+    
+    is_approved = models.BooleanField(default=True)
+    helpful_votes = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product', 'order')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.rating} star review by {self.user.username} for {self.product.name}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.product.update_rating()
+
+    def delete(self, *args, **kwargs):
+        product = self.product
+        super().delete(*args, **kwargs)
+        product.update_rating()
