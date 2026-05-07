@@ -45,6 +45,9 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     sku: "",
     status: "Active",
     images: [],
+    is_new_arrival: false,
+    is_best_seller: false,
+    is_offer_product: false,
   });
   const [previewUrls, setPreviewUrls] = useState([]);
   const [error, setError] = useState(null);
@@ -124,6 +127,9 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         sku: initialData.sku || "",
         status: initialData.status || "Active",
         images: [],
+        is_new_arrival: initialData.is_new_arrival || false,
+        is_best_seller: initialData.is_best_seller || false,
+        is_offer_product: initialData.is_offer_product || false,
       });
       if (initialData.images && initialData.images.length > 0) {
         setPreviewUrls(initialData.images.map(img => img.image));
@@ -798,6 +804,96 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                          )}
                        </div>
                      ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Commercial Strategy Flags */}
+              <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-8 space-y-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center">
+                    <Zap size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-lg">Commercial Strategy</h3>
+                    <p className="text-slate-500 text-xs">Set specific product visibility flags</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <Plus size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">New Arrival</p>
+                        <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Show in New Arrivals section</p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, is_new_arrival: !formData.is_new_arrival})}
+                      className={clsx(
+                        "w-12 h-6 rounded-full relative transition-all duration-300",
+                        formData.is_new_arrival ? "bg-blue-600 shadow-lg shadow-blue-200" : "bg-slate-200"
+                      )}
+                    >
+                      <div className={clsx(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
+                        formData.is_new_arrival ? "left-7" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <CheckCircle2 size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Best Seller</p>
+                        <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Mark as a top-selling product</p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, is_best_seller: !formData.is_best_seller})}
+                      className={clsx(
+                        "w-12 h-6 rounded-full relative transition-all duration-300",
+                        formData.is_best_seller ? "bg-emerald-600 shadow-lg shadow-emerald-200" : "bg-slate-200"
+                      )}
+                    >
+                      <div className={clsx(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
+                        formData.is_best_seller ? "left-7" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <Tag size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Offer Product</p>
+                        <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Feature in current offers & deals</p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, is_offer_product: !formData.is_offer_product})}
+                      className={clsx(
+                        "w-12 h-6 rounded-full relative transition-all duration-300",
+                        formData.is_offer_product ? "bg-orange-600 shadow-lg shadow-orange-200" : "bg-slate-200"
+                      )}
+                    >
+                      <div className={clsx(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
+                        formData.is_offer_product ? "left-7" : "left-1"
+                      )} />
+                    </button>
                   </div>
                 </div>
               </div>

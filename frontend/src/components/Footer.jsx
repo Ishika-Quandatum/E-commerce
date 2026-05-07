@@ -1,10 +1,10 @@
 import React from 'react';
-import { Phone, Mail, CreditCard, Landmark, Wallet, Globe, MessageCircle, Camera, Briefcase } from 'lucide-react';
+import { Phone, Mail, CreditCard, Landmark, Wallet, Globe, Camera, MessageCircle, Briefcase } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePlatform } from '../context/PlatformContext';
 
 const Footer = () => {
-  const { platformName } = usePlatform();
+  const { platformName, settings } = usePlatform();
 
   return (
     <footer className="bg-brand-navy text-white/70 pt-20 pb-8 border-t border-brand-purple/10 mt-auto">
@@ -22,18 +22,22 @@ const Footer = () => {
               Your one-stop online shopping destination. We provide a pure premium shopping experience with curated essentials.
             </p>
             <div className="flex flex-col gap-4 text-sm">
-              <a href="tel:+919876543210" className="flex items-center gap-4 hover:text-brand-purple transition-all group">
-                <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all">
-                  <Phone size={18} />
-                </div>
-                <span>+91 9876543210</span>
-              </a>
-              <a href="mailto:support@quanstore.com" className="flex items-center gap-4 hover:text-brand-purple transition-all group">
-                <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all">
-                  <Mail size={18} />
-                </div>
-                <span>support@quanstore.com</span>
-              </a>
+              {settings?.support_phone && (
+                <a href={`tel:${settings.support_phone}`} className="flex items-center gap-4 hover:text-brand-purple transition-all group">
+                  <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all">
+                    <Phone size={18} />
+                  </div>
+                  <span>{settings.support_phone}</span>
+                </a>
+              )}
+              {settings?.support_email && (
+                <a href={`mailto:${settings.support_email}`} className="flex items-center gap-4 hover:text-brand-purple transition-all group">
+                  <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all">
+                    <Mail size={18} />
+                  </div>
+                  <span>{settings.support_email}</span>
+                </a>
+              )}
             </div>
           </div>
 
@@ -44,10 +48,10 @@ const Footer = () => {
             <div className="flex flex-col">
               <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Shop</h3>
               <ul className="space-y-4 text-sm">
-                <li><Link to="/products" className="text-white/60 hover:text-brand-purple transition-all">New Arrivals</Link></li>
+                <li><Link to="/new-arrivals" className="text-white/60 hover:text-brand-purple transition-all">New Arrivals</Link></li>
                 <li><Link to="/categories" className="text-white/60 hover:text-brand-purple transition-all">Categories</Link></li>
-                <li><Link to="/products" className="text-white/60 hover:text-brand-purple transition-all">Best Sellers</Link></li>
-                <li><Link to="/products" className="text-white/60 hover:text-brand-purple transition-all">Offers</Link></li>
+                <li><Link to="/best-sellers" className="text-white/60 hover:text-brand-purple transition-all">Best Sellers</Link></li>
+                <li><Link to="/offers" className="text-white/60 hover:text-brand-purple transition-all">Offers</Link></li>
               </ul>
             </div>
 
@@ -56,7 +60,7 @@ const Footer = () => {
               <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Help</h3>
               <ul className="space-y-4 text-sm">
                 <li><Link to="/track-order" className="text-white/60 hover:text-brand-purple transition-all">Track Order</Link></li>
-                <li><Link to="/shipping" className="text-white/60 hover:text-brand-purple transition-all">Shipping Info</Link></li>
+                <li><Link to="/shipping-info" className="text-white/60 hover:text-brand-purple transition-all">Shipping Info</Link></li>
                 <li><Link to="/returns" className="text-white/60 hover:text-brand-purple transition-all">Returns</Link></li>
                 <li><Link to="/contact-us" className="text-white/60 hover:text-brand-purple transition-all">Contact Us</Link></li>
               </ul>
@@ -74,15 +78,25 @@ const Footer = () => {
             </div>
 
             {/* FOLLOW US */}
-            <div className="flex flex-col">
-              <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Follow Us</h3>
-              <ul className="space-y-4 text-sm ">
-                <li><a href="#" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Globe size={18} /> Facebook</a></li>
-                <li><a href="#" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Camera size={18} /> Instagram</a></li>
-                <li><a href="#" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><MessageCircle size={18} /> Twitter</a></li>
-                <li><a href="#" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Briefcase size={18} /> LinkedIn</a></li>
-              </ul>
-            </div>
+            {(settings?.facebook_link || settings?.instagram_link || settings?.twitter_link || settings?.linkedin_link) && (
+              <div className="flex flex-col">
+                <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Follow Us</h3>
+                <ul className="space-y-4 text-sm ">
+                  {settings?.facebook_link && (
+                    <li><a href={settings.facebook_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Globe size={18} /> Facebook</a></li>
+                  )}
+                  {settings?.instagram_link && (
+                    <li><a href={settings.instagram_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Camera size={18} /> Instagram</a></li>
+                  )}
+                  {settings?.twitter_link && (
+                    <li><a href={settings.twitter_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><MessageCircle size={18} /> Twitter</a></li>
+                  )}
+                  {settings?.linkedin_link && (
+                    <li><a href={settings.linkedin_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Briefcase size={18} /> LinkedIn</a></li>
+                  )}
+                </ul>
+              </div>
+            )}
 
           </div>
         </div>

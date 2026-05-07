@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
-  RotateCcw
+  RotateCcw,
+  Eye
 } from "lucide-react";
 import ProductForm from "./ProductForm";
 import clsx from "clsx";
@@ -318,7 +319,7 @@ const ProductList = () => {
                         className="w-10 h-10 rounded-xl text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-90"
                         title="View Live"
                       >
-                        <ImageIcon size={18} />
+                        <Eye size={18} />
                       </button>
                       <button 
                         onClick={() => setActiveEditProduct(p)}

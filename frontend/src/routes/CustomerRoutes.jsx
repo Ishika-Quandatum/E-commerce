@@ -13,6 +13,13 @@ import OrderTracking from '../pages/customer/Tracking/OrderTracking'
 import TrackOrder from '../pages/customer/Tracking/TrackOrder'
 import AboutUs from '../pages/customer/AboutUs'
 import ContactUs from '../pages/customer/ContactUs'
+import NewArrivals from '../pages/customer/NewArrivals'
+import BestSellers from '../pages/customer/BestSellers'
+import Offers from '../pages/customer/Offers'
+import Categories from '../pages/customer/Categories'
+import TrackOrderSearch from '../pages/customer/Tracking/TrackOrderSearch'
+import ShippingInfo from '../pages/customer/ShippingInfo'
+import Returns from '../pages/customer/Returns'
 
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -35,6 +42,13 @@ const CustomerRoutes = () => {
         <Route path="/tracking/:id" element={<OrderTracking />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/contact-us" element={<ContactUs />} />
+        <Route path="/new-arrivals" element={<NewArrivals />} />
+        <Route path="/best-sellers" element={<BestSellers />} />
+        <Route path="/offers" element={<Offers />} />
+        <Route path="/categories" element={<Categories />} />
+        <Route path="/track-order" element={<TrackOrderSearch />} />
+        <Route path="/shipping-info" element={<ShippingInfo />} />
+        <Route path="/returns" element={<Returns />} />
       </Routes>
       <Footer />
     </>

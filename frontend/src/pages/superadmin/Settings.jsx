@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Shield, Bell, Globe, Database, Pencil, Save, CheckCircle2, RefreshCw } from "lucide-react";
+import { Settings as SettingsIcon, Shield, Bell, Globe, Database, Pencil, Save, CheckCircle2, RefreshCw, Phone, Mail, Camera, MessageCircle, Briefcase } from "lucide-react";
 import { platformService } from "../../services/api";
 import { usePlatform } from "../../context/PlatformContext";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 
 const Settings = () => {
-  const { platformName, updateBranding } = usePlatform();
+  const { platformName, updateBranding, refreshSettings } = usePlatform();
   const [settings, setSettings] = useState({
     platform_name: "",
     global_commission: 0,
     two_factor_enabled: false,
-    auto_update_check: true
+    auto_update_check: true,
+    support_phone: "",
+    support_email: "",
+    facebook_link: "",
+    instagram_link: "",
+    twitter_link: "",
+    linkedin_link: ""
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -32,11 +38,38 @@ const Settings = () => {
     fetchSettings();
   }, []);
 
+  const validateSettings = () => {
+    if (settings.support_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.support_email)) {
+      showNotification("Invalid support email address.", "error");
+      return false;
+    }
+    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
+    if (settings.facebook_link && !urlPattern.test(settings.facebook_link)) {
+      showNotification("Invalid Facebook link.", "error");
+      return false;
+    }
+    if (settings.instagram_link && !urlPattern.test(settings.instagram_link)) {
+      showNotification("Invalid Instagram link.", "error");
+      return false;
+    }
+    if (settings.twitter_link && !urlPattern.test(settings.twitter_link)) {
+      showNotification("Invalid Twitter/X link.", "error");
+      return false;
+    }
+    if (settings.linkedin_link && !urlPattern.test(settings.linkedin_link)) {
+      showNotification("Invalid LinkedIn link.", "error");
+      return false;
+    }
+    return true;
+  };
+
   const handleUpdate = async () => {
+    if (!validateSettings()) return;
     setSaving(true);
     try {
       await platformService.updateSettings(settings);
       updateBranding(settings.platform_name);
+      await refreshSettings();
       showNotification("Settings updated successfully!");
     } catch (err) {
       console.error("Failed to update settings", err);
@@ -125,6 +158,107 @@ const Settings = () => {
                                 "absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-md",
                                 settings.two_factor_enabled ? "left-9" : "left-1"
                             )} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Contact & Social Links */}
+            <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
+                <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
+                         <Phone size={20} />
+                    </div>
+                    <h3 className="font-medium text-slate-900 uppercase tracking-widest text-[11px]">Contact & Social Presence</h3>
+                </div>
+                <div className="p-12 space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
+                                <Phone size={12} /> Support Phone Number
+                            </label>
+                            <input 
+                                type="text" 
+                                value={settings.support_phone || ""}
+                                onChange={(e) => setSettings({...settings, support_phone: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-sm"
+                                placeholder="+91 9876543210"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
+                                <Mail size={12} /> Support Email Address
+                            </label>
+                            <input 
+                                type="email" 
+                                value={settings.support_email || ""}
+                                onChange={(e) => setSettings({...settings, support_email: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-sm"
+                                placeholder="support@example.com"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
+                                <Globe size={12} /> Facebook Link
+                            </label>
+                            <input 
+                                type="text" 
+                                value={settings.facebook_link || ""}
+                                onChange={(e) => setSettings({...settings, facebook_link: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-sm"
+                                placeholder="https://facebook.com/yourpage"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
+                                <Camera size={12} /> Instagram Link
+                            </label>
+                            <input 
+                                type="text" 
+                                value={settings.instagram_link || ""}
+                                onChange={(e) => setSettings({...settings, instagram_link: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-sm"
+                                placeholder="https://instagram.com/yourprofile"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
+                                <MessageCircle size={12} /> Twitter/X Link
+                            </label>
+                            <input 
+                                type="text" 
+                                value={settings.twitter_link || ""}
+                                onChange={(e) => setSettings({...settings, twitter_link: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-sm"
+                                placeholder="https://twitter.com/yourhandle"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em]">
+                                <Briefcase size={12} /> LinkedIn Link
+                            </label>
+                            <input 
+                                type="text" 
+                                value={settings.linkedin_link || ""}
+                                onChange={(e) => setSettings({...settings, linkedin_link: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all text-sm"
+                                placeholder="https://linkedin.com/company/yourpage"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Section Specific Save Button */}
+                    <div className="flex justify-end pt-6 border-t border-slate-50">
+                        <button 
+                            onClick={handleUpdate}
+                            disabled={saving}
+                            className={clsx(
+                                "flex items-center gap-3 px-8 py-4 rounded-2xl font-medium text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40",
+                                saving ? "bg-slate-100 text-slate-400" : "bg-rose-600 text-white shadow-lg shadow-rose-200 hover:bg-rose-700"
+                            )}
+                        >
+                            {saving ? <RefreshCw className="animate-spin" size={14} /> : <Save size={14} />}
+                            {saving ? "Saving..." : "Save Presence Settings"}
                         </button>
                     </div>
                 </div>

@@ -111,6 +111,18 @@ class ProductViewSet(viewsets.ModelViewSet):
         deal = self.request.query_params.get('deal')
         if deal == 'true':
             queryset = queryset.filter(is_deal=True)
+
+        new_arrival = self.request.query_params.get('new_arrival')
+        if new_arrival == 'true':
+            queryset = queryset.filter(is_new_arrival=True)
+
+        best_seller = self.request.query_params.get('best_seller')
+        if best_seller == 'true':
+            queryset = queryset.filter(is_best_seller=True)
+
+        offer = self.request.query_params.get('offer')
+        if offer == 'true':
+            queryset = queryset.filter(is_offer_product=True)
             
         sort_by = self.request.query_params.get('sort')
         if sort_by == 'price_asc':

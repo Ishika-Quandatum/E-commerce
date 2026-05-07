@@ -459,7 +459,12 @@ const AdminProductList = () => {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-900 leading-tight">{p.name}</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">SKU: {p.sku || "N/A"}</p>
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">SKU: {p.sku || "N/A"}</p>
+                                                    {p.is_new_arrival && <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[8px] font-black uppercase tracking-tighter">New Arrival</span>}
+                                                    {p.is_best_seller && <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[8px] font-black uppercase tracking-tighter">Best Seller</span>}
+                                                    {p.is_offer_product && <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded text-[8px] font-black uppercase tracking-tighter">Offer</span>}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -535,7 +540,12 @@ const AdminProductList = () => {
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.category_name}</p>
                                     <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">SKU: {p.sku || "N/A"}</p>
+                                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase">SKU: {p.sku || "N/A"}</p>
+                                        {p.is_new_arrival && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title="New Arrival" />}
+                                        {p.is_best_seller && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Best Seller" />}
+                                        {p.is_offer_product && <span className="w-1.5 h-1.5 rounded-full bg-orange-500" title="Offer Product" />}
+                                    </div>
                                 </div>
                                 <div className="flex items-center justify-between pt-2">
                                     <div className="min-w-0 flex-1">
