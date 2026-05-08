@@ -58,11 +58,22 @@ class ProductSerializer(serializers.ModelSerializer):
             'discount_type', 'tax', 'sku', 'status',
             'stock', 'quantity', 'unit', 'category', 'category_name', 'category_slug',
             'subcategory', 'subcategory_name', 'brand', 'brand_name',
-            'rating', 'is_featured', 'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 'created_at', 'images', 'image', 'shipping_charge',
-            'reviews', 'review_metrics', 'can_review', 'eligibility_message'
+            'rating', 'reviews_count', 'is_featured', 'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 'created_at', 'images', 'image', 'shipping_charge',
+            'reviews', 'review_metrics', 'can_review', 'eligibility_message', 'sizes'
         ]
 
     discount_percentage = serializers.SerializerMethodField()
+
+    def validate_sizes(self, value):
+        if isinstance(value, str):
+            if value.startswith('[') and value.endswith(']'):
+                try:
+                    import json
+                    return json.loads(value)
+                except (ValueError, TypeError):
+                    return [s.strip() for s in value.strip('[]').split(',') if s.strip()]
+            return [s.strip() for s in value.split(',') if s.strip()]
+        return value
 
     def get_discount_percentage(self, obj):
         if obj.discount_price and obj.price and obj.discount_price < obj.price:
@@ -161,9 +172,9 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'price', 'discount_price', 'stock', 'quantity', 'unit',
-            'category', 'category_name', 'brand', 'brand_name', 'status', 'rating', 'is_featured',
-            'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 'primary_image', 'discount_percentage', 'shipping_charge', 'vendor', 'vendor_name', 'sku', 'created_at'
+            'id', 'name', 'description', 'full_description', 'price', 'discount_price', 'stock', 'quantity', 'unit',
+            'category', 'category_name', 'brand', 'brand_name', 'status', 'rating', 'reviews_count', 'is_featured',
+            'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 'primary_image', 'discount_percentage', 'shipping_charge', 'vendor', 'vendor_name', 'sku', 'created_at', 'sizes', 'tax', 'discount_type'
         ]
 
     def get_primary_image(self, obj):

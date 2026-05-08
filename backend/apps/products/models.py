@@ -58,6 +58,7 @@ class Product(models.Model):
     tax = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     sku = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
+    sizes = models.JSONField(default=list, blank=True)
 
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
     is_featured = models.BooleanField(default=False)
@@ -67,6 +68,10 @@ class Product(models.Model):
     is_offer_product = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def reviews_count(self):
+        return self.reviews.filter(is_approved=True).count()
 
     def update_rating(self):
         from django.db.models import Avg

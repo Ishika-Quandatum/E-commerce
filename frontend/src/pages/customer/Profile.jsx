@@ -159,6 +159,11 @@ const Profile = () => {
         </p>
         <p className="text-xs text-slate-500">
           Qty: {item.quantity}
+          {item.size && (
+            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary-50 text-primary-600 font-black uppercase text-[8px] border border-primary-100">
+              {item.size}
+            </span>
+          )}
         </p>
       </div>
 

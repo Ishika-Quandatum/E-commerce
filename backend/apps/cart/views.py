@@ -25,12 +25,13 @@ class CartViewSet(viewsets.GenericViewSet):
     def add_item(self, request):
         product_id = request.data.get('product_id')
         quantity = int(request.data.get('quantity', 1))
+        size = request.data.get('size')
 
         if not product_id:
             return Response({'error': 'product_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         cart = self.get_or_create_cart()
-        item, created = CartItem.objects.get_or_create(cart=cart, product_id=product_id)
+        item, created = CartItem.objects.get_or_create(cart=cart, product_id=product_id, size=size)
         if not created:
             item.quantity += quantity
         else:

@@ -70,7 +70,15 @@ const Cart = () => {
                   <Link to={`/products/${product.id}`} className="hover:text-primary-600 transition-colors">
                     <h3 className="text-xl font-bold text-slate-900 mb-1">{product.name}</h3>
                   </Link>
-                  <p className="text-sm font-semibold text-slate-400 mb-4">{product.category_name}</p>
+                  <p className="text-sm font-semibold text-slate-400 mb-2">{product.category_name}</p>
+                  {item.size && (
+                    <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Size:</span>
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-black rounded uppercase border border-slate-200">
+                        {item.size}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-center sm:justify-start gap-4">
                     <div className="flex items-center bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
@@ -123,18 +131,24 @@ const Cart = () => {
 
             <div className="space-y-4 mb-8">
               <div className="flex justify-between items-center text-slate-300">
-                <span className="font-medium">Subtotal ({cart.item_count} items)</span>
-                <span className="font-bold">₹{parseFloat(cart.total).toFixed(2)}</span>
+                <span className="font-medium">Subtotal ({cart.items.length} items)</span>
+                <span className="font-bold">₹{parseFloat(cart.items.reduce((acc, i) => acc + (parseFloat(i.product.discount_price || i.product.price) * i.quantity), 0)).toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center text-slate-300">
                 <span className="font-medium">Shipping</span>
-                <span className={`font-bold ${cart.total_shipping > 0 ? 'text-slate-300' : 'text-green-400'}`}>
-                  {cart.total_shipping > 0 ? `₹${parseFloat(cart.total_shipping).toFixed(2)}` : 'Free'}
+                <span className={`font-bold ${cart.items.reduce((acc, i) => acc + (parseFloat(i.product.shipping_charge || 0) * i.quantity), 0) > 0 ? 'text-slate-300' : 'text-green-400'}`}>
+                  {cart.items.reduce((acc, i) => acc + (parseFloat(i.product.shipping_charge || 0) * i.quantity), 0) > 0 
+                    ? `₹${parseFloat(cart.items.reduce((acc, i) => acc + (parseFloat(i.product.shipping_charge || 0) * i.quantity), 0)).toFixed(2)}` 
+                    : 'Free'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-300">
-                <span className="font-medium">Tax</span>
-                <span className="font-bold text-slate-300">₹{parseFloat(cart.total_tax).toFixed(2)}</span>
+                <span className="font-medium">Tax {cart?.items?.length === 1 && `(${parseFloat(cart.items[0].product.tax || 0)}%)`}</span>
+                <span className="font-bold text-slate-300">₹{parseFloat(cart.items.reduce((acc, i) => {
+                    const price = parseFloat(i.product.discount_price || i.product.price);
+                    const taxRate = parseFloat(i.product.tax || 0);
+                    return acc + (price * i.quantity * (taxRate / 100));
+                }, 0)).toFixed(2)}</span>
               </div>
             </div>
 
@@ -143,7 +157,15 @@ const Cart = () => {
                 <span className="text-lg font-medium text-slate-300">Grand Total</span>
                 <span className="text-4xl font-extrabold flex items-start">
                   <span className="text-xl text-primary-400 mt-1 mr-1">₹</span>
-                  {parseFloat(cart.grand_total).toFixed(2)}
+                  {(
+                    cart.items.reduce((acc, i) => acc + (parseFloat(i.product.discount_price || i.product.price) * i.quantity), 0) +
+                    cart.items.reduce((acc, i) => acc + (parseFloat(i.product.shipping_charge || 0) * i.quantity), 0) +
+                    cart.items.reduce((acc, i) => {
+                        const price = parseFloat(i.product.discount_price || i.product.price);
+                        const taxRate = parseFloat(i.product.tax || 0);
+                        return acc + (price * i.quantity * (taxRate / 100));
+                    }, 0)
+                  ).toFixed(2)}
                 </span>
               </div>
             </div>

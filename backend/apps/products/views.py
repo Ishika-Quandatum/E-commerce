@@ -38,7 +38,12 @@ class ProductViewSet(viewsets.ModelViewSet):
                     queryset = queryset.filter(vendor=vendor)
                 else:
                     queryset = queryset.none()
-            # Super Admin can see all, customers can see all (public list)
+            elif user.role in ['user', 'rider']:
+                queryset = queryset.filter(status='Active')
+            # Super Admin and Admin can see all (for management)
+        else:
+            # Anonymous users only see active products
+            queryset = queryset.filter(status='Active')
 
         category_param = self.request.query_params.get('category')
         if category_param and category_param != 'All Categories':
@@ -282,6 +287,18 @@ class ProductViewSet(viewsets.ModelViewSet):
                 is_best = get_bool(row, 'Best Seller', 'is_best_seller')
                 is_offer = get_bool(row, 'Offer Product', 'is_offer_product')
 
+                # Sizes
+                sizes_val = get_val(row, 'Size', 'Sizes', 'Available Sizes', default='')
+                if sizes_val:
+                    if isinstance(sizes_val, str):
+                        sizes = [s.strip() for s in sizes_val.split(',') if s.strip()]
+                    elif isinstance(sizes_val, (list, tuple)):
+                        sizes = list(sizes_val)
+                    else:
+                        sizes = [str(sizes_val)]
+                else:
+                    sizes = []
+
                 # Update or Create
                 lookup_kwargs = {'vendor': vendor}
                 if sku:
@@ -310,7 +327,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                         'is_new_arrival': is_new,
                         'is_best_seller': is_best,
                         'is_offer_product': is_offer,
-                        'sku': sku 
+                        'sku': sku,
+                        'sizes': sizes
                     }
                 )
                 
@@ -319,9 +337,9 @@ class ProductViewSet(viewsets.ModelViewSet):
                 else:
                     updated_count += 1
             except Exception as e:
-                import traceback
-                print(f"Error skipping row {index}: {str(e)}")
-                traceback.print_exc()
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error skipping row {index} in bulk upload: {str(e)}", exc_info=True)
                 continue
                 
         return Response({

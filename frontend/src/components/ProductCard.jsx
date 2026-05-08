@@ -90,11 +90,11 @@ const ProductCard = ({ product }) => {
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-brand-orange text-white px-1.5 py-0.5 rounded text-xs font-bold">
-            <span>{product.rating || '4.0'}</span>
+            <span>{parseFloat(product.rating || 0).toFixed(1)}</span>
             <Star size={10} fill="currentColor" strokeWidth={1} />
           </div>
           <span className="text-xs font-medium text-slate-500">
-            {product.reviews_count || '45669'} Reviews
+            {product.reviews_count || 0} Reviews
           </span>
         </div>
       </div>

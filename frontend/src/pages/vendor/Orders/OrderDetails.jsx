@@ -228,6 +228,9 @@ const OrderDetails = () => {
                           {item.product?.name || `Fulfillment Unit #${idx + 1}`}
                       </h4>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Quantity: {item.quantity}</p>
+                      {item.size && (
+                        <p className="text-[10px] font-black text-brand-blue uppercase tracking-widest mt-1">Size: {item.size}</p>
+                      )}
                       <p className="text-xs font-bold text-brand-orange mt-2">Unit Price: ₹{item.price}</p>
                     </div>
                   </div>

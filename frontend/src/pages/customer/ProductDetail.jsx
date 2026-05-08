@@ -21,12 +21,16 @@ const ProductDetail = () => {
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [selectedSize, setSelectedSize] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await productService.getProductDetail(id);
         setProduct(res.data);
+        if (res.data.sizes && res.data.sizes.length > 0) {
+          setSelectedSize(res.data.sizes[0]);
+        }
       } catch (err) {
         console.error("Error fetching product", err);
         navigate('/products');
@@ -76,7 +80,6 @@ const ProductDetail = () => {
       setReviewForm({ rating: 5, comment: '', images: [] });
       setImagePreviews([]);
       
-      // Refresh product
       const res = await productService.getProductDetail(id);
       setProduct(res.data);
       alert("Review submitted successfully!");
@@ -93,10 +96,8 @@ const ProductDetail = () => {
       alert("Maximum 5 images allowed");
       return;
     }
-
     const newImages = [...reviewForm.images, ...files];
     setReviewForm({ ...reviewForm, images: newImages });
-
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setImagePreviews([...imagePreviews, ...newPreviews]);
   };
@@ -109,13 +110,7 @@ const ProductDetail = () => {
   };
 
   const getRatingLabel = (rating) => {
-    const labels = {
-      1: 'Poor',
-      2: 'Fair',
-      3: 'Good',
-      4: 'Very Good',
-      5: 'Excellent'
-    };
+    const labels = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Excellent' };
     return labels[rating] || '';
   };
 
@@ -129,9 +124,25 @@ const ProductDetail = () => {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleAddToCart = async () => {
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert("Please select a size first");
+      return;
+    }
     try {
-      await addToCart(product.id, quantity);
+      await addToCart(product.id, quantity, selectedSize);
+    } catch (err) {
+      console.error("Error adding to cart", err);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert("Please select a size first");
+      return;
+    }
+    try {
+      await addToCart(product.id, quantity, selectedSize);
       navigate('/checkout');
     } catch (err) {
       console.error("Error in Buy Now", err);
@@ -177,7 +188,7 @@ const ProductDetail = () => {
            {/* Split Action Buttons */}
            <div className="flex gap-3">
               <button
-                onClick={() => addToCart(product.id, quantity)}
+                onClick={handleAddToCart}
                 className="flex-1 h-14 bg-white border border-[#6D28D9] text-[#6D28D9] rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all active:scale-95"
               >
                 <ShoppingCart size={20} />
@@ -233,14 +244,19 @@ const ProductDetail = () => {
           <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
             <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide">Select Size</h3>
             <div className="flex flex-wrap gap-2">
-               {['Free Size', 'S', 'M', 'L', 'XL'].map((size) => (
-                 <button 
-                  key={size}
-                  className={`px-5 py-2 rounded-full border-2 text-sm font-bold transition-all ${size === 'Free Size' ? 'border-[#6D28D9] text-[#6D28D9] bg-[#6D28D9]/5' : 'border-slate-100 text-slate-600 hover:border-slate-200'}`}
-                 >
-                   {size}
-                 </button>
-               ))}
+               {product.sizes && product.sizes.length > 0 ? (
+                 product.sizes.map((size) => (
+                   <button 
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`px-5 py-2 rounded-full border-2 text-sm font-bold transition-all ${size === selectedSize ? 'border-[#6D28D9] text-[#6D28D9] bg-[#6D28D9]/5' : 'border-slate-100 text-slate-600 hover:border-slate-200'}`}
+                   >
+                     {size}
+                   </button>
+                 ))
+               ) : (
+                 <p className="text-xs text-slate-400 italic">No specific sizes available for this product.</p>
+               )}
             </div>
           </div>
 

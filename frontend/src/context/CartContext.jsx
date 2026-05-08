@@ -30,15 +30,14 @@ export const CartProvider = ({ children }) => {
     }
   }, [user]);
 
- const addToCart = async (productId) => {
-  const res = await cartService.addToCart({
-    product_id: productId,
-    quantity: 1,
-  });
-
-  
-  setCart(res.data);  
-};
+  const addToCart = async (productId, quantity = 1, size = null) => {
+    const res = await cartService.addToCart({
+      product_id: productId,
+      quantity: quantity,
+      size: size
+    });
+    setCart(res.data);  
+  };
 
   const updateQuantity = async (itemId, quantity) => {
     try {

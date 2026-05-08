@@ -90,7 +90,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                     order=order,
                     product=item.product,
                     quantity=item.quantity,
-                    price=item.product.discount_price or item.product.price
+                    price=item.product.discount_price or item.product.price,
+                    size=item.size
                 )
 
             # Determine initial payment status based on method

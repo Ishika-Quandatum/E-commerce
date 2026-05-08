@@ -63,10 +63,14 @@ const Checkout = () => {
     }
   };
 
-  const subtotal = cart?.total ? parseFloat(cart.total) : 0;
-  const shipping = cart?.total_shipping ? parseFloat(cart.total_shipping) : 0;
-  const tax = cart?.total_tax ? parseFloat(cart.total_tax) : 0;
-  const total = cart?.grand_total ? parseFloat(cart.grand_total) : (subtotal + shipping + tax);
+  const subtotal = cart?.items?.reduce((acc, item) => acc + (parseFloat(item.product.discount_price || item.product.price) * item.quantity), 0) || 0;
+  const shipping = cart?.items?.reduce((acc, item) => acc + (parseFloat(item.product.shipping_charge || 0) * item.quantity), 0) || 0;
+  const tax = cart?.items?.reduce((acc, item) => {
+    const price = parseFloat(item.product.discount_price || item.product.price);
+    const taxRate = parseFloat(item.product.tax || 0);
+    return acc + (price * item.quantity * (taxRate / 100));
+  }, 0) || 0;
+  const total = subtotal + shipping + tax;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -289,6 +293,9 @@ const Checkout = () => {
                   <div className="flex-grow">
                     <h4 className="font-bold text-sm line-clamp-1">{item.product.name}</h4>
                     <p className="text-xs text-slate-400">Qty: {item.quantity}</p>
+                    {item.size && (
+                      <p className="text-[10px] text-primary-400 font-bold uppercase mt-0.5">Size: {item.size}</p>
+                    )}
                   </div>
                   <div className="font-bold text-sm">
   ₹{((item.product.discount_price || item.product.price) * item.quantity).toFixed(2)}
@@ -307,7 +314,7 @@ const Checkout = () => {
                 <span>{shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-slate-400 text-sm">
-                <span>Tax</span>
+                <span>Tax {cart?.items?.length === 1 && `(${parseFloat(cart.items[0].product.tax || 0)}%)`}</span>
                 <span>₹{tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between pt-4 border-t border-white/10">

@@ -47,6 +47,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     sku: "",
     status: "Active",
     images: [],
+    sizes: [],
     is_new_arrival: false,
     is_best_seller: false,
     is_offer_product: false,
@@ -118,17 +119,18 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         subcategory: initialData.subcategory || "",
         description: initialData.description || "",
         full_description: initialData.full_description || "",
-        price: initialData.price || "",
-        discount_price: initialData.discount_price || "",
+        price: initialData.price ?? "",
+        discount_price: initialData.discount_price ?? "",
         discount_type: initialData.discount_type || "Percentage (%)",
-        tax: initialData.tax || "",
-        shipping_charge: initialData.shipping_charge || "",
-        stock: initialData.stock || "",
-        quantity: initialData.quantity || "1",
+        tax: initialData.tax ?? "",
+        shipping_charge: initialData.shipping_charge ?? "",
+        stock: initialData.stock ?? "",
+        quantity: initialData.quantity ?? "1",
         unit: ["g", "kg", "ml", "l", "pcs"].includes(initialData.unit?.toLowerCase()) ? initialData.unit.toLowerCase() : "pcs",
         sku: initialData.sku || "",
         status: initialData.status || "Active",
         images: [],
+        sizes: Array.isArray(initialData.sizes) ? initialData.sizes : [],
         is_new_arrival: initialData.is_new_arrival || false,
         is_best_seller: initialData.is_best_seller || false,
         is_offer_product: initialData.is_offer_product || false,
@@ -144,6 +146,15 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSizeToggle = (size) => {
+    const currentSizes = [...formData.sizes];
+    if (currentSizes.includes(size)) {
+      setFormData({ ...formData, sizes: currentSizes.filter(s => s !== size) });
+    } else {
+      setFormData({ ...formData, sizes: [...currentSizes, size] });
+    }
   };
 
   const handleFileChange = (e) => {
@@ -189,7 +200,8 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
       'Shipping Charge': "50",
       'New Arrival': "Yes",
       'Best Seller': "Yes",
-      'Offer Product': "No"
+      'Offer Product': "No",
+      'Sizes': "S, M, L, XL"
     }]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Products");
@@ -280,6 +292,8 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         });
       } else if (key === 'shipping_charge') {
         data.append(key, formData[key] === "" ? "0" : formData[key]);
+      } else if (key === 'sizes') {
+        data.append(key, JSON.stringify(formData[key]));
       } else if (formData[key] !== null && formData[key] !== "") {
         data.append(key, formData[key]);
       }
@@ -669,7 +683,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                              (parseFloat(formData.discount_price || formData.price || 0)) +
                              parseFloat(formData.shipping_charge || 0) -
                              ((parseFloat(formData.discount_price || formData.price || 0)) * (parseFloat(formData.tax || 0)/100))
-                        ).toFixed(2)}</span>
+                        ).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         <span className="text-[9px] text-slate-500 mt-1">After discount & tax</span>
                     </div>
                 </div>
@@ -735,6 +749,27 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                         <option value="l">Liter (l)</option>
                         <option value="pcs">Pieces (pcs)</option>
                       </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-3">Available Sizes</label>
+                    <div className="flex flex-wrap gap-2">
+                       {['S', 'M', 'L', 'XL', 'XXL', 'Free Size'].map((size) => (
+                         <button 
+                           key={size}
+                           type="button"
+                           onClick={() => handleSizeToggle(size)}
+                           className={clsx(
+                             "px-4 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95",
+                             formData.sizes.includes(size) 
+                               ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200" 
+                               : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300"
+                           )}
+                         >
+                           {size}
+                         </button>
+                       ))}
                     </div>
                   </div>
 
