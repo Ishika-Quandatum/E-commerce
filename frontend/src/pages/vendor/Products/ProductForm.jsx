@@ -14,7 +14,9 @@ import {
   Download,
   X,
   FileQuestion,
-  Loader2
+  Loader2,
+  Zap,
+  Tag
 } from "lucide-react";
 import { clsx } from "clsx";
 import { useNavigate } from "react-router-dom";
@@ -170,19 +172,30 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
   const downloadSampleTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([{
       'Product Title': "Premium Quality Product Name",
-      'Description': "Full detailed description of the product.",
-      'Quantity': "1",
+      'Brand': "Nike",
+      'Category': "Fashion",
+      'Subcategory': "Men",
+      'Short Description': "Brief highlight of the product.",
+      'Full Description': "Detailed narrative about the product features and benefits.",
+      'Total Stock': "100",
+      'Quantity / Item': "1",
       'Unit': "pcs",
-      'Category': "Electronics",
-      'Regular Price': "49.99",
-      'Offer Price': "39.99",
-      'Stock': "100",
-      'Image': "https://example.com/image.png"
+      'SKU': "MNT001",
+      'Product Status': "Active",
+      'Regular Price': "999",
+      'Offer Price': "799",
+      'Discount Type': "Percentage (%)",
+      'Tax (%)': "5",
+      'Shipping Charge': "50",
+      'New Arrival': "Yes",
+      'Best Seller': "Yes",
+      'Offer Product': "No"
     }]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Products");
     XLSX.writeFile(wb, "Vendor_Bulk_Template.xlsx");
   };
+
 
   const handleDrag = (e) => {
     e.preventDefault();

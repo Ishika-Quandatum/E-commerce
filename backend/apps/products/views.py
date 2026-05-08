@@ -13,7 +13,7 @@ class BrandViewSet(viewsets.ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.select_related('category').prefetch_related('images').all()
+    queryset = Product.objects.select_related('category', 'vendor').prefetch_related('images').all().order_by('-created_at')
     pagination_class = StandardResultsSetPagination
 
     def get_serializer_class(self):
@@ -28,7 +28,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Product.objects.select_related('category', 'vendor').prefetch_related('images').all()
+        queryset = Product.objects.select_related('category', 'vendor').prefetch_related('images').all().order_by('-created_at')
 
         # Data Isolation
         if not user.is_anonymous:
@@ -196,19 +196,57 @@ class ProductViewSet(viewsets.ModelViewSet):
                         return val
             return default
 
+        def get_bool(row, *keys):
+            val = get_val(row, *keys).lower()
+            return val in ['yes', 'true', '1', 'y']
+
+        def get_unit(val):
+            val = str(val).lower()
+            if 'gram' in val or ' g' in val: return 'g'
+            if 'kg' in val or 'kilogram' in val: return 'kg'
+            if 'ml' in val or 'milliliter' in val: return 'ml'
+            if 'liter' in val or ' l' in val: return 'l'
+            return 'pcs' # Default to pcs for everything else like "Pieces (pcs)"
+
+        def get_discount_type(val):
+            if 'flat' in str(val).lower(): return 'Flat'
+            return 'Percentage (%)'
+
         for index, row in df.iterrows():
             try:
                 name = get_val(row, 'Product Title', 'Name', 'Title')
                 if not name:
                     continue
-                    
+                
+                sku = get_val(row, 'SKU', 'sku', 'Product SKU')
+                brand_name = get_val(row, 'Brand', 'brand')
                 cat_name = get_val(row, 'Category', 'category', default='Uncategorized')
+                subcat_name = get_val(row, 'Subcategory', 'subcategory')
+                
+                # Category & Subcategory
                 category, _ = Category.objects.get_or_create(
                     name=cat_name, 
                     defaults={'slug': slugify(cat_name)}
                 )
                 
-                price_val = get_val(row, 'Regular Price', 'Retail Price', 'Price', 'Regular Price (₹)', 'Price (₹)')
+                subcategory = None
+                if subcat_name:
+                    subcategory, _ = Category.objects.get_or_create(
+                        name=subcat_name,
+                        parent=category,
+                        defaults={'slug': slugify(subcat_name)}
+                    )
+
+                # Brand
+                brand = None
+                if brand_name:
+                    brand, _ = Brand.objects.get_or_create(
+                        name=brand_name,
+                        defaults={'slug': slugify(brand_name)}
+                    )
+                
+                # Pricing - Support "Regular Pri" cut off from image
+                price_val = get_val(row, 'Regular Price', 'Regular Pri', 'Retail Price', 'Price', 'Regular Price (₹)', 'Price (₹)')
                 price_str = price_val.replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '').strip() if price_val else ''
                 price = float(price_str) if price_str else 0.0
                 
@@ -216,40 +254,74 @@ class ProductViewSet(viewsets.ModelViewSet):
                 offer_price_str = offer_price_val.replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '').strip() if offer_price_val else ''
                 offer_price = float(offer_price_str) if offer_price_str else None
                 
-                qty_val = get_val(row, 'Quantity', 'Qty')
-                stock_val = get_val(row, 'Stock', 'Inventory', default=qty_val if qty_val else 0)
+                discount_type = get_discount_type(get_val(row, 'Discount Type'))
+                tax_val = get_val(row, 'Tax (%)', 'Tax', default='0')
+                tax = float(tax_val) if tax_val else 0.0
+                
+                shipping_val = get_val(row, 'Shipping Charge', 'Shipping', default='0')
+                shipping_charge = float(shipping_val) if shipping_val else 0.0
+
+                # Stock
+                qty_val = get_val(row, 'Quantity', 'Qty', 'Quantity / Item')
+                stock_val = get_val(row, 'Stock', 'Total Stock', 'Inventory', default=qty_val if qty_val else 0)
                 
                 stock = int(float(stock_val)) if stock_val else 0
                 quantity = float(qty_val) if qty_val else 1.0
+                unit = get_unit(get_val(row, 'Unit', default='pcs'))
                 
-                unit = get_val(row, 'Unit', default='pcs').lower()
-                desc = get_val(row, 'Description')
+                # Descriptions
+                short_desc = get_val(row, 'Short Description', 'Description')
+                full_desc = get_val(row, 'Full Description', default=short_desc)
                 
+                # Status & Flags
+                status_val = get_val(row, 'Product Status', 'Status', default='Active').capitalize()
+                if 'Inactive' in status_val: status_val = 'Inactive'
+                else: status_val = 'Active'
+                
+                is_new = get_bool(row, 'New Arrival', 'is_new_arrival')
+                is_best = get_bool(row, 'Best Seller', 'is_best_seller')
+                is_offer = get_bool(row, 'Offer Product', 'is_offer_product')
+
+                # Update or Create
+                lookup_kwargs = {'vendor': vendor}
+                if sku:
+                    lookup_kwargs['sku'] = sku
+                else:
+                    lookup_kwargs['name'] = name
+
                 product, _created = Product.objects.update_or_create(
-                    vendor=vendor,
-                    name=name,
+                    **lookup_kwargs,
                     defaults={
+                        'name': name,
                         'category': category,
-                        'description': desc,
+                        'subcategory': subcategory,
+                        'brand': brand,
+                        'description': short_desc,
+                        'full_description': full_desc,
                         'price': price,
                         'discount_price': offer_price,
+                        'discount_type': discount_type,
+                        'tax': tax,
+                        'shipping_charge': shipping_charge,
                         'stock': stock,
                         'quantity': quantity,
                         'unit': unit,
+                        'status': status_val,
+                        'is_new_arrival': is_new,
+                        'is_best_seller': is_best,
+                        'is_offer_product': is_offer,
+                        'sku': sku 
                     }
                 )
                 
-                # Try to process image URL if present
-                img_url = get_val(row, 'Image', 'Image URL')
-                if img_url:
-                    pass # Handled asynchronously or manually for now as image downloads delay the server
-                    
                 if _created:
                     created_count += 1
                 else:
                     updated_count += 1
             except Exception as e:
+                import traceback
                 print(f"Error skipping row {index}: {str(e)}")
+                traceback.print_exc()
                 continue
                 
         return Response({
@@ -257,6 +329,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             'created': created_count,
             'updated': updated_count
         })
+
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def bulk_export(self, request):
@@ -273,16 +346,25 @@ class ProductViewSet(viewsets.ModelViewSet):
         data = []
         for p in products:
             data.append({
-                'Name': p.name,
-                'SKU': p.sku or '',
-                'Description': p.description,
+                'Product Title': p.name,
+                'Brand': p.brand.name if p.brand else '',
                 'Category': p.category.name if p.category else '',
-                'Vendor': p.vendor.shop_name if p.vendor else 'Official Store',
+                'Subcategory': p.subcategory.name if p.subcategory else '',
+                'Short Description': p.description,
+                'Full Description': p.full_description or '',
+                'Total Stock': p.stock,
+                'Quantity / Item': p.quantity,
+                'Unit': p.unit,
+                'SKU': p.sku or '',
+                'Product Status': p.status,
                 'Regular Price': float(p.price) if p.price else 0.0,
                 'Offer Price': float(p.discount_price) if p.discount_price else '',
-                'Stock': p.stock,
-                'Status': p.status,
-                'Created At': p.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                'Discount Type': p.discount_type,
+                'Tax (%)': float(p.tax),
+                'Shipping Charge': float(p.shipping_charge),
+                'New Arrival': 'Yes' if p.is_new_arrival else 'No',
+                'Best Seller': 'Yes' if p.is_best_seller else 'No',
+                'Offer Product': 'Yes' if p.is_offer_product else 'No',
             })
             
         import pandas as pd
@@ -302,6 +384,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
