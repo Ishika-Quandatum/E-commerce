@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.tracking',
     'apps.core',
     'apps.promotions',
+    'apps.returns',
     'channels',
 ]
 

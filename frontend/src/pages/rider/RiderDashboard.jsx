@@ -11,23 +11,39 @@ import {
   ChevronRight
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { adminService } from "../../services/api";
+import { riderService } from "../../services/api";
 
 const RiderDashboard = () => {
     const [stats, setStats] = useState({
-        earnings: 125.50,
-        completed: 12,
-        pending: 3,
-        distance: "42.8 km",
-        rating: 4.9
+        earnings: 0,
+        completed: 0,
+        pending: 0,
+        distance: "0 km",
+        rating: 5.0,
+        recent_activities: [],
+        online_riders_count: 0
     });
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await riderService.getRiderDashboardStats();
+                setStats(res.data);
+            } catch (err) {
+                console.error("Error fetching rider dashboard stats", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
 
     const statsCards = [
-        { title: "Today Earnings", value: `$${stats.earnings}`, icon: <TrendingUp />, color: "bg-emerald-500", trend: "+12.5%", isPositive: true },
-        { title: "Completed", value: stats.completed, icon: <CheckCircle />, color: "bg-brand-blue", trend: "+2 today", isPositive: true },
-        { title: "Pending", value: stats.pending, icon: <Package />, color: "bg-brand-orange", trend: "Needs detail", isPositive: false },
-        { title: "Distance", value: stats.distance, icon: <MapPin />, color: "bg-indigo-500", trend: "+5km last trip", isPositive: true },
+        { title: "Today Earnings", value: `₹${stats.earnings}`, icon: <TrendingUp />, color: "bg-emerald-500", trend: "+12.5%", isPositive: true },
+        { title: "Completed", value: stats.completed, icon: <CheckCircle />, color: "bg-brand-blue", trend: "Today", isPositive: true },
+        { title: "Pending", value: stats.pending, icon: <Package />, color: "bg-brand-orange", trend: "Active Tasks", isPositive: false },
+        { title: "Distance", value: stats.distance, icon: <MapPin />, color: "bg-indigo-500", trend: "Lifetime", isPositive: true },
     ];
 
     return (
@@ -48,7 +64,7 @@ const RiderDashboard = () => {
                             </div>
                         ))}
                     </div>
-                    <span className="text-sm font-bold text-slate-600">3 Riders nearby</span>
+                    <span className="text-sm font-bold text-slate-600">{stats.online_riders_count || 0} Riders nearby</span>
                 </div>
             </div>
 
@@ -151,18 +167,20 @@ const RiderDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {[
-                                { id: '#ORD-9281', name: 'Alaxander G.', time: '10:45 AM', earn: '$12.00' },
-                                { id: '#ORD-8172', name: 'Sophia R.', time: '09:30 AM', earn: '$8.50' },
-                                { id: '#ORD-7261', name: 'Markus K.', time: 'Yesterday', earn: '$15.00' },
-                            ].map((row, i) => (
-                                <tr key={i} className="border-b border-slate-50/50 hover:bg-slate-50/50 transition-colors">
-                                    <td className="py-5 px-4 text-sm font-bold text-slate-900">{row.id}</td>
-                                    <td className="py-5 px-4 text-sm font-medium text-slate-600">{row.name}</td>
-                                    <td className="py-5 px-4 text-sm font-medium text-slate-400">{row.time}</td>
-                                    <td className="py-5 px-4 text-sm font-black text-emerald-600 text-right">{row.earn}</td>
+                            {stats.recent_activities && stats.recent_activities.length > 0 ? (
+                                stats.recent_activities.map((row, i) => (
+                                    <tr key={i} className="border-b border-slate-50/50 hover:bg-slate-50/50 transition-colors">
+                                        <td className="py-5 px-4 text-sm font-bold text-slate-900">{row.id}</td>
+                                        <td className="py-5 px-4 text-sm font-medium text-slate-600">{row.name}</td>
+                                        <td className="py-5 px-4 text-sm font-medium text-slate-400">{row.time}</td>
+                                        <td className="py-5 px-4 text-sm font-black text-emerald-600 text-right">{row.earn}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" className="py-10 text-center text-slate-400 font-medium">No recent activity found.</td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>

@@ -12,6 +12,8 @@ import OrderDetails from "../pages/vendor/Orders/OrderDetails";
 import PaymentList from "../pages/vendor/Payments/PaymentList";
 import VendorDispatchList from "../pages/vendor/Dispatch/VendorDispatchList";
 import VendorPromotionBanner from "../pages/vendor/Promotions/VendorPromotionBanner";
+import VendorReturnList from "../pages/vendor/Returns/VendorReturnList";
+import VendorReturnDetail from "../pages/vendor/Returns/VendorReturnDetail";
 
 const VendorRoutes = () => {
   const { user, loading, isVendor, isSuperAdmin } = useAuth();
@@ -47,6 +49,10 @@ const VendorRoutes = () => {
 
         {/* Promotions */}
         <Route path="promotion-banner" element={<VendorPromotionBanner />} />
+        
+        {/* Returns */}
+        <Route path="returns" element={<VendorReturnList />} />
+        <Route path="returns/:id" element={<VendorReturnDetail />} />
 
 
       </Route>

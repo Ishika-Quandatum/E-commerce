@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { orderService } from '../../services/api';
-import { Package, MapPin, Phone, User as UserIcon, Calendar, Clock } from 'lucide-react';
+import { Package, MapPin, Phone, User as UserIcon, Calendar, Clock, RotateCcw, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReturnRequestModal from '../../components/customer/ReturnRequestModal';
+import { returnService, authService } from '../../services/api';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [wallet, setWallet] = useState(null);
+  const [selectedOrderForReturn, setSelectedOrderForReturn] = useState(null);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -23,6 +28,20 @@ const Profile = () => {
       }
     };
     if (user) fetchOrders();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      try {
+        const res = await authService.getProfile(); // Assuming profile includes wallet or I need a new endpoint
+        // Wait, I didn't create a specific wallet endpoint yet. 
+        // I'll add one to users/views.py or just use getProfile if it's serialized there.
+        setWallet(res.data.wallet);
+      } catch (err) {
+        console.error("Error fetching wallet", err);
+      }
+    };
+    if (user) fetchWallet();
   }, [user]);
 
   if (!user) return null;
@@ -52,6 +71,19 @@ const Profile = () => {
                 <span className="text-sm font-medium">{orders.length} Total Orders</span>
               </div>
             </div>
+
+            {user.role === 'user' && (
+              <div className="mt-8 p-6 bg-brand-purple/5 rounded-3xl border border-brand-purple/10">
+                <div className="flex items-center gap-3 mb-4">
+                   <div className="p-2 bg-brand-purple text-white rounded-xl">
+                      <Wallet size={18} />
+                   </div>
+                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-tighter">My Wallet</h3>
+                </div>
+                <p className="text-3xl font-black text-brand-purple italic">₹{wallet?.balance || '0.00'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mt-2">Available for Shopping</p>
+              </div>
+            )}
 
             <button
               onClick={logout}
@@ -173,12 +205,24 @@ const Profile = () => {
           ₹{item.price}
         </div>
         {order.status === 'Delivered' && (
-          <button
-            onClick={() => navigate(`/products/${item.product.id}?write_review=true`)}
-            className="text-[10px] font-black text-white bg-brand-blue px-3 py-1.5 rounded-lg uppercase tracking-tighter hover:bg-slate-900 transition-all shadow-md shadow-brand-blue/10"
-          >
-            Write Review
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => navigate(`/products/${item.product?.id}?write_review=true`)}
+              className="text-[10px] font-black text-white bg-brand-blue px-3 py-1.5 rounded-lg uppercase tracking-tighter hover:bg-slate-900 transition-all shadow-md shadow-brand-blue/10 text-center"
+            >
+              Write Review
+            </button>
+            <button
+              onClick={() => {
+                setSelectedOrderForReturn(order);
+                setIsReturnModalOpen(true);
+              }}
+              className="text-[10px] font-black text-rose-500 bg-rose-50 px-3 py-1.5 rounded-lg uppercase tracking-tighter hover:bg-rose-500 hover:text-white transition-all border border-rose-100 flex items-center justify-center gap-1"
+            >
+              <RotateCcw size={10} />
+              Return
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -193,6 +237,18 @@ const Profile = () => {
           )}
         </main>
       </div>
+
+      {selectedOrderForReturn && (
+        <ReturnRequestModal 
+          isOpen={isReturnModalOpen}
+          onClose={() => setIsReturnModalOpen(false)}
+          order={selectedOrderForReturn}
+          onSuccess={() => {
+            // Refresh orders to reflect return status if needed
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 };

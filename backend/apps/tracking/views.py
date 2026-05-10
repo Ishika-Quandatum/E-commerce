@@ -465,6 +465,50 @@ class RiderViewSet(viewsets.ModelViewSet):
         riders = self.queryset.filter(is_active=True)
         return Response(self.serializer_class(riders, many=True, context={'request': request}).data)
 
+    @action(detail=False, methods=['get'])
+    def dashboard_stats(self, request):
+        user = request.user
+        if user.role != 'rider':
+            return Response({'error': 'Unauthorized'}, status=403)
+        
+        rider = user.rider_profile
+        today = timezone.now().date()
+        
+        # Today's Earnings
+        from django.db.models import Sum
+        from decimal import Decimal
+        today_earnings = RiderSalaryTransaction.objects.filter(
+            rider=rider, 
+            created_at__date=today
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Today's Shipments
+        today_shipments = Shipment.objects.filter(rider=rider, created_at__date=today)
+        completed_today = today_shipments.filter(status='Delivered').count()
+        pending_today = today_shipments.exclude(status__in=['Delivered', 'Cancelled', 'Returned']).count()
+        
+        # Recent Activities (Last 5)
+        recent_shipments = Shipment.objects.filter(rider=rider).order_by('-updated_at')[:5]
+        recent_data = []
+        for s in recent_shipments:
+            recent_data.append({
+                'id': f'#ORD-{s.order.id}',
+                'name': s.order.user.get_full_name() or s.order.user.username,
+                'time': s.updated_at.strftime('%I:%M %p') if s.updated_at.date() == today else s.updated_at.strftime('%b %d'),
+                'earn': f'₹{s.order.total_price}', # Using order total as placeholder or delivery fee
+                'status': s.status
+            })
+
+        return Response({
+            'earnings': float(today_earnings),
+            'completed': completed_today,
+            'pending': pending_today,
+            'distance': f"{rider.total_distance} km",
+            'rating': float(rider.rating),
+            'recent_activities': recent_data,
+            'online_riders_count': RiderProfile.objects.filter(availability_status='Online', is_active=True).count()
+        })
+
     @action(detail=True, methods=['post'])
     def add_bonus(self, request, pk=None):
         if request.user.role not in ['superadmin', 'admin']:

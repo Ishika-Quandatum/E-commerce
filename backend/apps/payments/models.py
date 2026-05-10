@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 from apps.orders.models import Order
 from apps.vendors.models import Vendor
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Payment(models.Model):
@@ -76,3 +78,32 @@ class VendorPayout(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class CustomerWallet(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wallet')
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Wallet: {self.user.username} - Balance: {self.balance}"
+
+class WalletTransaction(models.Model):
+    TRANSACTION_TYPES = (
+        ('Credit', 'Credit'),
+        ('Debit', 'Debit'),
+        ('Refund', 'Refund'),
+    )
+    wallet = models.ForeignKey(CustomerWallet, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    description = models.TextField()
+    reference_id = models.CharField(max_length=100, blank=True, null=True) # Order ID or Return ID
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.transaction_type}: {self.amount} for {self.wallet.user.username}"
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_customer_wallet(sender, instance, created, **kwargs):
+    if created and instance.role == 'user':
+        CustomerWallet.objects.get_or_create(user=instance)

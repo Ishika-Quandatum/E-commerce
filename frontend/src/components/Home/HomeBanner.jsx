@@ -75,7 +75,7 @@ const HomeBanner = () => {
               >
                 <div 
                   className={`w-full h-full flex relative transition-all duration-500 ${
-                    banner.image_position === 'left' ? 'flex-row-reverse' : 
+                    banner.image_position === 'right' ? 'flex-row-reverse' : 
                     banner.image_position === 'center' ? 'flex-col justify-center' : 'flex-row'
                   }`}
                   style={{ background: banner.computed_background || banner.background_color || '#6D28D9' }}
@@ -100,23 +100,23 @@ const HomeBanner = () => {
                   )}
                   
                   {/* Content Overlay */}
-                  <div className={`relative z-10 p-6 flex flex-col justify-center ${
+                  <div className={`relative z-10 p-4 sm:p-5 lg:p-6 flex flex-col justify-center ${
                     banner.image_position === 'center' ? 'w-full items-center text-center' : 'w-1/2'
                   }`}>
-                     {banner.badge_text && (
-                       <span className="inline-block w-fit px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest bg-white/20 backdrop-blur-md mb-2 border border-white/10" style={{ color: banner.title_color || '#FFFFFF' }}>
-                         {banner.badge_text}
-                       </span>
-                     )}
-                     <h3 className="text-[10px] sm:text-xs font-bold opacity-90 uppercase tracking-widest mb-1" style={{ color: banner.title_color || '#FFFFFF' }}>
-                       {banner.vendor_name}
-                     </h3>
-                     <h2 className="text-lg sm:text-2xl font-black mb-2 leading-tight tracking-tight" style={{ color: banner.title_color || '#FFFFFF' }}>
-                       {banner.title}
-                     </h2>
-                     <p className="text-[10px] sm:text-sm opacity-90 mb-4 line-clamp-2 font-medium" style={{ color: banner.description_color || '#F3F4F6' }}>
-                       {banner.short_description}
-                     </p>
+                      {banner.badge_text && (
+                        <span className="inline-block w-fit px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest bg-white/20 backdrop-blur-md mb-1 sm:mb-2 border border-white/10" style={{ color: banner.title_color || '#FFFFFF' }}>
+                          {banner.badge_text}
+                        </span>
+                      )}
+                      <h3 className="text-[10px] sm:text-xs font-bold opacity-90 uppercase tracking-widest mb-0.5 sm:mb-1" style={{ color: banner.title_color || '#FFFFFF' }}>
+                        {banner.vendor_name}
+                      </h3>
+                      <h2 className="text-lg sm:text-xl lg:text-2xl font-black mb-1 sm:mb-2 leading-[1.1] tracking-tight" style={{ color: banner.title_color || '#FFFFFF' }}>
+                        {banner.title}
+                      </h2>
+                      <p className="text-[10px] sm:text-[13px] lg:text-sm opacity-90 mb-3 sm:mb-4 line-clamp-2 font-medium" style={{ color: banner.description_color || '#F3F4F6' }}>
+                        {banner.short_description}
+                      </p>
                      
                      <span 
                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold uppercase text-[10px] sm:text-xs tracking-wide hover:scale-105 transition-transform shadow-md w-fit"

@@ -14,6 +14,8 @@ class RiderProfile(models.Model):
     current_lng = models.FloatField(null=True, blank=True)
     license_number = models.CharField(max_length=100, blank=True)
     availability_status = models.CharField(max_length=20, choices=[('Online', 'Online'), ('Offline', 'Offline')],default='Offline')
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=5.0)
+    total_distance = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     join_date = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

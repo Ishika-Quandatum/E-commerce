@@ -120,7 +120,7 @@ const VendorDashboard = () => {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard 
-            title="Net Revenue" 
+            title="Total Revenue" 
             value={`₹${stats.total_revenue}`} 
             icon={<DollarSign />} 
             color="bg-emerald-50 text-emerald-600"
@@ -128,7 +128,7 @@ const VendorDashboard = () => {
             linkText="Financial Ledger"
           />
           <StatCard 
-            title="Total Deployments" 
+            title="Total Orders" 
             value={stats.total_orders} 
             icon={<ShoppingBag />} 
             color="bg-indigo-50 text-indigo-600"
@@ -136,7 +136,7 @@ const VendorDashboard = () => {
             linkText="Order Command"
           />
           <StatCard 
-            title="Catalog Size" 
+            title="Total Products" 
             value={stats.total_products} 
             icon={<Box />} 
             color="bg-amber-50 text-amber-600"

@@ -168,11 +168,21 @@ export const riderService = {
   getSettlements: (params) => api.get('tracking/settlements/', { params }),
   verifyCODSubmission: (id, data) => api.post(`tracking/wallet-transactions/${id}/verify_submission/`, data),
   paySalary: (id) => api.post(`tracking/settlements/${id}/pay_salary/`),
+  getRiderDashboardStats: () => api.get('tracking/riders/dashboard_stats/'),
 };
 
 export const platformService = {
   getSettings: () => api.get('core/settings/'),
   updateSettings: (data) => api.patch('core/settings/update_settings/', data),
+};
+
+export const returnService = {
+  getReturnRequests: (params) => api.get('returns/requests/', { params }),
+  getReturnDetail: (id) => api.get(`returns/requests/${id}/`),
+  createReturnRequest: (formData) => api.post('returns/requests/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateReturnStatus: (id, data) => api.post(`returns/requests/${id}/update_status/`, data),
+  assignRider: (id, data) => api.post(`returns/requests/${id}/assign_rider/`, data),
+  getReturnPolicies: () => api.get('returns/policies/'),
 };
 
 export const promotionService = {

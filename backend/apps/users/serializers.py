@@ -3,6 +3,7 @@ from .models import User, UserAddress
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 
+from apps.payments.models import CustomerWallet
 
 class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,19 +11,30 @@ class UserAddressSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user']
 
+class CustomerWalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerWallet
+        fields = ['balance']
+
 class UserSerializer(serializers.ModelSerializer):
     vendor_status = serializers.SerializerMethodField()
+    wallet = serializers.SerializerMethodField()
 
     addresses = UserAddressSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_superuser', 'vendor_status', 'phone', 'address', 'avatar', 'addresses']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_superuser', 'vendor_status', 'phone', 'address', 'avatar', 'addresses', 'wallet']
         read_only_fields = ['id', 'is_staff', 'is_superuser', 'vendor_status']
 
     def get_vendor_status(self, obj):
         if hasattr(obj, 'vendor_profile'):
             return obj.vendor_profile.status
+        return None
+
+    def get_wallet(self, obj):
+        if hasattr(obj, 'customer_wallet'):
+            return CustomerWalletSerializer(obj.customer_wallet).data
         return None
 
 

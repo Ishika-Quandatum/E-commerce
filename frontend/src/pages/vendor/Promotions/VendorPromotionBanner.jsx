@@ -26,7 +26,7 @@ const VendorPromotionBanner = () => {
     button_text: 'Shop Now',
     button_text_color: '#0F172A',
     button_bg_color: '#FFFFFF',
-    image_position: 'right',
+    image_position: 'left',
     border_radius: 16,
     overlay_opacity: 0.2,
     badge_text: '',
@@ -369,18 +369,18 @@ const VendorPromotionBanner = () => {
                      <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> Live</span>
                   </div>
                   <div className="relative w-full h-[224.38px] overflow-hidden shadow-2xl border border-slate-200" style={{ borderRadius: `${formData.border_radius}px`, background: getComputedBackground(formData) }}>
-                     <div className={`w-full h-full flex relative ${formData.image_position === 'left' ? 'flex-row-reverse' : formData.image_position === 'center' ? 'flex-col justify-center' : 'flex-row'}`}>
+                     <div className={`w-full h-full flex relative ${formData.image_position === 'right' ? 'flex-row-reverse' : formData.image_position === 'center' ? 'flex-col justify-center' : 'flex-row'}`}>
                         {formData.banner_image && (
                           <div className={`relative overflow-hidden ${formData.image_position === 'center' ? 'absolute inset-0 w-full h-full' : 'w-1/2 h-full'}`}>
                             <img src={typeof formData.banner_image === 'string' ? formData.banner_image : URL.createObjectURL(formData.banner_image)} className="w-full h-full object-cover" />
                             {formData.image_position === 'center' && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${formData.overlay_opacity})` }}></div>}
                           </div>
                         )}
-                        <div className={`relative z-10 p-6 flex flex-col justify-center ${formData.image_position === 'center' ? 'w-full items-center text-center' : 'w-1/2'}`}>
-                           {formData.badge_text && <span className="inline-block w-fit px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest bg-white/20 backdrop-blur-md mb-2 border border-white/10" style={{ color: formData.title_color }}>{formData.badge_text}</span>}
-                           <h3 className="text-[10px] font-bold opacity-90 uppercase tracking-widest mb-1" style={{ color: formData.title_color }}>{formData.vendor_name || 'Vendor'}</h3>
-                           <h2 className="text-xl font-black mb-2 leading-tight" style={{ color: formData.title_color }}>{formData.title || 'Title'}</h2>
-                           <p className="text-[10px] opacity-90 mb-4 line-clamp-2" style={{ color: formData.description_color }}>{formData.short_description || 'Desc'}</p>
+                        <div className={`relative z-10 p-4 sm:p-5 lg:p-6 flex flex-col justify-center ${formData.image_position === 'center' ? 'w-full items-center text-center' : 'w-1/2'}`}>
+                           {formData.badge_text && <span className="inline-block w-fit px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest bg-white/20 backdrop-blur-md mb-1 sm:mb-2 border border-white/10" style={{ color: formData.title_color }}>{formData.badge_text}</span>}
+                           <h3 className="text-[10px] font-bold opacity-90 uppercase tracking-widest mb-0.5 sm:mb-1" style={{ color: formData.title_color }}>{formData.vendor_name || 'Vendor'}</h3>
+                           <h2 className="text-lg sm:text-xl font-black mb-1 sm:mb-2 leading-[1.1]" style={{ color: formData.title_color }}>{formData.title || 'Title'}</h2>
+                           <p className="text-[10px] sm:text-[13px] opacity-90 mb-3 sm:mb-4 line-clamp-2" style={{ color: formData.description_color }}>{formData.short_description || 'Desc'}</p>
                            <span className="px-4 py-2 rounded-xl font-bold uppercase text-[10px] shadow-md w-fit" style={{ backgroundColor: formData.button_bg_color, color: formData.button_text_color }}>{formData.button_text} <ArrowRight size={12} className="inline ml-1" /></span>
                         </div>
                         <div className="absolute bottom-3 right-4 bg-black/30 backdrop-blur-md px-2 py-0.5 rounded-md text-[8px] font-bold text-white uppercase tracking-widest z-10">AD</div>

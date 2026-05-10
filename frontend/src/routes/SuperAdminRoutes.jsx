@@ -19,6 +19,7 @@ import AdminUserList from "../pages/superadmin/Users/AdminUserList";
 import Settings from "../pages/superadmin/Settings";
 import TrackingDashboard from "../pages/superadmin/Tracking/TrackingDashboard";
 import DeliveryBoyList from "../pages/superadmin/Delivery/DeliveryBoyList";
+import AdminReturnManagement from "../pages/superadmin/Returns/AdminReturnManagement";
 
 const SuperAdminRoutes = () => {
   const { user, isSuperAdmin, loading } = useAuth();
@@ -58,6 +59,7 @@ const SuperAdminRoutes = () => {
 
         {/* Tracking */}
         <Route path="tracking" element={<TrackingDashboard />} />
+        <Route path="returns" element={<AdminReturnManagement />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>

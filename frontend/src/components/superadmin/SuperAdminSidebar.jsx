@@ -13,6 +13,7 @@ import {
   ChevronRight,
   MapPin,
   Bike,
+  RotateCcw,
   Settings as SettingsIcon,
   LogOut
 } from "lucide-react";
@@ -53,6 +54,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         { name: "Settlements", path: "/admin/payments/settlements" },
       ]
     },
+    { name: "Returns", path: "/admin/returns", icon: RotateCcw },
     { name: "Delivery Boys", path: "/admin/delivery-boys", icon: Bike },
     { name: "Tracking", path: "/admin/tracking", icon: MapPin },
     { name: "Settings", path: "/admin/settings", icon: SettingsIcon },

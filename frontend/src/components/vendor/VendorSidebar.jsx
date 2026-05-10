@@ -9,7 +9,8 @@ import {
   X,
   Truck,
   LogOut,
-  Megaphone
+  Megaphone,
+  RotateCcw
 } from "lucide-react";
 import clsx from "clsx";
 import { usePlatform } from "../../context/PlatformContext";
@@ -31,6 +32,7 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Products", path: "/vendor/products", icon: Box },
     { name: "Orders", path: "/vendor/orders", icon: ShoppingBag },
     { name: "Dispatch", path: "/vendor/dispatch", icon: Truck },
+    { name: "Returns", path: "/vendor/returns", icon: RotateCcw },
     { name: "Promotions", path: "/vendor/promotion-banner", icon: Megaphone },
     { name: "Payments", path: "/vendor/payments", icon: CreditCard },
   ];
