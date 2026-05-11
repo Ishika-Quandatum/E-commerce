@@ -182,6 +182,7 @@ export const returnService = {
   createReturnRequest: (formData) => api.post('returns/requests/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   updateReturnStatus: (id, data) => api.post(`returns/requests/${id}/update_status/`, data),
   assignRider: (id, data) => api.post(`returns/requests/${id}/assign_rider/`, data),
+  inspectReturn: (id, formData) => api.post(`returns/requests/${id}/inspect/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getReturnPolicies: () => api.get('returns/policies/'),
 };
 

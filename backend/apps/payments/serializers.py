@@ -15,7 +15,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'order', 'order_id', 'user', 'username', 'customer_name', 'customer_email', 'customer_phone',
             'vendor_name', 'amount', 'method', 'status', 'transaction_id', 'gateway_reference',
-            'refund_transaction_id', 'refund_reason',
+            'refund_transaction_id', 'refund_status', 'refund_method', 'refund_date', 'refund_reason',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['user', 'transaction_id', 'created_at', 'updated_at']

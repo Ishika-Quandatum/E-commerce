@@ -87,14 +87,21 @@ const OrderList = () => {
   };
 
   const getStatusStyle = (status) => {
-    switch (status) {
-      case 'Delivered': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'Shipped': return 'bg-blue-50 text-blue-600 border-blue-100';
-      case 'Dispatch Queue': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'Packed': return 'bg-amber-50 text-amber-600 border-amber-100';
-      case 'Processing': return 'bg-sky-50 text-sky-600 border-sky-100';
-      case 'Pending': return 'bg-rose-50 text-rose-600 border-rose-100';
-      case 'Cancelled': return 'bg-slate-100 text-slate-400 border-slate-200';
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'SHIPPED': return 'bg-blue-50 text-blue-600 border-blue-100';
+      case 'DISPATCH QUEUE': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'PACKED': return 'bg-amber-50 text-amber-600 border-amber-100';
+      case 'PROCESSING': return 'bg-sky-50 text-sky-600 border-sky-100';
+      case 'PENDING': return 'bg-rose-50 text-rose-600 border-rose-100';
+      case 'CANCELLED': return 'bg-slate-100 text-slate-400 border-slate-200';
+      // Return Statuses
+      case 'RETURN_REQUESTED': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+      case 'RETURN_APPROVED': return 'bg-violet-50 text-violet-600 border-violet-100';
+      case 'RETURN_IN_PROGRESS': return 'bg-sky-50 text-sky-600 border-sky-100';
+      case 'RETURN_DELIVERED': return 'bg-teal-50 text-teal-600 border-teal-100';
+      case 'REFUNDED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'RETURN_REJECTED': return 'bg-rose-50 text-rose-600 border-rose-100';
       default: return 'bg-slate-50 text-slate-500 border-slate-100';
     }
   };
@@ -205,9 +212,9 @@ const OrderList = () => {
                     <td className="px-8 py-8">
                       <span className={clsx(
                         "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm",
-                        getStatusStyle(o.status)
+                        getStatusStyle(o.display_status || o.status)
                       )}>
-                        {o.status}
+                        {o.display_status || o.status}
                       </span>
                     </td>
                     <td className="px-10 py-8">

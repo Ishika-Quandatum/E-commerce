@@ -46,76 +46,79 @@ class OrderViewSet(viewsets.ModelViewSet):
         return queryset.order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        from django.db import transaction
         
-        # We override create because we might create multiple orders (one per vendor)
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        cart_items = cart.items.all()
-
-        if not cart_items.exists():
-            return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Group items by vendor
-        vendor_items = {}
-        for item in cart_items:
-            vendor = item.product.vendor
-            if vendor not in vendor_items:
-                vendor_items[vendor] = []
-            vendor_items[vendor].append(item)
-
-        created_orders = []
-        # Create an order per vendor
-        for vendor, items in vendor_items.items():
-            product_total = sum((i.product.discount_price or i.product.price) * i.quantity for i in items)
-            shipping_total = sum(getattr(i.product, 'shipping_charge', 0) or 0 for i in items)
-            tax_total = sum(((i.product.discount_price or i.product.price) * i.quantity * (getattr(i.product, 'tax', 0) or 0)) / 100 for i in items)
+        with transaction.atomic():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             
-            final_total = product_total + shipping_total + tax_total
-            
-            order = Order.objects.create(
-                user=request.user,
-                vendor=vendor,
-                total_price=final_total,
-                shipping_charge=shipping_total,
-                tax_amount=tax_total,
-                payment_method=serializer.validated_data['payment_method'],
-                address=serializer.validated_data['address'],
-                phone=serializer.validated_data['phone'],
-                status='Pending'
-            )
-
-            for item in items:
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    quantity=item.quantity,
-                    price=item.product.discount_price or item.product.price,
-                    size=item.size
+            # We override create because we might create multiple orders (one per vendor)
+            cart, created = Cart.objects.get_or_create(user=request.user)
+            cart_items = cart.items.all()
+    
+            if not cart_items.exists():
+                return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+    
+            # Group items by vendor
+            vendor_items = {}
+            for item in cart_items:
+                vendor = item.product.vendor
+                if vendor not in vendor_items:
+                    vendor_items[vendor] = []
+                vendor_items[vendor].append(item)
+    
+            created_orders = []
+            # Create an order per vendor
+            for vendor, items in vendor_items.items():
+                product_total = sum((i.product.discount_price or i.product.price) * i.quantity for i in items)
+                shipping_total = sum(getattr(i.product, 'shipping_charge', 0) or 0 for i in items)
+                tax_total = sum(((i.product.discount_price or i.product.price) * i.quantity * (getattr(i.product, 'tax', 0) or 0)) / 100 for i in items)
+                
+                final_total = product_total + shipping_total + tax_total
+                
+                order = Order.objects.create(
+                    user=request.user,
+                    vendor=vendor,
+                    total_price=final_total,
+                    shipping_charge=shipping_total,
+                    tax_amount=tax_total,
+                    payment_method=serializer.validated_data['payment_method'],
+                    address=serializer.validated_data['address'],
+                    phone=serializer.validated_data['phone'],
+                    status='Pending'
                 )
-
-            # Determine initial payment status based on method
-            payment_status = 'Pending'
-            if order.payment_method in ['upi', 'card', 'netbanking']:
-                payment_status = 'Paid'
-            elif order.payment_method == 'cod':
-                payment_status = 'COD Pending'
-
-            transaction_id = str(uuid.uuid4()).replace('-', '').upper()[:16]
-            Payment.objects.create(
-                order=order,
-                user=request.user,
-                amount=final_total,
-                method=order.payment_method,
-                status=payment_status,
-                transaction_id=transaction_id
-            )
-            created_orders.append(order)
-
-        # Clear the cart
-        cart.items.all().delete()
-        
-        return Response(OrderSerializer(created_orders, many=True).data, status=status.HTTP_201_CREATED)
+    
+                for item in items:
+                    OrderItem.objects.create(
+                        order=order,
+                        product=item.product,
+                        quantity=item.quantity,
+                        price=item.product.discount_price or item.product.price,
+                        size=item.size
+                    )
+    
+                # Determine initial payment status based on method
+                payment_status = 'Pending'
+                if order.payment_method in ['upi', 'card', 'netbanking']:
+                    payment_status = 'Paid'
+                elif order.payment_method == 'cod':
+                    payment_status = 'COD Pending'
+    
+                transaction_id = str(uuid.uuid4()).replace('-', '').upper()[:16]
+                Payment.objects.create(
+                    order=order,
+                    user=request.user,
+                    amount=final_total,
+                    method=order.payment_method,
+                    status=payment_status,
+                    transaction_id=transaction_id
+                )
+                created_orders.append(order)
+    
+            # Clear the cart
+            cart.items.all().delete()
+            
+            return Response(OrderSerializer(created_orders, many=True, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         # Logic moved to create() to handle multi-vendor orders properly

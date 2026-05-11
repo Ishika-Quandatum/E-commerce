@@ -320,6 +320,7 @@ const CustomerTransactions = () => {
                 <th className="px-8 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Method</th>
                 <th className="px-8 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Amount</th>
                 <th className="px-8 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 text-center">Status</th>
+                <th className="px-8 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 text-center">Refund</th>
                 <th className="px-8 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 text-right">Date</th>
                 <th className="px-8 py-6 text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 text-right">Actions</th>
               </tr>
@@ -361,6 +362,25 @@ const CustomerTransactions = () => {
                           )}>
                              {getStatusIcon(t.status)} {t.status}
                           </div>
+                       </div>
+                    </td>
+                    <td className="px-8 py-6">
+                       <div className="flex flex-col items-center gap-1">
+                          {t.refund_status ? (
+                            <>
+                              <span className={clsx(
+                                "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border",
+                                t.refund_status === 'Success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                t.refund_status === 'Failed' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                'bg-amber-50 text-amber-600 border-amber-100'
+                              )}>
+                                {t.refund_status}
+                              </span>
+                              <span className="text-[8px] font-bold text-slate-400 uppercase">{t.refund_method}</span>
+                            </>
+                          ) : (
+                            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">No Refund</span>
+                          )}
                        </div>
                     </td>
                     <td className="px-8 py-6 text-right">
@@ -514,9 +534,29 @@ const CustomerTransactions = () => {
 
                     {selectedTxn.status === 'Refunded' && (
                        <div className="bg-rose-50 p-8 rounded-[2rem] border border-rose-100">
-                          <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-4">Refund Details</h4>
+                          <div className="flex justify-between items-center mb-4">
+                             <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Refund Audit</h4>
+                             <span className={clsx(
+                               "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border text-white",
+                               selectedTxn.refund_status === 'Success' ? 'bg-emerald-500 border-emerald-600' : 'bg-rose-500 border-rose-600'
+                             )}>
+                               {selectedTxn.refund_status || 'Pending'}
+                             </span>
+                          </div>
                           <p className="text-sm font-medium text-rose-900 mb-2 italic">"{selectedTxn.refund_reason}"</p>
-                          <p className="text-[10px] font-bold text-rose-400 uppercase">TXN ID: {selectedTxn.refund_transaction_id}</p>
+                          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-rose-100">
+                             <div>
+                                <p className="text-[8px] font-black text-rose-400 uppercase">Method</p>
+                                <p className="text-[10px] font-bold text-rose-900 uppercase">{selectedTxn.refund_method || 'N/A'}</p>
+                             </div>
+                             <div>
+                                <p className="text-[8px] font-black text-rose-400 uppercase">Processed On</p>
+                                <p className="text-[10px] font-bold text-rose-900 uppercase">
+                                   {selectedTxn.refund_date ? new Date(selectedTxn.refund_date).toLocaleDateString() : 'N/A'}
+                                </p>
+                             </div>
+                          </div>
+                          <p className="text-[10px] font-bold text-rose-400 uppercase mt-2">TXN ID: {selectedTxn.refund_transaction_id}</p>
                        </div>
                     )}
 

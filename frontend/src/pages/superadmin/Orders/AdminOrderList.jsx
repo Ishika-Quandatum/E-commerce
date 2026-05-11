@@ -29,13 +29,20 @@ const AdminOrderList = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'shipped': return 'bg-blue-100 text-blue-800';
-      case 'processing': return 'bg-yellow-100 text-yellow-800';
-      case 'pending': return 'bg-orange-100 text-orange-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return 'bg-emerald-100 text-emerald-800';
+      case 'SHIPPED': return 'bg-blue-100 text-blue-800';
+      case 'PROCESSING': return 'bg-amber-100 text-amber-800';
+      case 'PENDING': return 'bg-orange-100 text-orange-800';
+      case 'CANCELLED': return 'bg-rose-100 text-rose-800';
+      // Return Statuses
+      case 'RETURN_REQUESTED': return 'bg-indigo-100 text-indigo-800';
+      case 'RETURN_APPROVED': return 'bg-violet-100 text-violet-800';
+      case 'RETURN_IN_PROGRESS': return 'bg-sky-100 text-sky-800';
+      case 'RETURN_DELIVERED': return 'bg-teal-100 text-teal-800';
+      case 'REFUNDED': return 'bg-emerald-100 text-emerald-800';
+      case 'RETURN_REJECTED': return 'bg-rose-100 text-rose-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -104,8 +111,8 @@ const AdminOrderList = () => {
                       ₹{parseFloat(o.total_price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>
-                        {o.status || 'Pending'}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter ${getStatusColor(o.display_status || o.status)}`}>
+                        {o.display_status || o.status || 'Pending'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

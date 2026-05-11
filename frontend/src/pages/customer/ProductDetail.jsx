@@ -450,9 +450,9 @@ const ProductDetail = () => {
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden"
+              className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
             >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
                 <h3 className="text-lg font-bold text-slate-900">Write a Review</h3>
                 <button 
                   onClick={() => setShowReviewModal(false)}
@@ -462,90 +462,92 @@ const ProductDetail = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleReviewSubmit} className="p-8">
-                {product.can_review && (
-                  <div className="mb-8 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-2xl flex items-center gap-3">
-                    <ShieldCheck size={20} className="shrink-0 text-emerald-500" />
-                    <span>{product.eligibility_message}</span>
-                  </div>
-                )}
+              <div className="overflow-y-auto p-8 custom-scrollbar">
+                <form onSubmit={handleReviewSubmit}>
+                  {product.can_review && (
+                    <div className="mb-8 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-2xl flex items-center gap-3">
+                      <ShieldCheck size={20} className="shrink-0 text-emerald-500" />
+                      <span>{product.eligibility_message}</span>
+                    </div>
+                  )}
 
-                {submitError && (
-                  <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm font-medium rounded-xl flex items-start gap-3">
-                    <AlertCircle size={18} className="shrink-0 mt-0.5" />
-                    <span>{submitError}</span>
-                  </div>
-                )}
-                
-                <div className="mb-8 flex flex-col items-center">
-                  <p className="text-sm font-bold text-slate-800 mb-4">Your Rating</p>
-                  <div className="flex items-center gap-3">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setReviewForm({...reviewForm, rating: star})}
-                        className="transition-all hover:scale-110 active:scale-95"
-                      >
-                        <Star 
-                          size={42} 
-                          fill={star <= reviewForm.rating ? "#fbbf24" : "none"} 
-                          strokeWidth={1.5}
-                          className={star <= reviewForm.rating ? "text-amber-400" : "text-slate-200"} 
-                        />
-                      </button>
-                    ))}
-                    <span className="ml-2 min-w-[80px] text-sm font-black text-slate-400 uppercase tracking-tighter">
+                  {submitError && (
+                    <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm font-medium rounded-xl flex items-start gap-3">
+                      <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                      <span>{submitError}</span>
+                    </div>
+                  )}
+                  
+                  <div className="mb-8 flex flex-col items-center">
+                    <p className="text-sm font-bold text-slate-800 mb-4">Your Rating</p>
+                    <div className="flex items-center gap-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewForm({...reviewForm, rating: star})}
+                          className="transition-all hover:scale-110 active:scale-95"
+                        >
+                          <Star 
+                            size={42} 
+                            fill={star <= reviewForm.rating ? "#fbbf24" : "none"} 
+                            strokeWidth={1.5}
+                            className={star <= reviewForm.rating ? "text-amber-400" : "text-slate-200"} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <span className="mt-4 text-sm font-black text-slate-400 uppercase tracking-tighter">
                        {getRatingLabel(reviewForm.rating)}
                     </span>
                   </div>
-                </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-bold text-slate-800 mb-2">Your Review</label>
-                  <textarea
-                    required
-                    rows="4"
-                    value={reviewForm.comment}
-                    onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
-                    placeholder="Share your experience with this product..."
-                    className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[1.25rem] focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 outline-none transition-all text-sm resize-none font-medium placeholder:text-slate-300"
-                  ></textarea>
-                  <div className="text-[10px] text-right mt-2 text-slate-400 font-bold">{reviewForm.comment.length}/1000</div>
-                </div>
-
-                <div className="mb-8">
-                  <label className="block text-sm font-bold text-slate-800 mb-3">Add Photos <span className="text-slate-400 font-medium">(optional)</span></label>
-                  <div className="flex flex-wrap gap-3">
-                    {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative w-20 h-20 group">
-                        <img src={preview} className="w-full h-full object-cover rounded-xl border-2 border-slate-100" />
-                        <button 
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg scale-0 group-hover:scale-100 transition-all"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                    {reviewForm.images.length < 5 && (
-                      <label className="w-20 h-20 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-all text-slate-400 hover:text-primary-600">
-                        <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageChange} />
-                        <Plus size={24} />
-                      </label>
-                    )}
+                  <div className="mb-6">
+                    <label className="block text-sm font-bold text-slate-800 mb-2">Your Review</label>
+                    <textarea
+                      required
+                      rows="4"
+                      value={reviewForm.comment}
+                      onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
+                      placeholder="Share your experience with this product..."
+                      className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[1.25rem] focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 outline-none transition-all text-sm resize-none font-medium placeholder:text-slate-300"
+                    ></textarea>
+                    <div className="text-[10px] text-right mt-2 text-slate-400 font-bold">{reviewForm.comment.length}/1000</div>
                   </div>
-                </div>
 
-                <button 
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-[1.25rem] font-bold uppercase tracking-widest text-sm transition-all shadow-xl shadow-primary-500/20 active:scale-95 disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Review'}
-                </button>
-              </form>
+                  <div className="mb-8">
+                    <label className="block text-sm font-bold text-slate-800 mb-3">Add Photos <span className="text-slate-400 font-medium">(optional)</span></label>
+                    <div className="flex flex-wrap gap-3">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative w-20 h-20 group">
+                          <img src={preview} className="w-full h-full object-cover rounded-xl border-2 border-slate-100" />
+                          <button 
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg scale-0 group-hover:scale-100 transition-all"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      {reviewForm.images.length < 5 && (
+                        <label className="w-20 h-20 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-all text-slate-400 hover:text-primary-600">
+                          <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageChange} />
+                          <Plus size={24} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-[1.25rem] font-bold uppercase tracking-widest text-sm transition-all shadow-xl shadow-primary-500/20 active:scale-95 disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}

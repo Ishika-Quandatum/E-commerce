@@ -19,11 +19,12 @@ const RiderPickups = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [pickups, setPickups] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(null); // Track which item is being updated
 
     const tabs = [
-        { id: "Assigned", label: "To Pickup", icon: <Package size={18} /> },
-        { id: "Picked Up", label: "Collected", icon: <Truck size={18} /> },
-        { id: "Delivered to Vendor", label: "Completed", icon: <CheckCircle2 size={18} /> },
+        { id: "Pickup Assigned", label: "To Pickup", icon: <Package size={18} />, statuses: ["Approved by Vendor", "Pickup Assigned"] },
+        { id: "Picked Up from Customer", label: "Collected", icon: <Truck size={18} />, statuses: ["Picked Up from Customer"] },
+        { id: "Delivered to Vendor", label: "Completed", icon: <CheckCircle2 size={18} />, statuses: ["Delivered to Vendor", "Vendor Confirmed Received", "Inspection Started", "Refund Approved", "Refund Processed"] },
     ];
 
     useEffect(() => {
@@ -33,8 +34,16 @@ const RiderPickups = () => {
     const fetchPickups = async () => {
         setLoading(true);
         try {
-            const res = await returnService.getReturnRequests({ status: activeTab });
-            setPickups(res.data);
+            // Find statuses for current tab
+            const currentTab = tabs.find(t => t.id === activeTab);
+            const statuses = currentTab?.statuses || [activeTab];
+            
+            // We'll fetch all and filter client-side for simplicity if backend filter is limited, 
+            // or just use the first status if that's all backend supports.
+            // But let's assume we can fetch all and filter.
+            const res = await returnService.getReturnRequests();
+            const allReturns = res.data;
+            setPickups(allReturns.filter(p => statuses.includes(p.status)));
         } catch (err) {
             console.error("Error fetching pickups", err);
         } finally {
@@ -43,11 +52,14 @@ const RiderPickups = () => {
     };
 
     const handleAction = async (id, status) => {
+        setActionLoading(id);
         try {
             await returnService.updateReturnStatus(id, { status });
             fetchPickups();
         } catch (err) {
             alert(err.response?.data?.error || "Failed to update status");
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -94,6 +106,7 @@ const RiderPickups = () => {
                         <div className="py-20 bg-white rounded-[32px] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 text-center">
                             <RotateCcw size={64} className="mb-4 opacity-10" />
                             <p className="font-bold text-lg text-slate-500">No pickups found</p>
+                            <p className="text-sm font-medium mt-1">Check back later for new tasks.</p>
                         </div>
                     ) : filteredPickups.map((pickup) => (
                         <motion.div
@@ -108,43 +121,90 @@ const RiderPickups = () => {
                                 </div>
                                 <h3 className="text-xl font-black text-slate-900">{pickup.customer_name}</h3>
                                 <p className="text-sm font-bold text-slate-500 mt-1">Refund: ₹{pickup.refund_amount}</p>
-                            </div>
-
-                            <div className="flex-1 space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <MapPin size={18} className="text-brand-blue shrink-0 mt-1" />
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase">Pickup Location</p>
-                                        <p className="text-sm font-bold text-slate-600 line-clamp-1">Customer Address for Order #{pickup.order}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <Package size={18} className="text-slate-400 shrink-0 mt-1" />
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase">Items</p>
-                                        <p className="text-sm font-bold text-slate-600">{pickup.items.length} items to collect</p>
-                                    </div>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-full uppercase tracking-tight">Order #{pickup.order}</span>
+                                    <span className={clsx(
+                                        "px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-tight",
+                                        pickup.status === 'Pickup Assigned' ? "bg-emerald-100 text-emerald-600" : "bg-brand-blue/10 text-brand-blue"
+                                    )}>
+                                        {pickup.status}
+                                    </span>
                                 </div>
                             </div>
 
-                            <div className="w-full md:w-auto flex gap-3">
-                                <a href={`tel:${pickup.phone || ''}`} className="p-4 bg-slate-100 text-slate-600 rounded-2xl font-bold">
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <MapPin size={18} className="text-brand-blue shrink-0 mt-1" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase">Customer Pickup</p>
+                                            <p className="text-sm font-bold text-slate-600 line-clamp-2">{pickup.pickup_address}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <Phone size={18} className="text-emerald-500 shrink-0 mt-1" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase">Customer Contact</p>
+                                            <p className="text-sm font-bold text-slate-600">{pickup.customer_phone}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <Truck size={18} className="text-brand-purple shrink-0 mt-1" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase">Delivery to Vendor</p>
+                                            <p className="text-sm font-bold text-slate-900">{pickup.vendor_name}</p>
+                                            <p className="text-xs font-bold text-slate-500 line-clamp-1">{pickup.vendor_address}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <Package size={18} className="text-slate-400 shrink-0 mt-1" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase">Items to Collect</p>
+                                            <div className="flex flex-col gap-1">
+                                                {pickup.items.map((item, idx) => (
+                                                    <p key={idx} className="text-sm font-bold text-slate-600">
+                                                        • {item.quantity}x {item.product_name}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="w-full md:w-auto flex md:flex-col gap-3">
+                                <a href={`tel:${pickup.customer_phone || ''}`} className="flex-1 md:flex-none p-4 bg-slate-100 text-slate-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
                                     <Phone size={20} />
+                                    <span className="md:hidden">Call Customer</span>
                                 </a>
-                                {activeTab === "Assigned" && (
+                                {activeTab === "Pickup Assigned" && pickup.status === "Approved by Vendor" && (
                                     <button 
-                                        onClick={() => handleAction(pickup.id, 'Picked Up')}
-                                        className="flex-1 md:flex-none bg-brand-purple text-white px-8 py-4 rounded-2xl font-bold"
+                                        onClick={() => handleAction(pickup.id, 'Pickup Assigned')}
+                                        disabled={actionLoading === pickup.id}
+                                        className="flex-[2] md:flex-none bg-brand-blue text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-brand-blue/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                                     >
-                                        Mark Picked Up
+                                        {actionLoading === pickup.id ? "Processing..." : "Claim Pickup"}
                                     </button>
                                 )}
-                                {activeTab === "Picked Up" && (
+                                {activeTab === "Pickup Assigned" && pickup.status === "Pickup Assigned" && (
+                                    <button 
+                                        onClick={() => handleAction(pickup.id, 'Picked Up from Customer')}
+                                        disabled={actionLoading === pickup.id}
+                                        className="flex-[2] md:flex-none bg-brand-purple text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-brand-purple/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                                    >
+                                        {actionLoading === pickup.id ? "Processing..." : "Mark Collected"}
+                                    </button>
+                                )}
+                                {activeTab === "Picked Up from Customer" && (
                                     <button 
                                         onClick={() => handleAction(pickup.id, 'Delivered to Vendor')}
-                                        className="flex-1 md:flex-none bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold"
+                                        disabled={actionLoading === pickup.id}
+                                        className="flex-[2] md:flex-none bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                                     >
-                                        Deliver to Vendor
+                                        {actionLoading === pickup.id ? "Processing..." : "Mark Completed"}
                                     </button>
                                 )}
                             </div>

@@ -8,15 +8,18 @@ from apps.tracking.models import RiderProfile
 class ReturnRequest(models.Model):
     STATUS_CHOICES = (
         ('Return Requested', 'Return Requested'),
-        ('Vendor Review Pending', 'Vendor Review Pending'),
-        ('Approved', 'Approved'),
-        ('Rejected', 'Rejected'),
-        ('Pickup Scheduled', 'Pickup Scheduled'),
-        ('Picked Up', 'Picked Up'),
+        ('Approved by Vendor', 'Approved by Vendor'),
+        ('Pickup Assigned', 'Pickup Assigned'),
+        ('Picked Up from Customer', 'Picked Up from Customer'),
         ('Delivered to Vendor', 'Delivered to Vendor'),
-        ('Product Inspection', 'Product Inspection'),
-        ('Refund Processing', 'Refund Processing'),
-        ('Refund Completed', 'Refund Completed'),
+        ('Vendor Confirmed Received', 'Vendor Confirmed Received'),
+        ('Inspection Started', 'Inspection Started'),
+        ('Return Accepted', 'Return Accepted'),
+        ('Return Rejected by Vendor', 'Return Rejected by Vendor'),
+        ('Admin Review', 'Admin Review'),
+        ('Refund Approved', 'Refund Approved'),
+        ('Refund Processed', 'Refund Processed'),
+        ('Refund Rejected', 'Refund Rejected'),
         ('Cancelled', 'Cancelled'),
     )
     
@@ -24,6 +27,13 @@ class ReturnRequest(models.Model):
         ('Original Payment Method', 'Original Payment Method'),
         ('Wallet', 'Wallet'),
         ('Bank Transfer', 'Bank Transfer'),
+        ('UPI', 'UPI'),
+    )
+
+    INSPECTION_STATUS_CHOICES = (
+        ('Pending', 'Pending'),
+        ('Accepted', 'Accepted'),
+        ('Rejected', 'Rejected'),
     )
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='return_requests')
@@ -37,8 +47,19 @@ class ReturnRequest(models.Model):
     refund_method = models.CharField(max_length=30, choices=REFUND_METHOD_CHOICES, default='Wallet')
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2)
     
-    rejection_reason = models.TextField(blank=True, null=True)
+    # Inspection Fields
+    inspection_status = models.CharField(max_length=20, choices=INSPECTION_STATUS_CHOICES, default='Pending')
     inspection_notes = models.TextField(blank=True, null=True)
+    inspection_reason = models.CharField(max_length=100, blank=True, null=True)
+    vendor_decision = models.CharField(max_length=30, blank=True, null=True) # Return Accepted / Return Rejected by Vendor
+    inspection_completed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Refund Audit Fields
+    refund_account_details = models.TextField(blank=True, null=True) # Bank info or UPI ID
+    refund_transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    refund_date = models.DateTimeField(null=True, blank=True)
+    
+    rejection_reason = models.TextField(blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -61,6 +82,7 @@ class ReturnItem(models.Model):
 class ReturnImage(models.Model):
     return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='returns/proofs/')
+    is_inspection_image = models.BooleanField(default=False) # True if uploaded by vendor during inspection
     created_at = models.DateTimeField(auto_now_add=True)
 
 class ReturnStatusHistory(models.Model):

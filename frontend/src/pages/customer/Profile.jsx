@@ -212,16 +212,63 @@ const Profile = () => {
             >
               Write Review
             </button>
-            <button
-              onClick={() => {
-                setSelectedOrderForReturn(order);
-                setIsReturnModalOpen(true);
-              }}
-              className="text-[10px] font-black text-rose-500 bg-rose-50 px-3 py-1.5 rounded-lg uppercase tracking-tighter hover:bg-rose-500 hover:text-white transition-all border border-rose-100 flex items-center justify-center gap-1"
-            >
-              <RotateCcw size={10} />
-              Return
-            </button>
+            
+            {item.can_return ? (
+              <button
+                onClick={() => {
+                  setSelectedOrderForReturn(order);
+                  setIsReturnModalOpen(true);
+                }}
+                className="text-[10px] font-black text-rose-500 bg-rose-50 px-3 py-1.5 rounded-lg uppercase tracking-tighter hover:bg-rose-500 hover:text-white transition-all border border-rose-100 flex items-center justify-center gap-1"
+              >
+                <RotateCcw size={10} />
+                Return
+              </button>
+            ) : item.return_status ? (
+              <div className={`text-[9px] font-black px-3 py-1.5 rounded-lg uppercase tracking-tighter text-center flex items-center justify-center gap-1 border ${
+                item.return_status === 'Refund Processed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                ['Refund Rejected', 'Return Rejected by Vendor'].includes(item.return_status) ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                item.return_status === 'Refund Approved' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                item.return_status === 'Admin Review' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                'bg-amber-50 text-amber-600 border-amber-100'
+              }`}>
+                {item.return_status === 'Return Requested' ? 'Return Requested' :
+                 item.return_status === 'Refund Processed' ? 'Refunded' :
+                 item.return_status === 'Refund Approved' ? 'Refund Approved' :
+                 item.return_status === 'Refund Rejected' ? 'Refund Rejected' :
+                 item.return_status === 'Return Rejected by Vendor' ? 'Return Rejected' :
+                 item.return_status === 'Admin Review' ? 'Under Review' :
+                 'Return In Progress'}
+              </div>
+            ) : null}
+
+            {/* Refund Details Display */}
+            {item.return_status === 'Refund Processed' && item.refund_details && (
+              <div className="mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-2">
+                 <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Refund Amount</span>
+                    <span className="text-sm font-black text-emerald-600">₹{item.refund_details.amount}</span>
+                 </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Date</span>
+                    <span className="text-xs font-bold text-emerald-900">{new Date(item.refund_details.date).toLocaleDateString()}</span>
+                 </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Method</span>
+                    <span className="text-xs font-bold text-emerald-900">{item.refund_details.method}</span>
+                 </div>
+                 <div className="pt-2 border-t border-emerald-100">
+                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-1">Transaction ID</span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-900 break-all bg-white/50 p-1 rounded-lg block">
+                       {item.refund_details.transaction_id}
+                    </span>
+                 </div>
+                 <div className="flex items-center gap-2 mt-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[9px] font-black text-emerald-600 uppercase">Successfully Refunded</span>
+                 </div>
+              </div>
+            )}
           </div>
         )}
       </div>

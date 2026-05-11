@@ -22,6 +22,13 @@ class Payment(models.Model):
         ('card', 'Credit/Debit Card'),
         ('upi', 'UPI'),
         ('netbanking', 'Net Banking'),
+        ('wallet', 'Wallet'),
+    )
+    
+    REFUND_STATUS_CHOICES = (
+        ('Pending', 'Pending'),
+        ('Success', 'Success'),
+        ('Failed', 'Failed'),
     )
 
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
@@ -32,6 +39,9 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=255, blank=True, null=True)
     gateway_reference = models.CharField(max_length=255, blank=True, null=True)
     refund_transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    refund_status = models.CharField(max_length=20, choices=REFUND_STATUS_CHOICES, blank=True, null=True)
+    refund_method = models.CharField(max_length=20, choices=METHOD_CHOICES, blank=True, null=True)
+    refund_date = models.DateTimeField(blank=True, null=True)
     refund_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -47,7 +57,9 @@ class VendorPayout(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
         ('Paid', 'Paid'),
-        ('Hold', 'Hold'),
+        ('Refund Hold', 'Refund Hold'),
+        ('Cancelled', 'Cancelled'),
+        ('Released', 'Released'),
         ('Failed', 'Failed'),
     )
     METHOD_CHOICES = (

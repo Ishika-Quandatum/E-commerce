@@ -5,7 +5,7 @@ from apps.orders.serializers import OrderItemSerializer
 class ReturnImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReturnImage
-        fields = ['id', 'image', 'created_at']
+        fields = ['id', 'image', 'is_inspection_image', 'created_at']
 
 class ReturnItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='order_item.product.name')
@@ -37,16 +37,23 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
     images = ReturnImageSerializer(many=True, read_only=True)
     history = ReturnStatusHistorySerializer(many=True, read_only=True)
     customer_name = serializers.ReadOnlyField(source='customer.username')
+    customer_phone = serializers.ReadOnlyField(source='order.phone')
+    pickup_address = serializers.ReadOnlyField(source='order.address')
     vendor_name = serializers.ReadOnlyField(source='vendor.shop_name')
+    vendor_phone = serializers.ReadOnlyField(source='vendor.user.phone')
+    vendor_address = serializers.ReadOnlyField(source='vendor.user.address')
     rider_name = serializers.ReadOnlyField(source='rider.user.username', default="Not Assigned")
     
     class Meta:
         model = ReturnRequest
         fields = [
-            'id', 'order', 'customer', 'customer_name', 'vendor', 'vendor_name', 
+            'id', 'order', 'customer', 'customer_name', 'customer_phone', 'pickup_address',
+            'vendor', 'vendor_name', 'vendor_phone', 'vendor_address',
             'rider', 'rider_name', 'reason', 'description', 'status', 
             'refund_method', 'refund_amount', 'rejection_reason', 
-            'inspection_notes', 'items', 'images', 'history', 
+            'inspection_status', 'inspection_notes', 'inspection_reason', 'vendor_decision',
+            'inspection_completed_at', 'refund_account_details', 'refund_transaction_id', 'refund_date',
+            'items', 'images', 'history', 
             'created_at', 'updated_at'
         ]
         read_only_fields = ['customer', 'vendor', 'rider', 'status', 'refund_amount', 'created_at', 'updated_at']

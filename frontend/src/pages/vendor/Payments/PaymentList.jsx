@@ -152,7 +152,9 @@ const PaymentList = () => {
     switch (status?.toLowerCase()) {
       case 'paid': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'pending': return 'bg-amber-50 text-amber-600 border-amber-100';
-      case 'hold': return 'bg-rose-50 text-rose-600 border-rose-100';
+      case 'refund hold': return 'bg-rose-50 text-rose-600 border-rose-100';
+      case 'cancelled': return 'bg-slate-100 text-slate-400 border-slate-200 line-through';
+      case 'released': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
       default: return 'bg-slate-50 text-slate-600 border-slate-100';
     }
   };
@@ -305,7 +307,9 @@ const PaymentList = () => {
                                   <option value="All">All Transactions</option>
                                   <option value="Pending">Pending</option>
                                   <option value="Paid">Paid</option>
-                                  <option value="Hold">On Hold</option>
+                                  <option value="Refund Hold">Refund Hold</option>
+                                  <option value="Cancelled">Cancelled</option>
+                                  <option value="Released">Released</option>
                               </select>
                           </div>
                           <div className="space-y-3">
@@ -413,7 +417,9 @@ const PaymentList = () => {
                               "inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm transition-all",
                               getStatusColor(p.status)
                           )}>
-                            {p.status === 'Paid' ? <CheckCircle2 size={12} /> : p.status === 'Hold' ? <ShieldCheck size={12} /> : <Clock size={12} />}
+                            {p.status === 'Paid' ? <CheckCircle2 size={12} /> : 
+                             ['Refund Hold', 'Cancelled'].includes(p.status) ? <XCircle size={12} /> : 
+                             p.status === 'Released' ? <RotateCcw size={12} /> : <Clock size={12} />}
                             {p.status}
                           </span>
                         </td>
