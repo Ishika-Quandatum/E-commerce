@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { vendorService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
 import { Star, Users, Package, ShieldCheck, Filter, ChevronDown, LayoutGrid, List, Search, ChevronRight } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const VendorShop = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [vendor, setVendor] = useState(null);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -14,6 +16,8 @@ const VendorShop = () => {
         sort: 'newest',
         search: ''
     });
+
+    const [isFollowLoading, setIsFollowLoading] = useState(false);
 
     useEffect(() => {
         fetchVendorData();
@@ -52,12 +56,69 @@ const VendorShop = () => {
     };
 
     const handleFollow = async () => {
+        if (isFollowLoading) return;
+        
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            toast.error('Please login to follow shops', {
+                style: {
+                    borderRadius: '10px',
+                    background: '#ef4444',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                }
+            });
+            navigate('/login');
+            return;
+        }
+
+        setIsFollowLoading(true);
         try {
             const res = await vendorService.followVendor(id);
-            setIsFollowing(res.data.status === 'followed');
+            const isNowFollowing = res.data.following;
+            setIsFollowing(isNowFollowing);
             setVendor(prev => ({ ...prev, followers_count: res.data.followers_count }));
+            
+            if (isNowFollowing) {
+                toast.success('Vendor followed successfully', {
+                    style: {
+                        borderRadius: '10px',
+                        background: '#333',
+                        color: '#fff',
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                    }
+                });
+            } else {
+                toast.success('Vendor unfollowed successfully', {
+                    style: {
+                        borderRadius: '10px',
+                        background: '#333',
+                        color: '#fff',
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                    }
+                });
+            }
         } catch (err) {
             console.error("Error following vendor", err);
+            if (err.response && err.response.status === 401) {
+                toast.error('Session expired. Please login again.', {
+                    style: {
+                        borderRadius: '10px',
+                        background: '#ef4444',
+                        color: '#fff',
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                    }
+                });
+                navigate('/login');
+            } else {
+                toast.error('Failed to update follow status');
+            }
+        } finally {
+            setIsFollowLoading(false);
         }
     };
 
@@ -115,13 +176,17 @@ const VendorShop = () => {
                         <div className="flex gap-4">
                             <button 
                                 onClick={handleFollow}
-                                className={`px-8 h-12 rounded-lg font-bold text-sm transition-all shadow-sm ${isFollowing ? 'bg-slate-100 text-slate-600' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'}`}
+                                disabled={isFollowLoading}
+                                className={`px-8 h-12 rounded-lg font-bold text-sm transition-all shadow-sm flex items-center justify-center min-w-[140px] ${
+                                    isFollowLoading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' :
+                                    isFollowing ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'
+                                }`}
                             >
-                                {isFollowing ? 'Following' : 'Follow'}
+                                {isFollowLoading ? (
+                                    <span className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
+                                ) : isFollowing ? 'Following' : 'Follow'}
                             </button>
-                            <button className="px-6 h-12 border border-slate-200 bg-white rounded-lg font-bold text-sm text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
-                                Share Shop
-                            </button>
+            
                         </div>
                     </div>
                 </div>

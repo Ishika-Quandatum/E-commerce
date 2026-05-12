@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, Plus, Minus, Heart, Edit3, X, ThumbsUp, AlertCircle, ChevronRight, Tag, Banknote, ChevronsRight } from 'lucide-react';
+import { Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, Plus, Minus, Heart, Edit3, X, ThumbsUp, AlertCircle, ChevronRight, Tag, Banknote, ChevronsRight, Store } from 'lucide-react';
 import { productService, reviewService, vendorService } from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,10 +33,14 @@ const ProductDetail = () => {
         const res = await productService.getProductDetail(id);
         setProduct(res.data);
         
-        // Fetch vendor details
+        // Handle vendor details
         if (res.data.vendor) {
-          const vRes = await vendorService.getVendorDetail(res.data.vendor);
-          setVendor(vRes.data);
+          if (typeof res.data.vendor === 'object') {
+            setVendor(res.data.vendor);
+          } else {
+            const vRes = await vendorService.getVendorDetail(res.data.vendor);
+            setVendor(vRes.data);
+          }
         }
         
         if (res.data.images && res.data.images.length > 0) {
@@ -380,50 +384,50 @@ SKU: ${product.sku || 'N/A'}
              <h4 className="font-bold text-slate-800 mb-4 uppercase text-xs tracking-wider">Sold By</h4>
              
              {vendor ? (
-               <div className="flex flex-col gap-6">
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                       <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm">
-                          {vendor.avatar ? (
-                            <img src={vendor.avatar} alt={vendor.shop_name} className="w-full h-full object-cover" />
-                          ) : (
-                            <ShieldCheck size={28} className="text-primary-600" />
-                          )}
-                       </div>
-                       <div>
-                          <div className="flex items-center gap-1.5">
-                            <p className="font-bold text-slate-800">{vendor.shop_name}</p>
-                            <ShieldCheck size={14} className="text-emerald-500" />
-                          </div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Verified Seller</p>
-                       </div>
-                    </div>
-                    <Link 
-                      to={`/vendor-shop/${vendor.id}`}
-                      className="px-5 py-2.5 border border-primary-600 text-primary-600 rounded-lg text-xs font-bold hover:bg-primary-50 transition-all cursor-pointer shadow-sm shadow-primary-500/5"
-                    >
-                      View Shop
-                    </Link>
-                 </div>
-
-                 <div className="flex items-center justify-around bg-slate-50/50 py-4 rounded-xl border border-slate-50">
-                    <div className="text-center">
-                      <div className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[11px] font-bold flex items-center gap-0.5 mx-auto mb-1 w-fit">
-                        {vendor.rating} <Star size={10} fill="currentColor" />
-                      </div>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase">{vendor.total_ratings.toLocaleString()} Ratings</p>
-                    </div>
-                    <div className="w-px h-8 bg-slate-100" />
-                    <div className="text-center">
-                      <p className="text-sm font-black text-slate-800 leading-none mb-1">{vendor.followers_count.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase">Followers</p>
-                    </div>
-                    <div className="w-px h-8 bg-slate-100" />
-                    <div className="text-center">
-                      <p className="text-sm font-black text-slate-800 leading-none mb-1">{vendor.products_count.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase">Products</p>
-                    </div>
-                 </div>
+               <div className="flex items-center justify-between">
+                  {/* Left Side: Avatar & Details */}
+                  <div className="flex items-start gap-4">
+                     <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm flex-shrink-0">
+                        {vendor.avatar ? (
+                          <img src={vendor.avatar} alt={vendor.shop_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Store size={28} className="text-primary-600" />
+                        )}
+                     </div>
+                     <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5 mb-3">
+                          <p className="font-bold text-slate-800 text-lg leading-none">{vendor.shop_name}</p>
+                        </div>
+                        
+                        {/* Stats Row */}
+                        <div className="flex items-center gap-6">
+                           <div className="flex flex-col">
+                             <div className="flex items-center justify-center gap-0.5 bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full text-[11px] font-bold w-fit mb-0.5">
+                               {vendor.rating} <Star size={10} fill="currentColor" />
+                             </div>
+                             <p className="text-[11px] text-slate-500">{vendor.total_ratings.toLocaleString()} Ratings</p>
+                           </div>
+                           
+                           <div className="flex flex-col">
+                             <p className="text-sm font-bold text-slate-800 leading-none mb-1">{vendor.followers_count.toLocaleString()}</p>
+                             <p className="text-[11px] text-slate-500">Followers</p>
+                           </div>
+                           
+                           <div className="flex flex-col">
+                             <p className="text-sm font-bold text-slate-800 leading-none mb-1">{vendor.products_count.toLocaleString()}</p>
+                             <p className="text-[11px] text-slate-500">Products</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  {/* Right Side: Button */}
+                  <Link 
+                    to={`/vendor-shop/${vendor.id}`}
+                    className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg text-sm font-bold hover:bg-primary-50 transition-all cursor-pointer bg-white"
+                  >
+                    View Shop
+                  </Link>
                </div>
              ) : (
                <div className="flex items-center justify-between animate-pulse">

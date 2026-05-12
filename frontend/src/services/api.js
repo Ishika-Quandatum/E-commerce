@@ -178,6 +178,7 @@ export const riderService = {
 export const platformService = {
   getSettings: () => api.get('core/settings/'),
   updateSettings: (data) => api.patch('core/settings/update_settings/', data),
+  getPlatformStats: () => api.get('core/settings/platform_stats/'),
 };
 
 export const returnService = {

@@ -22,8 +22,8 @@ class VendorViewSet(viewsets.ModelViewSet):
         follower, created = Follower.objects.get_or_create(vendor=vendor, user=request.user)
         if not created:
             follower.delete()
-            return Response({'status': 'unfollowed', 'followers_count': vendor.followers.count()})
-        return Response({'status': 'followed', 'followers_count': vendor.followers.count()})
+            return Response({'following': False, 'followers_count': vendor.followers.count()})
+        return Response({'following': True, 'followers_count': vendor.followers.count()})
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
     def is_following(self, request, pk=None):
@@ -96,7 +96,7 @@ class VendorViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # If it's a list or retrieve action for public info, allow seeing approved vendors
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'is_following', 'follow']:
             queryset = Vendor.objects.filter(status='Approved')
             
             # If user is admin, let them see all for management

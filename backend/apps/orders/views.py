@@ -59,9 +59,15 @@ class OrderViewSet(viewsets.ModelViewSet):
             if not cart_items.exists():
                 return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
     
-            # Group items by vendor
+            # Group items by vendor and verify stock
             vendor_items = {}
             for item in cart_items:
+                if item.product.stock < item.quantity:
+                    return Response(
+                        {'error': f'Not enough stock for {item.product.name}. Available: {item.product.stock}'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
                 vendor = item.product.vendor
                 if vendor not in vendor_items:
                     vendor_items[vendor] = []
@@ -96,6 +102,10 @@ class OrderViewSet(viewsets.ModelViewSet):
                         price=item.product.discount_price or item.product.price,
                         size=item.size
                     )
+                    
+                    # Deduct stock
+                    item.product.stock -= item.quantity
+                    item.product.save(update_fields=['stock'])
     
                 # Determine initial payment status based on method
                 payment_status = 'Pending'

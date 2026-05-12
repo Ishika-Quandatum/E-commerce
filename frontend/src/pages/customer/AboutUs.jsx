@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
@@ -22,9 +22,33 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePlatform } from '../../context/PlatformContext';
+import { platformService } from '../../services/api';
 
 const AboutUs = () => {
   const { platformName } = usePlatform();
+  const [dynamicStats, setDynamicStats] = useState({
+    customers: '10,000+',
+    products: '500+',
+    sellers: '100+',
+    cities: '50+'
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await platformService.getPlatformStats();
+        setDynamicStats({
+          customers: res.data.customers + '+',
+          products: res.data.products + '+',
+          sellers: res.data.sellers + '+',
+          cities: res.data.cities + '+'
+        });
+      } catch (error) {
+        console.error('Failed to fetch platform stats', error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const categories = [
     { name: "Fashion", icon: <Shirt size={32} />, color: "bg-pink-50 text-pink-500" },
@@ -36,10 +60,10 @@ const AboutUs = () => {
   ];
 
   const stats = [
-    { label: "Happy Customers", value: "10,000+" },
-    { label: "Products", value: "500+" },
-    { label: "Trusted Sellers", value: "100+" },
-    { label: "Cities Served", value: "50+" },
+    { label: "Happy Customers", value: dynamicStats.customers },
+    { label: "Products", value: dynamicStats.products },
+    { label: "Trusted Sellers", value: dynamicStats.sellers },
+    { label: "Cities Served", value: dynamicStats.cities },
   ];
 
   const features = [
@@ -81,7 +105,7 @@ const AboutUs = () => {
                 <Link to="/products" className="bg-brand-purple hover:bg-brand-purple/90 text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-brand-purple/20 active:scale-95 flex items-center gap-2">
                   Shop Now <ArrowRight size={20} />
                 </Link>
-                <Link to="/contact" className="bg-white hover:bg-slate-50 text-brand-purple border border-brand-purple/20 px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95">
+                <Link to="/contact-us" className="bg-white hover:bg-slate-50 text-brand-purple border border-brand-purple/20 px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95">
                   Contact Us
                 </Link>
               </div>
@@ -113,7 +137,7 @@ const AboutUs = () => {
             className="order-2 lg:order-1"
           >
             <img 
-              src="https://images.unsplash.com/photo-1556740734-7f95826913b8?auto=format&fit=crop&q=80&w=800" 
+              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800" 
               alt="Our Story" 
               className="rounded-[3rem] shadow-2xl"
             />

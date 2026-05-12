@@ -59,10 +59,17 @@ class ProductSerializer(serializers.ModelSerializer):
             'stock', 'quantity', 'unit', 'category', 'category_name', 'category_slug',
             'subcategory', 'subcategory_name', 'brand', 'brand_name',
             'rating', 'reviews_count', 'is_featured', 'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 'created_at', 'images', 'image', 'shipping_charge',
-            'reviews', 'review_metrics', 'can_review', 'eligibility_message', 'sizes'
+            'reviews', 'review_metrics', 'can_review', 'eligibility_message', 'sizes', 'vendor'
         ]
 
     discount_percentage = serializers.SerializerMethodField()
+    vendor = serializers.SerializerMethodField()
+
+    def get_vendor(self, obj):
+        if obj.vendor:
+            from apps.vendors.serializers import VendorSerializer
+            return VendorSerializer(obj.vendor, context=self.context).data
+        return None
 
     def validate_sizes(self, value):
         if isinstance(value, str):
