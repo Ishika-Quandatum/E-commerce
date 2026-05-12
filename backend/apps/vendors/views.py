@@ -11,9 +11,28 @@ class VendorViewSet(viewsets.ModelViewSet):
     serializer_class = VendorSerializer
 
     def get_permissions(self):
-        if self.action == 'signup':
+        if self.action in ['signup', 'retrieve', 'list', 'is_following']:
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def follow(self, request, pk=None):
+        vendor = self.get_object()
+        from .models import Follower
+        follower, created = Follower.objects.get_or_create(vendor=vendor, user=request.user)
+        if not created:
+            follower.delete()
+            return Response({'status': 'unfollowed', 'followers_count': vendor.followers.count()})
+        return Response({'status': 'followed', 'followers_count': vendor.followers.count()})
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def is_following(self, request, pk=None):
+        if not request.user.is_authenticated:
+            return Response({'is_following': False})
+        vendor = self.get_object()
+        from .models import Follower
+        is_following = Follower.objects.filter(vendor=vendor, user=request.user).exists()
+        return Response({'is_following': is_following})
 
     @action(detail=False, methods=['post'])
     def signup(self, request):
@@ -27,7 +46,11 @@ class VendorViewSet(viewsets.ModelViewSet):
             return Response({'error': 'You are already a vendor or have a pending application.'}, status=status.HTTP_400_BAD_REQUEST)
         
         serializer = VendorSignupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            print("--- VENDOR SIGNUP VALIDATION ERRORS ---")
+            print(serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
         vendor = serializer.save(user=user if user.is_authenticated else None, status='Pending')
         
         # Generate tokens for the user (whether newly created or existing)
@@ -71,16 +94,23 @@ class VendorViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Vendor.objects.none()
         
-        if user.role == 'superadmin' or user.is_staff:
-            # Admins see all vendor applications EXCEPT those from fellow admins
-            queryset = Vendor.objects.exclude(user__role='superadmin').exclude(user__is_staff=True)
-        elif hasattr(user, 'vendor_profile'):
-            queryset = Vendor.objects.filter(user=user)
-        
-        status_filter = self.request.query_params.get('status')
-        if status_filter and queryset.exists():
-            queryset = queryset.filter(status=status_filter)
+        # If it's a list or retrieve action for public info, allow seeing approved vendors
+        if self.action in ['list', 'retrieve']:
+            queryset = Vendor.objects.filter(status='Approved')
             
+            # If user is admin, let them see all for management
+            if user.is_authenticated and (user.role in ['superadmin', 'admin'] or user.is_staff):
+                queryset = Vendor.objects.all()
+            
+            return queryset
+
+        # Otherwise, restrict to user's own vendor profile
+        queryset = Vendor.objects.none()
+        if user.is_authenticated:
+            if user.role == 'superadmin' or user.is_staff:
+                queryset = Vendor.objects.all()
+            elif hasattr(user, 'vendor_profile'):
+                queryset = Vendor.objects.filter(user=user)
+        
         return queryset

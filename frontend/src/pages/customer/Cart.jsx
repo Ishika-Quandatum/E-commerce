@@ -56,68 +56,102 @@ const Cart = () => {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center gap-6 relative"
+                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col relative overflow-hidden"
               >
-                <div className="w-full sm:w-32 h-32 bg-slate-50 rounded-2xl overflow-hidden flex-shrink-0">
-                  <img
-                    src={product.primary_image || "https://placehold.co/200"}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-6 mb-4">
+                  {/* Product Image */}
+                  <div className="w-full sm:w-28 h-28 bg-slate-50 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100">
+                    <img
+                      src={product.primary_image || "https://placehold.co/200"}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                <div className="flex-grow w-full text-center sm:text-left">
-                  <Link to={`/products/${product.id}`} className="hover:text-primary-600 transition-colors">
-                    <h3 className="text-xl font-bold text-slate-900 mb-1">{product.name}</h3>
-                  </Link>
-                  <p className="text-sm font-semibold text-slate-400 mb-2">{product.category_name}</p>
-                  {item.size && (
-                    <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Size:</span>
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-black rounded uppercase border border-slate-200">
-                        {item.size}
-                      </span>
+                  {/* Product Info */}
+                  <div className="flex-grow w-full text-center sm:text-left">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                         <span className="bg-primary-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Mall</span>
+                         <Link to={`/products/${product.id}`} className="hover:text-primary-600 transition-colors">
+                            <h3 className="text-lg font-bold text-slate-900 leading-tight line-clamp-1">{product.name}</h3>
+                         </Link>
+                      </div>
+                     
                     </div>
-                  )}
-
-                  <div className="flex items-center justify-center sm:justify-start gap-4">
-                    <div className="flex items-center bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-                      <button
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
-                        className="px-4 py-2 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors font-bold"
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <span className="w-10 text-center font-bold text-slate-900">{item.quantity}</span>
-                      <button
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
-                        className="px-4 py-2 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors font-bold"
-                      >
-                        <Plus size={16} />
-                      </button>
+                    
+                    <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                       <p className="text-lg font-black text-slate-900">₹{price}</p>
+                       {product.discount_price && (
+                         <p className="text-xs text-slate-400 line-through">₹{product.price}</p>
+                       )}
+                       {product.discount_percentage && (
+                         <p className="text-xs font-bold text-orange-500">{product.discount_percentage}% Off</p>
+                       )}
                     </div>
 
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center"
-                      title="Remove Item"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+                    <p className="text-[11px] font-bold text-emerald-600 mb-3 flex items-center justify-center sm:justify-start gap-1">
+                       All issue easy returns
+                    </p>
+
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-2 mb-4">
+                      {item.size && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Size:</span>
+                          <span className="text-[11px] font-black text-slate-700 uppercase">{item.size}</span>
+                        </div>
+                      )}
+                      <div className="w-px h-3 bg-slate-200 hidden sm:block" />
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Qty:</span>
+                        <span className="text-[11px] font-black text-slate-700 uppercase">{item.quantity}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center sm:justify-start gap-6">
+                      <button 
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 size={14} /> Remove
+                      </button>
+                      
+                      <div className="flex items-center bg-slate-50 rounded-lg border border-slate-100 overflow-hidden">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                          className="px-3 py-1 text-slate-500 hover:bg-slate-100 transition-colors"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className="px-2 text-xs font-bold text-slate-700">{item.quantity}</span>
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                          className="px-3 py-1 text-slate-500 hover:bg-slate-100 transition-colors"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subtotal Desktop */}
+                  <div className="hidden sm:block text-right pl-6 border-l border-slate-50">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Subtotal</p>
+                    <p className="text-xl font-black text-slate-900">₹{parseFloat(item.subtotal).toFixed(2)}</p>
                   </div>
                 </div>
 
-                <div className="w-full sm:w-auto text-center sm:text-right mt-4 sm:mt-0 sm:pl-6 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0">
-                  <p className="text-sm font-semibold text-slate-500 mb-1">Subtotal</p>
-                  <p className="text-2xl font-extrabold text-slate-900 flex items-center justify-center sm:justify-end gap-1">
-                    <span className="text-lg text-slate-400 font-medium">₹</span>
-                    {parseFloat(item.subtotal).toFixed(2)}
-                  </p>
-                  {product.discount_price && (
-                    <span className="inline-block mt-2 text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-md">
-                      Discount Applied
-                    </span>
-                  )}
+                {/* Sold By Footer */}
+                <div className="mt-2 pt-3 border-t border-slate-50 flex items-center justify-between">
+                   <div className="flex items-center gap-1.5">
+                     <span className="text-[11px] text-slate-400 font-medium">Sold by:</span>
+                     <span className="text-[11px] text-slate-900 font-bold hover:text-primary-600 cursor-pointer transition-colors">
+                       {product.vendor_name || 'QuanStore Official'}
+                     </span>
+                   </div>
+                   <div className="sm:hidden text-right">
+                     <p className="text-sm font-black text-slate-900">₹{parseFloat(item.subtotal).toFixed(2)}</p>
+                   </div>
                 </div>
               </div>
             );

@@ -147,6 +147,10 @@ export const paymentService = {
 
 export const vendorService = {
   getVendors: (params) => api.get('vendors/', { params }),
+  getVendorDetail: (id) => api.get(`vendors/${id}/`),
+  getVendorProducts: (id, params) => api.get('products/', { params: { ...params, vendor: id } }),
+  followVendor: (id) => api.post(`vendors/${id}/follow/`),
+  isFollowing: (id) => api.get(`vendors/${id}/is_following/`),
   signup: (data) => api.post('vendors/signup/', data),
 
   approve: (id) => api.post(`vendors/${id}/approve/`),

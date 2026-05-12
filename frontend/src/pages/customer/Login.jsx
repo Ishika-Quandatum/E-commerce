@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import { authService, cartService } from '../../services/api';
+import { toast } from 'react-hot-toast';
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -12,27 +13,43 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-useEffect(() => {
   const addPendingProduct = async () => {
     const pendingProduct = localStorage.getItem("pending_cart_product");
+    const pendingQuantity = localStorage.getItem("pending_cart_quantity") || 1;
+    const pendingSize = localStorage.getItem("pending_cart_size");
     const token = localStorage.getItem("access_token");
 
     if (pendingProduct && token) {
       try {
         await cartService.addToCart({
           product_id: pendingProduct,
-          quantity: 1,
+          quantity: parseInt(pendingQuantity),
+          size: pendingSize ? JSON.parse(pendingSize) : null
         });
 
         localStorage.removeItem("pending_cart_product");
+        localStorage.removeItem("pending_cart_quantity");
+        localStorage.removeItem("pending_cart_size");
+        
+        toast.success("Item added to cart!", {
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+            fontSize: '12px',
+            fontWeight: 'bold'
+          },
+          icon: '🛒'
+        });
       } catch (err) {
         console.error("Auto cart error", err);
       }
     }
   };
 
-  addPendingProduct();
-}, []);
+  useEffect(() => {
+    addPendingProduct();
+  }, []);
 
   // LOGIN SUBMIT
  const handleSubmit = async (e) => {

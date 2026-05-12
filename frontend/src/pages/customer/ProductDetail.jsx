@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, Plus, Minus, Heart, Edit3, X, ThumbsUp, AlertCircle, ChevronRight, Tag, Banknote, ChevronsRight } from 'lucide-react';
-import { productService, reviewService } from '../../services/api';
+import { productService, reviewService, vendorService } from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -12,6 +13,8 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
+  const [vendor, setVendor] = useState(null);
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
@@ -26,20 +29,57 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        setLoading(true);
         const res = await productService.getProductDetail(id);
         setProduct(res.data);
-        if (res.data.sizes && res.data.sizes.length > 0) {
-          setSelectedSize(res.data.sizes[0]);
+        
+        // Fetch vendor details
+        if (res.data.vendor) {
+          const vRes = await vendorService.getVendorDetail(res.data.vendor);
+          setVendor(vRes.data);
         }
+        
+        if (res.data.images && res.data.images.length > 0) {
+          setImages(res.data.images);
+        } else if (res.data.primary_image) {
+          setImages([{ image: res.data.primary_image }]);
+        } else {
+          setImages([{ image: 'https://placehold.co/800' }]);
+        }
+
+        // Removed default size selection to force user to select a size
+        // if (res.data.sizes && res.data.sizes.length > 0) {
+        //   setSelectedSize(res.data.sizes[0]);
+        // }
       } catch (err) {
-        console.error("Error fetching product", err);
-        navigate('/products');
+        console.error("Error fetching product details", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchProduct();
   }, [id]);
+
+  const handleCopy = () => {
+      const text = `
+Product: ${product.name}
+Brand: ${product.brand_name || 'Generic'}
+Category: ${product.category_name}
+SKU: ${product.sku || 'N/A'}
+      `.trim();
+      
+      navigator.clipboard.writeText(text);
+      toast.success("Copied Successfully", {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      });
+  };
 
   useEffect(() => {
     if (product && new URLSearchParams(location.search).get('write_review') === 'true') {
@@ -50,14 +90,10 @@ const ProductDetail = () => {
   }, [product, location.search]);
 
   if (loading) return (
-    <div className="flex items-center justify-center h-[70vh]">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-    </div>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 font-bold text-slate-400 uppercase tracking-widest text-xs animate-pulse">Loading Premium Goods...</div>
   );
 
-  if (!product) return null;
-
-  const images = product.images?.length > 0 ? product.images : [{ image: 'https://placehold.co/800' }];
+  if (!product) return <div className="min-h-screen flex items-center justify-center bg-slate-50 font-bold text-rose-500 uppercase tracking-widest text-xs">Product Not Found</div>;
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -126,13 +162,55 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert("Please select a size first");
+      toast.error("please select the size then you can click add to cart", {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      });
       return;
     }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      // Save pending cart data to handle it after login
+      localStorage.setItem("pending_cart_product", product.id);
+      localStorage.setItem("pending_cart_quantity", quantity);
+      if (selectedSize) {
+        localStorage.setItem("pending_cart_size", JSON.stringify(selectedSize));
+      }
+      
+      toast.error("Please login to add items to cart", {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      });
+      navigate("/login");
+      return;
+    }
+
     try {
       await addToCart(product.id, quantity, selectedSize);
+      toast.success("product is added to cart", {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        },
+        icon: '🛒'
+      });
     } catch (err) {
       console.error("Error adding to cart", err);
+      toast.error("Failed to add to cart");
     }
   };
 
@@ -153,9 +231,9 @@ const ProductDetail = () => {
     <div className="max-w-7xl mx-auto px-4 py-8 bg-[#f8fafc] min-h-screen">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 bg-white p-3 rounded-lg border border-slate-100">
-        <span>Home</span> <ChevronRight size={12} />
-        <span>{product.category_name}</span> <ChevronRight size={12} />
-        <span className="truncate max-w-[200px]">{product.name}</span>
+        <Link to="/" className="hover:text-primary-600 transition-colors cursor-pointer">Home</Link> <ChevronRight size={12} />
+        <Link to={`/products?category=${product.category}`} className="hover:text-primary-600 transition-colors cursor-pointer">{product.category_name}</Link> <ChevronRight size={12} />
+        <span className="truncate max-w-[200px] font-bold text-slate-800">{product.name}</span>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4">
@@ -169,7 +247,7 @@ const ProductDetail = () => {
                     key={idx}
                     onMouseEnter={() => setActiveImage(idx)}
                     onClick={() => setActiveImage(idx)}
-                    className={`aspect-square rounded-md overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-[#6D28D9]' : 'border-slate-100'}`}
+                    className={`aspect-square rounded-md overflow-hidden border-2 transition-all cursor-pointer ${activeImage === idx ? 'border-[#6D28D9]' : 'border-slate-100'}`}
                   >
                     <img src={img.image} className="w-full h-full object-cover" />
                   </button>
@@ -178,10 +256,16 @@ const ProductDetail = () => {
 
               {/* Main Image View */}
               <div className="flex-1 aspect-[4/5] bg-white rounded-lg overflow-hidden border border-slate-50 relative group">
-                <img
-                  src={images[activeImage].image}
-                  className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-                />
+                {images.length > 0 ? (
+                  <img
+                    src={images[activeImage]?.image}
+                    className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-50 flex items-center justify-center">
+                    <ShieldCheck size={48} className="text-slate-200" />
+                  </div>
+                )}
               </div>
            </div>
 
@@ -189,14 +273,14 @@ const ProductDetail = () => {
            <div className="flex gap-3">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 h-14 bg-white border border-[#6D28D9] text-[#6D28D9] rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all active:scale-95"
+                className="flex-1 h-14 bg-white border border-[#6D28D9] text-[#6D28D9] rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all active:scale-95 cursor-pointer"
               >
                 <ShoppingCart size={20} />
                 Add to Cart
               </button>
               <button
                 onClick={handleBuyNow}
-                className="flex-1 h-14 bg-[#6D28D9] hover:bg-[#5B21B6] text-white rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all shadow-lg shadow-[#6D28D9]/20 active:scale-95"
+                className="flex-1 h-14 bg-[#6D28D9] hover:bg-[#5B21B6] text-white rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all shadow-lg shadow-[#6D28D9]/20 active:scale-95 cursor-pointer"
               >
                 <ChevronsRight size={20} className="text-white" />
                 Buy Now
@@ -249,7 +333,7 @@ const ProductDetail = () => {
                    <button 
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`px-5 py-2 rounded-full border-2 text-sm font-bold transition-all ${size === selectedSize ? 'border-[#6D28D9] text-[#6D28D9] bg-[#6D28D9]/5' : 'border-slate-100 text-slate-600 hover:border-slate-200'}`}
+                    className={`px-5 py-2 rounded-full border-2 text-sm font-bold transition-all cursor-pointer ${size === selectedSize ? 'border-[#6D28D9] text-[#6D28D9] bg-[#6D28D9]/5' : 'border-slate-100 text-slate-600 hover:border-slate-200'}`}
                    >
                      {size}
                    </button>
@@ -264,7 +348,12 @@ const ProductDetail = () => {
           <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Product Highlights</h3>
-              <button className="text-[#6D28D9] text-[10px] font-bold uppercase tracking-widest">Copy</button>
+              <button 
+                onClick={handleCopy}
+                className="text-[#6D28D9] text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:underline"
+              >
+                Copy
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-y-4 gap-x-8">
               <div>
@@ -288,19 +377,66 @@ const ProductDetail = () => {
 
           {/* Sold By Section */}
           <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-             <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide">Sold By</h3>
-             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
-                      <Truck size={20} />
-                   </div>
-                   <div>
-                      <p className="text-sm font-bold text-slate-900">{product.vendor_name || 'Official Store'}</p>
-                      <p className="text-[10px] text-emerald-500 font-bold uppercase">Certified Partner</p>
-                   </div>
-                </div>
-                <button className="px-4 py-2 border border-[#6D28D9] text-[#6D28D9] rounded-lg text-xs font-bold hover:bg-[#6D28D9]/5 transition-all">View Shop</button>
-             </div>
+             <h4 className="font-bold text-slate-800 mb-4 uppercase text-xs tracking-wider">Sold By</h4>
+             
+             {vendor ? (
+               <div className="flex flex-col gap-6">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                       <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm">
+                          {vendor.avatar ? (
+                            <img src={vendor.avatar} alt={vendor.shop_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <ShieldCheck size={28} className="text-primary-600" />
+                          )}
+                       </div>
+                       <div>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-bold text-slate-800">{vendor.shop_name}</p>
+                            <ShieldCheck size={14} className="text-emerald-500" />
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Verified Seller</p>
+                       </div>
+                    </div>
+                    <Link 
+                      to={`/vendor-shop/${vendor.id}`}
+                      className="px-5 py-2.5 border border-primary-600 text-primary-600 rounded-lg text-xs font-bold hover:bg-primary-50 transition-all cursor-pointer shadow-sm shadow-primary-500/5"
+                    >
+                      View Shop
+                    </Link>
+                 </div>
+
+                 <div className="flex items-center justify-around bg-slate-50/50 py-4 rounded-xl border border-slate-50">
+                    <div className="text-center">
+                      <div className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[11px] font-bold flex items-center gap-0.5 mx-auto mb-1 w-fit">
+                        {vendor.rating} <Star size={10} fill="currentColor" />
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase">{vendor.total_ratings.toLocaleString()} Ratings</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div className="text-center">
+                      <p className="text-sm font-black text-slate-800 leading-none mb-1">{vendor.followers_count.toLocaleString()}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase">Followers</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div className="text-center">
+                      <p className="text-sm font-black text-slate-800 leading-none mb-1">{vendor.products_count.toLocaleString()}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase">Products</p>
+                    </div>
+                 </div>
+               </div>
+             ) : (
+               <div className="flex items-center justify-between animate-pulse">
+                  <div className="flex items-center gap-3">
+                     <div className="w-12 h-12 bg-slate-100 rounded-full" />
+                     <div className="space-y-2">
+                        <div className="h-3 w-24 bg-slate-100 rounded" />
+                        <div className="h-2 w-16 bg-slate-100 rounded" />
+                     </div>
+                  </div>
+                  <div className="h-8 w-20 bg-slate-100 rounded-lg" />
+               </div>
+             )}
           </div>
  
           {/* Trust Badges */}

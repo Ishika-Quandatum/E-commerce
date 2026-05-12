@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Filter, SlidersHorizontal, ChevronDown, LayoutGrid, List, Search, ChevronUp } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Filter, SlidersHorizontal, ChevronDown, LayoutGrid, List, Search, ChevronUp, ChevronRight } from 'lucide-react';
 import { productService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
 
@@ -90,6 +90,22 @@ const ProductList = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 bg-white p-3 rounded-lg border border-slate-100">
+        <Link to="/" className="hover:text-primary-600 transition-colors cursor-pointer">Home</Link> <ChevronRight size={12} />
+        {filters.category.length > 0 ? (
+          <>
+            <Link to="/products" className="hover:text-primary-600 transition-colors cursor-pointer" onClick={() => setFilters({...filters, category: []})}>Products</Link>
+            <ChevronRight size={12} />
+            <span className="font-bold text-slate-800">
+              {categories.filter(c => filters.category.includes(c.id.toString()) || filters.category.includes(c.slug)).map(c => c.name).join(', ')}
+            </span>
+          </>
+        ) : (
+          <span className="font-bold text-slate-800">Products</span>
+        )}
+      </div>
+
       {/* Top Heading */}
       <h1 className="text-3xl text-slate-800 font-semibold mb-6">Products For You</h1>
 
@@ -99,7 +115,7 @@ const ProductList = () => {
           
           {/* Top Sort Bar - Mobile/Desktop */}
           <div className="bg-white rounded-lg border border-slate-200 p-3 shadow-sm relative group z-20">
-            <button className="flex items-center justify-between w-full text-sm text-slate-700 font-medium">
+            <button className="flex items-center justify-between w-full text-sm text-slate-700 font-medium cursor-pointer">
               <span>Sort by : <span className="font-bold text-slate-900">{sortOptions.find(o => o.value === filters.sort)?.label}</span></span>
               <ChevronDown size={18} className="text-slate-500" />
             </button>
@@ -109,7 +125,7 @@ const ProductList = () => {
                   <button 
                     key={option.value}
                     onClick={() => setFilters({ ...filters, sort: option.value })} 
-                    className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filters.sort === option.value ? 'bg-slate-50 text-primary-600 font-bold' : 'text-slate-700 hover:bg-slate-100'}`}
+                    className={`block w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer ${filters.sort === option.value ? 'bg-slate-50 text-primary-600 font-bold' : 'text-slate-700 hover:bg-slate-100'}`}
                   >
                     {option.label}
                   </button>

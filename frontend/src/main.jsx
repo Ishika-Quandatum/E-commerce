@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')).render(
     <AuthProvider>
       <CartProvider>
         <PlatformProvider>
-          <Toaster position="top-right" reverseOrder={false} />
+          <Toaster position="bottom-center" reverseOrder={false} />
           <App />
         </PlatformProvider>
       </CartProvider>
