@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { vendorService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Store, ShoppingBag, Truck, CheckCircle, MapPin, Phone, Map, Loader2, Navigation } from 'lucide-react';
+import { Store, ShoppingBag, Truck, CheckCircle, MapPin, Phone, Map, Loader2, Navigation, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const VendorSignup = () => {
@@ -24,6 +24,7 @@ const VendorSignup = () => {
   const [loading, setLoading] = useState(false);
   const [geocodingLoading, setGeocodingLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   // If user is already an approved vendor, they shouldn't be here
@@ -229,14 +230,24 @@ const VendorSignup = () => {
 
                       <div>
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Account Password</label>
-                        <input 
-                          type="password"
-                          required
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
-                          placeholder="Min 6 characters"
-                          value={formData.password}
-                          onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        />
+                        <div className="relative">
+                          <input 
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            className="w-full px-4 py-3 pr-11 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                            placeholder="Min 6 characters"
+                            value={formData.password}
+                            onChange={(e) => setFormData({...formData, password: e.target.value})}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          >
+                            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
