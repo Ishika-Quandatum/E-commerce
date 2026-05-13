@@ -75,7 +75,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'user', 'username', 'total_price', 'shipping_charge', 'tax_amount', 'status', 'display_status',
-            'payment_method', 'address', 'phone',
+            'payment_method', 'address', 'phone', 'alternative_phone',
             'created_at', 'updated_at', 'items',
             'shipment_id', 'shipment_status'
         ]
@@ -123,4 +123,4 @@ class CreateOrderSerializer(serializers.ModelSerializer):
     """Used when placing a new order."""
     class Meta:
         model = Order
-        fields = ['total_price', 'payment_method', 'address', 'phone']
+        fields = ['total_price', 'payment_method', 'address', 'phone', 'alternative_phone']

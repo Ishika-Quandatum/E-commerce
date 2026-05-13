@@ -288,9 +288,17 @@ const OrderDetails = () => {
                       <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                           <Phone size={18} />
                       </div>
-                      <div>
+                      <div className="flex-1">
                           <p className="text-[8px] font-black text-slate-400 uppercase">Verified Contact</p>
-                          <p className="text-xs font-bold text-slate-900">{order.phone || "+91-XXXXXXXXXX"}</p>
+                          <div className="flex flex-col">
+                              <p className="text-xs font-bold text-slate-900">{order.phone || "+91-XXXXXXXXXX"}</p>
+                              {order.alternative_phone && (
+                                  <p className="text-[10px] font-bold text-brand-purple mt-1 flex items-center gap-1">
+                                      <span className="w-1 h-1 bg-brand-purple rounded-full"></span>
+                                      Alt: {order.alternative_phone}
+                                  </p>
+                              )}
+                          </div>
                       </div>
                   </div>
               </div>

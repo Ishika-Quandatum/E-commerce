@@ -91,14 +91,29 @@ class ShipmentViewSet(viewsets.ModelViewSet):
     def update_dispatch_status(self, request, pk=None):
         shipment = self.get_object()
         new_status = request.data.get('status')
-        valid_statuses = ['Pending', 'Packed', 'Dispatch Queue', 'Assigned', 'Picked Up', 'Dispatched', 'In Transit', 'Reached', 'Delivered']
+        valid_statuses = [
+            'Dispatch Queue', 'Assigned', 'Start Pickup', 'Picked Up', 
+            'Start Delivery', 'In Transit', 'Reached', 'Delivered'
+        ]
         
         if new_status in valid_statuses:
             shipment.status = new_status
+            
+            # Record Timestamps
+            now = timezone.now()
+            if new_status == 'Assigned' and not shipment.assigned_at:
+                shipment.assigned_at = now
+            elif new_status == 'Picked Up' and not shipment.picked_up_at:
+                shipment.picked_up_at = now
+            elif new_status == 'Start Delivery' and not shipment.start_delivery_at:
+                shipment.start_delivery_at = now
+            elif new_status == 'Delivered' and not shipment.delivered_at:
+                shipment.delivered_at = now
+                
             shipment.save()
 
             # Sync Order Status
-            if new_status in ['Picked Up', 'In Transit', 'Dispatched']:
+            if new_status in ['Picked Up', 'Start Delivery', 'In Transit']:
                 shipment.order.status = 'Shipped'
                 shipment.order.save()
             elif new_status == 'Delivered':
@@ -107,7 +122,7 @@ class ShipmentViewSet(viewsets.ModelViewSet):
 
             TrackingHistory.objects.create(shipment=shipment, status=new_status, description=f'Shipment status updated to {new_status}')
             return Response({'status': 'updated', 'new_status': shipment.status})
-        return Response({'error': 'Invalid status transition'}, status=400)
+        return Response({'error': f'Invalid status transition: {new_status}'}, status=400)
 
     @action(detail=False, methods=['get'])
     def dashboard_stats(self, request):

@@ -26,7 +26,9 @@ class Shipment(models.Model):
     STATUS_CHOICES = [
         ('Dispatch Queue', 'Dispatch Queue'),
         ('Assigned', 'Assigned'),
-        ('Dispatched', 'Dispatched'),
+        ('Start Pickup', 'Start Pickup'),
+        ('Picked Up', 'Picked Up'),
+        ('Start Delivery', 'Start Delivery'),
         ('In Transit', 'In Transit'),
         ('Delivered', 'Delivered'),
         ('Failed', 'Failed'),
@@ -42,6 +44,13 @@ class Shipment(models.Model):
     parcel_weight = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     label_printed = models.BooleanField(default=False)
     estimated_delivery_time = models.DateTimeField(null=True, blank=True)
+    
+    # Tracking Timestamps
+    assigned_at = models.DateTimeField(null=True, blank=True)
+    picked_up_at = models.DateTimeField(null=True, blank=True)
+    start_delivery_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+
     failed_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

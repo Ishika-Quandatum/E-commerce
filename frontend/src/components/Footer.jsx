@@ -71,9 +71,7 @@ const Footer = () => {
               <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Company</h3>
               <ul className="space-y-4 text-sm">
                 <li><Link to="/about-us" className="text-white/60 hover:text-brand-purple transition-all">About Us</Link></li>
-                <li><Link to="/careers" className="text-white/60 hover:text-brand-purple transition-all">Careers</Link></li>
                 <li><Link to="/become-seller" className="text-white/60 hover:text-brand-purple transition-all">Sell with Us</Link></li>
-                <li><Link to="/blog" className="text-white/60 hover:text-brand-purple transition-all">Blog</Link></li>
               </ul>
             </div>
 

@@ -1,61 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { trackingService } from '../../../services/api';
 import { 
   Package, MapPin, Navigation, Clock, Phone, MessageSquare, 
   ChevronRight, AlertTriangle, HelpCircle, ShieldCheck, 
-  CheckCircle2, Truck, Timer, Info, MoreHorizontal
+  CheckCircle2, Truck, Timer, Info, Store, User, Map as MapIcon,
+  ArrowRight
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-
-// Leaflet Icon Fix
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-let RiderIcon = L.divIcon({
-    html: `<div class="bg-brand-purple p-2 rounded-full border-2 border-white shadow-lg text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-           </div>`,
-    className: '',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18]
-});
-
-let CustomerIcon = L.divIcon({
-    html: `<div class="bg-emerald-500 p-2 rounded-full border-2 border-white shadow-lg text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-           </div>`,
-    className: '',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
-
-// Map Auto-fit Component
-const MapAutoCenter = ({ riderPos, customerPos }) => {
-    const map = useMap();
-    useEffect(() => {
-        if (riderPos && customerPos) {
-            const bounds = L.latLngBounds([riderPos, customerPos]);
-            map.fitBounds(bounds, { padding: [50, 50] });
-        } else if (customerPos) {
-            map.setView(customerPos, 15);
-        }
-    }, [riderPos, customerPos, map]);
-    return null;
-};
 
 const OrderTracking = () => {
     const { id } = useParams(); // shipmentId
@@ -63,6 +16,8 @@ const OrderTracking = () => {
     const [trackingData, setTrackingData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const mapRef = useRef(null);
+    const [googleLoaded, setGoogleLoaded] = useState(false);
 
     const fetchTracking = async () => {
         try {
@@ -81,6 +36,108 @@ const OrderTracking = () => {
         const interval = setInterval(fetchTracking, 10000); // Poll every 10s
         return () => clearInterval(interval);
     }, [id]);
+
+    // Google Maps Script Loader
+    useEffect(() => {
+        if (window.google) {
+            setGoogleLoaded(true);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setGoogleLoaded(true);
+        document.head.appendChild(script);
+    }, []);
+
+    // Map Initialization and Update
+    useEffect(() => {
+        if (googleLoaded && trackingData && mapRef.current) {
+            const riderPos = trackingData.current_location ? {
+                lat: parseFloat(trackingData.current_location.latitude),
+                lng: parseFloat(trackingData.current_location.longitude)
+            } : null;
+            
+            const customerPos = {
+                lat: parseFloat(trackingData.customer_info?.lat || 12.9716),
+                lng: parseFloat(trackingData.customer_info?.lng || 77.5946)
+            };
+
+            const vendorPos = trackingData.vendor_info ? {
+                lat: parseFloat(trackingData.vendor_info.lat),
+                lng: parseFloat(trackingData.vendor_info.lng)
+            } : null;
+
+            const map = new window.google.maps.Map(mapRef.current, {
+                center: customerPos,
+                zoom: 14,
+                styles: [
+                    { "featureType": "all", "elementType": "labels.text.fill", "stylers": [{ "color": "#7c93a3" }, { "lightness": "-10" }] },
+                    { "featureType": "administrative.country", "elementType": "geometry", "stylers": [{ "visibility": "on" }] },
+                    { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] },
+                    { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#e9e9e9" }] }
+                ],
+                disableDefaultUI: true,
+                zoomControl: true
+            });
+
+            // Markers
+            new window.google.maps.Marker({
+                position: customerPos,
+                map,
+                title: "Your Location",
+                icon: {
+                    path: window.google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: "#10b981",
+                    fillOpacity: 1,
+                    strokeWeight: 2,
+                    strokeColor: "#ffffff"
+                }
+            });
+
+            if (vendorPos) {
+                new window.google.maps.Marker({
+                    position: vendorPos,
+                    map,
+                    title: "Vendor Location",
+                    icon: {
+                        path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        scale: 6,
+                        fillColor: "#3b82f6",
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "#ffffff"
+                    }
+                });
+            }
+
+            if (riderPos) {
+                new window.google.maps.Marker({
+                    position: riderPos,
+                    map,
+                    title: "Rider",
+                    icon: {
+                        path: "M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z",
+                        scale: 1.5,
+                        fillColor: "#6d28d9",
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "#ffffff",
+                        rotation: 0 // Could animate rotation based on movement
+                    }
+                });
+
+                // Auto-fit bounds
+                const bounds = new window.google.maps.LatLngBounds();
+                bounds.extend(customerPos);
+                bounds.extend(riderPos);
+                if (vendorPos) bounds.extend(vendorPos);
+                map.fitBounds(bounds, 50);
+            }
+        }
+    }, [googleLoaded, trackingData]);
 
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -104,17 +161,12 @@ const OrderTracking = () => {
         </div>
     );
 
-    const riderPos = trackingData.current_location ? [parseFloat(trackingData.current_location.latitude), parseFloat(trackingData.current_location.longitude)] : null;
-    const customerPos = [parseFloat(trackingData.customer_location.lat), parseFloat(trackingData.customer_location.lng)];
-    const routePoints = trackingData.location_history?.map(p => [parseFloat(p.latitude), parseFloat(p.longitude)]) || [];
-
     const stages = [
-        { label: 'Order Received', statuses: ['Pending', 'Dispatch Queue'], icon: <Package size={18} /> },
-        { label: 'Processing', statuses: ['Assigned'], icon: <ChevronRight size={18} /> },
-        { label: 'Packed', statuses: ['Packed'], icon: <Package size={18} /> },
-        { label: 'Shipped', statuses: ['Dispatched'], icon: <Truck size={18} /> },
-        { label: 'Out for Delivery', statuses: ['In Transit', 'Picked Up', 'Reached'], icon: <Navigation size={18} /> },
-        { label: 'Delivered', statuses: ['Delivered'], icon: <CheckCircle2 size={18} /> }
+        { label: 'Confirmed', statuses: ['Dispatch Queue', 'Assigned'], icon: <Package size={18} /> },
+        { label: 'Pickup', statuses: ['Start Pickup'], icon: <Store size={18} /> },
+        { label: 'Picked Up', statuses: ['Picked Up'], icon: <Truck size={18} /> },
+        { label: 'Delivering', statuses: ['Start Delivery', 'In Transit', 'Reached'], icon: <Navigation size={18} /> },
+        { label: 'Arrived', statuses: ['Delivered'], icon: <CheckCircle2 size={18} /> }
     ];
 
     const currentStatus = trackingData.shipment_status;
@@ -133,21 +185,19 @@ const OrderTracking = () => {
                                 <span>Secured Tracking</span>
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Order #{trackingData.tracking_number}</h1>
-                            <p className="text-brand-purple-light/40 mt-1 font-medium">Tracking is active for your package delivery</p>
+                            <p className="text-brand-purple-light/40 mt-1 font-medium">Live progress updates for your delivery</p>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-6 backdrop-blur-md">
                             <div className="grid grid-cols-2 gap-8">
                                 <div>
-                                    <p className="text-brand-purple-light/40 text-[10px] font-black uppercase tracking-widest mb-1">Expected By</p>
+                                    <p className="text-brand-purple-light/40 text-[10px] font-black uppercase tracking-widest mb-1">Estimated Arrival</p>
                                     <p className="text-lg font-black">
-                                        {trackingData.eta && !isNaN(new Date(trackingData.eta).getTime()) 
-                                            ? new Date(trackingData.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                                            : 'Today'}
+                                        {trackingData.eta ? new Date(trackingData.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Calculating...'}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-brand-purple-light/40 text-[10px] font-black uppercase tracking-widest mb-1">Payment</p>
-                                    <p className="text-lg font-black uppercase tracking-tighter">{trackingData.payment_method}</p>
+                                    <p className="text-brand-purple-light/40 text-[10px] font-black uppercase tracking-widest mb-1">Status</p>
+                                    <p className="text-lg font-black uppercase tracking-tighter text-emerald-400">{trackingData.shipment_status}</p>
                                 </div>
                             </div>
                         </div>
@@ -161,18 +211,18 @@ const OrderTracking = () => {
                     {/* Left Column: Timeline and Map */}
                     <div className="lg:col-span-8 space-y-8">
                         
-                        {/* 2. Delivery Timeline */}
+                        {/* Delivery Progress Timeline */}
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
                             <h3 className="text-lg font-black text-slate-900 mb-10 flex items-center gap-2">
                                 <Clock className="text-brand-purple" />
-                                Delivery Timeline
+                                Delivery Progress
                             </h3>
                             
-                            <div className="relative mt-8 mb-4">
-                                {/* Track Line Background (Dashed) */}
-                                <div className="absolute top-6 left-12 right-12 h-[2px] border-t-2 border-dashed border-slate-300 -translate-y-1/2 z-0"></div>
+                            <div className="relative mt-8 mb-4 px-4">
+                                {/* Track Line Background */}
+                                <div className="absolute top-6 left-12 right-12 h-[2px] bg-slate-100 -translate-y-1/2 z-0"></div>
                                 
-                                {/* Track Line Filled (Solid Purple) */}
+                                {/* Track Line Filled */}
                                 <div className="absolute top-6 left-12 right-12 h-[2px] -translate-y-1/2 z-0">
                                     <motion.div 
                                         initial={{ width: 0 }}
@@ -189,37 +239,24 @@ const OrderTracking = () => {
                                         const isFuture = idx > displayStatusIndex;
                                         
                                         return (
-                                            <div key={idx} className="flex flex-col items-center w-24 relative">
-                                                <div className="relative flex items-center justify-center w-12 h-12">
-                                                    {isCurrent && (
-                                                        <div className="absolute inset-[-12px] rounded-full bg-brand-purple/10 scale-100"></div>
+                                            <div key={idx} className="flex flex-col items-center w-12 sm:w-24">
+                                                <motion.div 
+                                                    whileHover={{ scale: 1.1 }}
+                                                    className={clsx(
+                                                        "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 relative z-10 bg-white",
+                                                        isPast && "bg-brand-purple text-white shadow-lg border border-brand-purple",
+                                                        isCurrent && "border-[3px] border-brand-purple text-brand-purple shadow-xl bg-white",
+                                                        isFuture && "border-2 border-slate-100 text-slate-300 bg-white"
                                                     )}
-                                                    {isCurrent && (
-                                                        <div className="absolute inset-0 rounded-full bg-brand-purple/20 animate-ping"></div>
-                                                    )}
-                                                    <motion.div 
-                                                        whileHover={{ scale: 1.1 }}
-                                                        className={clsx(
-                                                            "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 relative z-10 bg-white",
-                                                            isPast && "bg-brand-purple text-white shadow-lg shadow-brand-purple/30 border border-brand-purple",
-                                                            isCurrent && "border-[3px] border-brand-purple text-brand-purple shadow-lg shadow-brand-purple/20",
-                                                            isFuture && "border-2 border-slate-200 text-slate-400"
-                                                        )}
-                                                    >
-                                                        {isPast ? <CheckCircle2 size={24} strokeWidth={2.5} /> : React.cloneElement(stage.icon, { size: 20 })}
-                                                    </motion.div>
-                                                </div>
-                                                <div className="text-center mt-5 flex flex-col items-center">
+                                                >
+                                                    {isPast ? <CheckCircle2 size={24} /> : stage.icon}
+                                                </motion.div>
+                                                <div className="text-center mt-4 hidden sm:block">
                                                     <p className={clsx(
-                                                        "text-[10px] sm:text-xs font-black uppercase tracking-tight transition-colors leading-tight mb-1",
-                                                        isPast || isCurrent ? "text-brand-purple" : "text-slate-500"
+                                                        "text-[10px] font-black uppercase tracking-tight transition-colors",
+                                                        isPast || isCurrent ? "text-brand-purple" : "text-slate-400"
                                                     )}>
                                                         {stage.label}
-                                                    </p>
-                                                    <p className="text-[10px] font-bold text-slate-400">
-                                                        {isPast || isCurrent 
-                                                            ? `${new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short'})}, ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}` 
-                                                            : '—'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -229,79 +266,45 @@ const OrderTracking = () => {
                             </div>
                         </div>
 
-                        {/* 3. Live Map Section */}
-                        <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 h-[500px] relative z-0 group">
-                            <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-2">
+                        {/* Live Google Map */}
+                        <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 h-[550px] relative z-0">
+                            <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
                                 <div className="bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
-                                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Live GPS Enabled</span>
+                                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Live Rider Tracking</span>
                                 </div>
                             </div>
-
-                            <MapContainer center={customerPos} zoom={13} className="h-full w-full" scrollWheelZoom={false}>
-                                <TileLayer
-                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                />
-                                <MapAutoCenter riderPos={riderPos} customerPos={customerPos} />
-                                
-                                {customerPos && (
-                                    <Marker position={customerPos} icon={CustomerIcon}>
-                                        <Popup>
-                                            <div className="font-bold">Your Delivery Location</div>
-                                            <div className="text-xs text-slate-500">{trackingData.customer_location.address}</div>
-                                        </Popup>
-                                    </Marker>
-                                )}
-
-                                {riderPos && (
-                                    <>
-                                        <Marker position={riderPos} icon={RiderIcon}>
-                                            <Popup>
-                                                <div className="font-bold">Rider: {trackingData.rider_info.name}</div>
-                                                <div className="text-xs text-brand-purple font-bold">In Transit</div>
-                                            </Popup>
-                                        </Marker>
-                                        {routePoints.length > 0 && (
-                                            <Polyline 
-                                                positions={[riderPos, ...routePoints, customerPos]} 
-                                                pathOptions={{ color: '#6D28D9', weight: 4, dashArray: '8, 12', lineCap: 'round' }} 
-                                            />
-                                        )}
-                                    </>
-                                )}
-                            </MapContainer>
+                            <div ref={mapRef} className="w-full h-full" />
                         </div>
                     </div>
 
-                    {/* Right Column: Cards */}
+                    {/* Right Column: Information Cards */}
                     <div className="lg:col-span-4 space-y-8">
                         
-                        {/* 4. Rider Info Card */}
+                        {/* Rider Card */}
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 group">
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-lg font-black text-slate-900">Rider Partner</h3>
-                                <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-emerald-600 animate-pulse"></span>
-                                    On the way
+                                <h3 className="text-lg font-black text-slate-900">Delivery Executive</h3>
+                                <div className="bg-brand-purple/10 text-brand-purple px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                    {trackingData.shipment_status === 'Delivered' ? 'Completed' : 'On the way'}
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-5 mb-8">
                                 <div className="w-16 h-16 rounded-[1.5rem] bg-brand-purple/10 flex items-center justify-center text-brand-purple">
-                                    <Truck size={32} />
+                                    <User size={32} />
                                 </div>
                                 <div>
-                                    <h4 className="text-xl font-black text-slate-900">{trackingData.rider_info.name}</h4>
+                                    <h4 className="text-xl font-black text-slate-900">{trackingData.rider_info?.name || "Rider Partner"}</h4>
                                     <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">
-                                        {trackingData.rider_info.vehicle || 'Rider Partner'}
+                                        {trackingData.rider_info?.vehicle || 'Verified Rider'}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <a 
-                                    href={`tel:${trackingData.rider_info.phone}`}
+                                    href={`tel:${trackingData.rider_info?.phone}`}
                                     className="flex items-center justify-center gap-2 bg-slate-50 hover:bg-brand-purple hover:text-white text-slate-900 h-14 rounded-2xl font-bold transition-all border border-slate-100"
                                 >
                                     <Phone size={18} />
@@ -314,82 +317,64 @@ const OrderTracking = () => {
                             </div>
                         </div>
 
-                        {/* 5. Delivery Stats */}
-                        <div className="bg-brand-purple rounded-[2.5rem] p-8 shadow-2xl shadow-brand-purple/30 text-white">
+                        {/* Location Summary */}
+                        <div className="bg-brand-navy rounded-[2.5rem] p-8 shadow-2xl shadow-brand-navy/30 text-white">
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-lg font-black">Delivery Stats</h3>
-                                <Info size={18} className="text-white/40" />
+                                <h3 className="text-lg font-black">Route Summary</h3>
+                                <MapIcon size={18} className="text-white/40" />
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                                            <Navigation size={18} />
-                                        </div>
-                                        <span className="font-bold text-brand-purple-light/60">Distance</span>
+                            <div className="space-y-6 relative">
+                                <div className="absolute left-5 top-8 bottom-8 w-px bg-white/10 border-l border-dashed border-white/20"></div>
+                                
+                                <div className="flex items-start gap-4 relative z-10">
+                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                                        <Store size={18} className="text-brand-purple-light" />
                                     </div>
-                                    <span className="text-xl font-black tracking-tight">2.4 km</span>
+                                    <div>
+                                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Pickup From</p>
+                                        <p className="text-sm font-bold text-white leading-tight">{trackingData.vendor_info?.shop_name || "Vendor Store"}</p>
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                                            <Timer size={18} />
-                                        </div>
-                                        <span className="font-bold text-brand-purple-light/60">Arrival</span>
+                                <div className="flex items-start gap-4 relative z-10">
+                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                                        <MapPin size={18} className="text-emerald-400" />
                                     </div>
-                                    <span className="text-xl font-black tracking-tight">12 Mins</span>
+                                    <div>
+                                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Deliver To</p>
+                                        <p className="text-sm font-bold text-white leading-tight">{trackingData.customer_info?.address || "Your Address"}</p>
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div className="pt-6 border-t border-white/10">
-                                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-brand-purple-light/40">
-                                        <span>Last GPS Update</span>
-                                        <span>{trackingData.current_location ? new Date(trackingData.current_location.timestamp).toLocaleTimeString() : 'Now'}</span>
-                                    </div>
+                            <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Distance</p>
+                                    <p className="text-lg font-black text-white">{trackingData.distance || '0.0'} km</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">ETA</p>
+                                    <p className="text-lg font-black text-white">~15 Mins</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 6. Order Summary */}
+                        {/* Order Items */}
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-                            <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center justify-between">
-                                Order Items
-                                <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-1 rounded-lg">{trackingData.order_items?.length} Items</span>
-                            </h3>
-                            
-                            <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                            <h3 className="text-lg font-black text-slate-900 mb-6">Order Items</h3>
+                            <div className="space-y-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                                 {trackingData.order_items?.map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-4 group">
-                                        <div className="w-14 h-14 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100">
-                                            <img 
-                                                src={item.image ? `http://127.0.0.1:8000${item.image}` : 'https://placehold.co/100'} 
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                                                alt={item.name} 
-                                            />
+                                    <div key={idx} className="flex items-center justify-between group">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-slate-400 text-xs">
+                                                {item.qty}x
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-700 truncate max-w-[150px]">{item.name}</span>
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-sm font-bold text-slate-900 truncate">{item.name}</h4>
-                                            <p className="text-xs font-bold text-slate-400">Qty: {item.qty} × ${item.price}</p>
-                                        </div>
+                                        <span className="text-xs font-black text-slate-400">₹{item.price}</span>
                                     </div>
                                 ))}
-                            </div>
-                        </div>
-
-                        {/* 7. Help Section */}
-                        <div className="bg-amber-50 rounded-[2.5rem] p-8 border border-amber-100">
-                            <div className="flex items-center gap-3 mb-6">
-                                <HelpCircle className="text-amber-600" />
-                                <h3 className="text-lg font-black text-amber-900">Need Help?</h3>
-                            </div>
-                            <div className="space-y-3">
-                                <button className="w-full bg-white hover:bg-amber-100 text-amber-800 h-12 rounded-2xl font-bold text-sm transition-all border border-amber-200">
-                                    Report Delivery Issue
-                                </button>
-                                <button className="w-full bg-amber-600 text-white h-12 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-amber-600/20">
-                                    Contact Support
-                                </button>
                             </div>
                         </div>
 

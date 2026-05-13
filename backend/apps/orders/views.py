@@ -91,6 +91,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                     payment_method=serializer.validated_data['payment_method'],
                     address=serializer.validated_data['address'],
                     phone=serializer.validated_data['phone'],
+                    alternative_phone=serializer.validated_data.get('alternative_phone'),
                     status='Pending'
                 )
     

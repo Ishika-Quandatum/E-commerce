@@ -240,6 +240,9 @@ class ShipmentSerializer(serializers.ModelSerializer):
     estimated_earning = serializers.SerializerMethodField()
     distance = serializers.SerializerMethodField()
     
+    vendor_info = serializers.SerializerMethodField()
+    customer_info = serializers.SerializerMethodField()
+    
     class Meta:
         model = Shipment
         fields = [
@@ -247,9 +250,32 @@ class ShipmentSerializer(serializers.ModelSerializer):
             'parcel_weight', 'label_printed', 'estimated_delivery_time', 
             'failed_reason', 'created_at', 'updated_at', 'customer_name', 
             'product_summary', 'address', 'phone', 'payment_method', 'order_id',
-            'estimated_earning', 'distance', 'history'
+            'estimated_earning', 'distance', 'history', 'vendor_info', 'customer_info',
+            'picked_up_at', 'start_delivery_at', 'delivered_at'
         ]
         read_only_fields = ['tracking_number', 'created_at', 'updated_at', 'delivery_otp']
+
+    def get_vendor_info(self, obj):
+        vendor = obj.order.vendor
+        if not vendor:
+            return None
+        return {
+            'shop_name': vendor.shop_name,
+            'address': vendor.shop_address,
+            'phone': vendor.pickup_contact or vendor.user.phone,
+            'lat': vendor.location_lat,
+            'lng': vendor.location_lng
+        }
+
+    def get_customer_info(self, obj):
+        order = obj.order
+        return {
+            'name': f"{order.user.first_name} {order.user.last_name}" if order.user.first_name else order.user.username,
+            'address': order.address,
+            'phone': order.phone,
+            'lat': order.latitude,
+            'lng': order.longitude
+        }
 
     def get_estimated_earning(self, obj):
         try:

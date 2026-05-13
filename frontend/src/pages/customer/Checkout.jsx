@@ -20,6 +20,7 @@ const Checkout = () => {
   const [newAddress, setNewAddress] = useState({
     full_name: '',
     phone: '',
+    alternative_phone: '',
     street_address: '',
     city: '',
     state: '',
@@ -29,6 +30,11 @@ const Checkout = () => {
 
   const [formData, setFormData] = useState({
     payment_method: 'upi',
+    upiId: '',
+    cardHolder: '',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: ''
   });
 
   useEffect(() => {
@@ -80,10 +86,11 @@ const Checkout = () => {
     }
     setLoading(true);
     try {
-      const addressString = `${selectedAddress.full_name}, ${selectedAddress.street_address}, ${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pincode}. Phone: ${selectedAddress.phone}`;
+      const addressString = `${selectedAddress.full_name}, ${selectedAddress.street_address}, ${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pincode}. Phone: ${selectedAddress.phone}${selectedAddress.alternative_phone ? ` (Alt: ${selectedAddress.alternative_phone})` : ''}`;
       await orderService.placeOrder({
         address: addressString,
         phone: selectedAddress.phone,
+        alternative_phone: selectedAddress.alternative_phone,
         payment_method: formData.payment_method,
         total_price: total
       });
@@ -194,6 +201,12 @@ const Checkout = () => {
                     <div className="flex items-center gap-2 text-slate-400 text-sm font-bold">
                       <CheckCircle size={14} className="text-emerald-500" />
                       <span>{selectedAddress.phone}</span>
+                      {selectedAddress.alternative_phone && (
+                        <>
+                          <span className="mx-1">•</span>
+                          <span>{selectedAddress.alternative_phone}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -222,24 +235,162 @@ const Checkout = () => {
                 animate={{ x: 0, opacity: 1 }}
               >
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-brand-purple/10 text-brand-purple rounded-xl flex items-center justify-center">
                     <CreditCard size={20} />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Payment Selection</h3>
+                  <h3 className="text-2xl font-bold text-slate-800">Select Payment Method</h3>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-10">
+
+                <div className="space-y-4 mb-10">
                   {[
-                    { id: 'upi', label: 'UPI / Card' },
-                    { id: 'cod', label: 'Cash on Delivery' }
+                    { 
+                      id: 'upi', 
+                      label: 'UPI Payment', 
+                      description: 'Pay using Google Pay, PhonePe, or Paytm',
+                      icon: <div className="flex -space-x-1">
+                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[8px] font-black text-blue-600 border border-white">G</div>
+                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[8px] font-black text-purple-600 border border-white">P</div>
+                        <div className="w-6 h-6 rounded-full bg-sky-100 flex items-center justify-center text-[8px] font-black text-sky-600 border border-white">Py</div>
+                      </div>
+                    },
+                    { 
+                      id: 'card', 
+                      label: 'Credit / Debit Card', 
+                      description: 'All major cards supported',
+                      icon: <CreditCard size={18} className="text-blue-500" />
+                    },
+                    { 
+                      id: 'cod', 
+                      label: 'Cash on Delivery', 
+                      description: 'Pay in cash or QR during delivery',
+                      icon: <Truck size={18} className="text-emerald-500" />
+                    }
                   ].map((method) => (
-                    <button
+                    <div 
                       key={method.id}
-                      type="button"
                       onClick={() => setFormData({ ...formData, payment_method: method.id })}
-                      className={`flex items-center justify-center h-16 rounded-2xl border-2 font-bold transition-all ${formData.payment_method === method.id ? 'border-brand-purple bg-brand-purple/5 text-brand-purple' : 'border-slate-100 hover:border-slate-200 text-slate-500'}`}
+                      className={`group cursor-pointer p-5 rounded-2xl border-2 transition-all duration-300 ${
+                        formData.payment_method === method.id 
+                          ? 'border-brand-purple bg-brand-purple/5 shadow-md shadow-brand-purple/5' 
+                          : 'border-slate-100 hover:border-slate-200 bg-white'
+                      }`}
                     >
-                      {method.label}
-                    </button>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            formData.payment_method === method.id ? 'border-brand-purple' : 'border-slate-200'
+                          }`}>
+                            {formData.payment_method === method.id && (
+                              <div className="w-3 h-3 rounded-full bg-brand-purple animate-in zoom-in duration-300" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className={`font-bold transition-colors ${formData.payment_method === method.id ? 'text-brand-purple' : 'text-slate-800'}`}>
+                              {method.label}
+                            </h4>
+                            <p className="text-xs text-slate-500">{method.description}</p>
+                          </div>
+                        </div>
+                        {method.icon}
+                      </div>
+
+                      {/* Conditional Form Rendering inside the selection card */}
+                      <AnimatePresence mode="wait">
+                        {formData.payment_method === method.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                            animate={{ height: 'auto', opacity: 1, marginTop: 20 }}
+                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-4 border-t border-brand-purple/10">
+                              {method.id === 'upi' && (
+                                <div className="space-y-4">
+                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Enter UPI ID (VPA)</label>
+                                  <div className="relative">
+                                    <input 
+                                      type="text"
+                                      placeholder="username@bank"
+                                      className="w-full h-14 pl-4 pr-12 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-purple font-medium"
+                                      value={formData.upiId}
+                                      onChange={(e) => setFormData({...formData, upiId: e.target.value})}
+                                    />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                                      <CheckCircle size={20} className={formData.upiId.includes('@') ? 'text-emerald-500' : ''} />
+                                    </div>
+                                  </div>
+                                  <p className="text-[10px] text-slate-400">Example: 9876543210@paytm, name@okhdfcbank</p>
+                                </div>
+                              )}
+
+                              {method.id === 'card' && (
+                                <div className="space-y-4">
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Card Holder Name</label>
+                                    <input 
+                                      type="text"
+                                      placeholder="John Doe"
+                                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-purple font-medium"
+                                      value={formData.cardHolder}
+                                      onChange={(e) => setFormData({...formData, cardHolder: e.target.value})}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Card Number</label>
+                                    <input 
+                                      type="text"
+                                      placeholder="0000 0000 0000 0000"
+                                      maxLength="19"
+                                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-purple font-medium"
+                                      value={formData.cardNumber}
+                                      onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+                                        setFormData({...formData, cardNumber: val});
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Expiry Date</label>
+                                      <input 
+                                        type="text"
+                                        placeholder="MM / YY"
+                                        maxLength="5"
+                                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-purple font-medium text-center"
+                                        value={formData.expiryDate}
+                                        onChange={(e) => {
+                                          let val = e.target.value.replace(/\D/g, '');
+                                          if (val.length > 2) val = val.substring(0, 2) + '/' + val.substring(2);
+                                          setFormData({...formData, expiryDate: val});
+                                        }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">CVV</label>
+                                      <input 
+                                        type="password"
+                                        placeholder="***"
+                                        maxLength="3"
+                                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-purple font-medium text-center"
+                                        value={formData.cvv}
+                                        onChange={(e) => setFormData({...formData, cvv: e.target.value})}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {method.id === 'cod' && (
+                                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
+                                  <CheckCircle size={18} className="text-emerald-500" />
+                                  <p className="text-sm font-medium text-emerald-800">You can pay using Cash, UPI, or Cards at the time of delivery.</p>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   ))}
                 </div>
 
@@ -256,7 +407,7 @@ const Checkout = () => {
                 </div>
 
                 <button
-                  disabled={loading}
+                  disabled={loading || (formData.payment_method === 'upi' && !formData.upiId.includes('@')) || (formData.payment_method === 'card' && formData.cardNumber.length < 16)}
                   type="submit"
                   className="w-full bg-brand-purple hover:bg-brand-purple/90 disabled:bg-slate-300 text-white h-16 rounded-2xl flex items-center justify-center gap-3 font-bold text-lg transition-all shadow-xl shadow-brand-purple/25 active:scale-95"
                 >
@@ -368,6 +519,10 @@ const Checkout = () => {
                       <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Street Address</label>
                       <textarea required rows="3" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-brand-purple resize-none" value={newAddress.street_address} onChange={(e) => setNewAddress({...newAddress, street_address: e.target.value})} />
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Alternative Phone (Optional)</label>
+                      <input className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-brand-purple" placeholder="Backup number for delivery" value={newAddress.alternative_phone} onChange={(e) => setNewAddress({...newAddress, alternative_phone: e.target.value})} />
+                    </div>
                     <div className="grid grid-cols-3 gap-4">
                       <input required placeholder="City" className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-brand-purple" value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} />
                       <input required placeholder="State" className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-brand-purple" value={newAddress.state} onChange={(e) => setNewAddress({...newAddress, state: e.target.value})} />
@@ -394,7 +549,15 @@ const Checkout = () => {
                           {addr.is_default && <span className="text-[10px] bg-brand-purple text-white px-2 py-0.5 rounded-full font-bold uppercase">Default</span>}
                         </div>
                         <p className="text-sm text-slate-500 mb-2">{addr.street_address}, {addr.city}, {addr.state} - {addr.pincode}</p>
-                        <p className="text-sm font-bold text-slate-400">{addr.phone}</p>
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-400">
+                          <span>{addr.phone}</span>
+                          {addr.alternative_phone && (
+                            <>
+                              <span className="mx-1">•</span>
+                              <span>{addr.alternative_phone}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                     <button 

@@ -35,10 +35,11 @@ const MyOrders = () => {
     // Real-Time GPS Tracking Logic
     useEffect(() => {
         let interval;
-        const inTransitOrders = orders.filter(o => o.status === 'In Transit' || o.status === 'Picked Up');
+        const inTransitOrders = (orders || []).filter(o => 
+            ['Picked Up', 'Start Delivery', 'In Transit', 'Reached'].includes(o.status)
+        );
         
         if (inTransitOrders.length > 0) {
-            console.log("GPS: Tracking active for", inTransitOrders.length, "tasks");
             interval = setInterval(() => {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
@@ -92,11 +93,10 @@ const MyOrders = () => {
                 await riderService.markDelivered(id);
                 alert("Delivery completed successfully! Wallet and COD logs updated.");
                 setActiveTab("Delivered");
-            } else if (status === "Picked Up") {
-                await riderService.updateStatus(id, "In Transit");
-                setActiveTab("Picked Up");
             } else {
                 await riderService.updateStatus(id, status);
+                if (status === 'Picked Up') setActiveTab("Picked Up");
+                if (status === 'Start Delivery') setActiveTab("Picked Up");
             }
             fetchOrders();
         } catch (err) {
@@ -104,21 +104,24 @@ const MyOrders = () => {
         }
     };
 
-    const filteredOrders = (orders || []).filter(o => {
+    const filterOrders = () => {
         const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = !searchTerm || 
-            (o.customer_name && o.customer_name.toLowerCase().includes(searchLower)) || 
-            (o.tracking_number && o.tracking_number.toLowerCase().includes(searchLower)) ||
-            (o.id && String(o.id).includes(searchLower));
-        
-        if (!matchesSearch) return false;
+        const filtered = (orders || []).filter(o => {
+            const matchesSearch = !searchTerm || 
+                (o.customer_name && o.customer_name.toLowerCase().includes(searchLower)) || 
+                (o.tracking_number && o.tracking_number.toLowerCase().includes(searchLower)) ||
+                (o.id && String(o.id).includes(searchLower));
+            return matchesSearch;
+        });
 
-        if (activeTab === "New") return true;
-        if (activeTab === "Assigned") return o.status === "Assigned";
-        if (activeTab === "Picked Up") return o.status === "In Transit" || o.status === "Picked Up";
-        if (activeTab === "Delivered") return o.status === "Delivered";
-        return false;
-    });
+        if (activeTab === "New") return filtered.filter(o => o.status === 'Dispatch Queue' || o.status === 'Pending');
+        if (activeTab === "Assigned") return filtered.filter(o => o.status === 'Assigned' || o.status === 'Start Pickup');
+        if (activeTab === "Picked Up") return filtered.filter(o => ['Picked Up', 'Start Delivery', 'In Transit', 'Reached'].includes(o.status));
+        if (activeTab === "Delivered") return filtered.filter(o => o.status === 'Delivered');
+        return [];
+    };
+
+    const filteredOrders = filterOrders();
 
     return (
         <div className="space-y-8 pb-20">
@@ -206,124 +209,167 @@ const MyOrders = () => {
                                 viewMode === 'grid' ? "flex-col" : "flex-col md:flex-row items-center"
                             )}
                         >
-                            {/* Card Header / Left side in list */}
-                            <div className={clsx(
-                                "p-8 border-slate-50 flex justify-between",
-                                viewMode === 'grid' ? "border-b items-start" : "border-b md:border-b-0 md:border-r w-full md:w-72 flex-col gap-2 shrink-0"
-                            )}>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order ID</span>
-                                        <span className="text-xs font-black text-brand-purple bg-brand-purple/5 px-2 py-1 rounded-lg">#{order.tracking_number?.slice(-6)}</span>
+                            {/* Card Header */}
+                            <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-brand-purple text-white w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shadow-lg shadow-brand-purple/20">
+                                        ID
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900 group-hover:text-brand-purple transition-colors truncate">
-                                        {order.customer_name}
-                                    </h3>
+                                    <span className="text-sm font-black text-slate-900 tracking-tight">#{order.tracking_number?.slice(-8).toUpperCase()}</span>
                                 </div>
-                                <div className={viewMode === 'grid' ? "text-right" : "text-left"}>
-                                    <div className="text-lg font-black text-emerald-600">₹{parseFloat(order.estimated_earning || 0).toLocaleString()}</div>
-                                    <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase">
-                                        <Clock size={10} /> {(() => {
-                                            const diff = Math.floor((new Date() - new Date(order.created_at)) / 1000);
-                                            if (diff < 60) return "Just now";
-                                            if (diff < 3600) return `${Math.floor(diff / 60)} mins ago`;
-                                            if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-                                            return `${Math.floor(diff / 86400)} days ago`;
-                                        })()}
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right">
+                                        <div className="text-xs font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Earning</div>
+                                        <div className="text-lg font-black text-emerald-600 leading-none">₹{parseFloat(order.estimated_earning || 0).toLocaleString()}</div>
+                                    </div>
+                                    <div className="w-px h-8 bg-slate-200"></div>
+                                    <div className={clsx(
+                                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                                        order.status === 'Assigned' ? "bg-blue-50 text-blue-600" :
+                                        order.status === 'Start Pickup' ? "bg-amber-50 text-amber-600" :
+                                        order.status === 'Picked Up' ? "bg-purple-50 text-purple-600" :
+                                        order.status === 'Start Delivery' ? "bg-orange-50 text-orange-600" :
+                                        "bg-emerald-50 text-emerald-600"
+                                    )}>
+                                        {order.status}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Card Body / Middle in list */}
-                            <div className={clsx(
-                                "p-8 space-y-6 flex-1",
-                                viewMode === 'list' && "flex items-center justify-between gap-8 space-y-0"
-                            )}>
-                                <div className={clsx("flex items-start gap-4", viewMode === 'list' ? "max-w-xs" : "")}>
-                                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-                                        <MapPin size={20} className="text-brand-blue" />
+                            {/* Card Body: Dual Address Workflow */}
+                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+                                {/* Connector Line */}
+                                <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-px bg-slate-100">
+                                    <ChevronRight size={16} className="text-slate-300 mx-auto -mt-2" />
+                                </div>
+
+                                {/* FROM: Vendor */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center">
+                                            <Package size={16} />
+                                        </div>
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">FROM: VENDOR</h4>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Delivery Address</p>
-                                        <p className="text-sm font-bold text-slate-600 line-clamp-1 leading-relaxed">
-                                            {order.address || "123 Business Way, Commercial Zone, Tech City, 56001"}
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:border-brand-blue/30 transition-colors">
+                                        <h5 className="font-black text-slate-900 mb-1">{order.vendor_info?.shop_name || "Vendor Shop"}</h5>
+                                        <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3 leading-relaxed">
+                                            {order.vendor_info?.address || "Shop Address not available"}
                                         </p>
+                                        <div className="flex items-center gap-2">
+                                            <a 
+                                                href={`tel:${order.vendor_info?.phone}`}
+                                                className="bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 flex items-center gap-1.5 transition-all"
+                                            >
+                                                <Phone size={12} /> Call Shop
+                                            </a>
+                                            <a 
+                                                href={`https://www.google.com/maps/dir/?api=1&destination=${order.vendor_info?.lat},${order.vendor_info?.lng}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue px-3 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition-all"
+                                            >
+                                                <ExternalLink size={12} /> Maps
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className={clsx(
-                                    "grid gap-4",
-                                    viewMode === 'grid' ? "grid-cols-2" : "flex items-center gap-8"
-                                )}>
-                                    <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3">
-                                        <Package size={18} className="text-slate-400" />
-                                        <div className="overflow-hidden">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter truncate">Payment</p>
-                                            <p className="text-xs font-bold text-slate-700">
-                                                {(() => {
-                                                    if (!order.payment_method) return 'Cash on Delivery';
-                                                    const m = order.payment_method.toLowerCase();
-                                                    if (m === 'cod' || m.includes('cash')) return 'Cash on Delivery';
-                                                    if (m === 'upi' || m.includes('card') || m.includes('online')) return 'UPI / Card';
-                                                    return order.payment_method;
-                                                })()}
-                                            </p>
+                                {/* TO: Customer */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                                            <MapPin size={16} />
                                         </div>
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">TO: CUSTOMER</h4>
                                     </div>
-                                    <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3">
-                                        <Clock size={18} className="text-slate-400" />
-                                        <div className="overflow-hidden">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter truncate">Distance</p>
-                                            <p className="text-xs font-bold text-slate-700">{order.distance || 0} km</p>
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:border-emerald-500/30 transition-colors">
+                                        <h5 className="font-black text-slate-900 mb-1">{order.customer_info?.name || "Customer"}</h5>
+                                        <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3 leading-relaxed">
+                                            {order.customer_info?.address || "Address not available"}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <a 
+                                                href={`tel:${order.customer_info?.phone}`}
+                                                className="bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 flex items-center gap-1.5 transition-all"
+                                            >
+                                                <Phone size={12} /> Call Customer
+                                            </a>
+                                            <a 
+                                                href={`https://www.google.com/maps/dir/?api=1&destination=${order.customer_info?.lat},${order.customer_info?.lng}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 px-3 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition-all"
+                                            >
+                                                <ExternalLink size={12} /> Maps
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Card Footer Actions / Right in list */}
-                            <div className={clsx(
-                                "px-8 pb-8 flex items-center gap-3",
-                                viewMode === 'grid' ? "" : "pb-8 md:pb-0 md:pr-8 w-full md:w-auto"
-                            )}>
-                                <a 
-                                    href={`tel:${order.phone || '555-0199'}`}
-                                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-                                >
-                                    <Phone size={18} /> Call
-                                </a>
-                                
+                            {/* Card Footer Actions */}
+                            <div className="p-6 bg-slate-50/30 border-t border-slate-50">
+                                {activeTab === "New" && (
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => handleAction(order.id, 'Rejected')}
+                                            className="flex-1 bg-white hover:bg-rose-50 text-rose-500 border border-rose-100 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <XCircle size={18} /> Decline
+                                        </button>
+                                        <button 
+                                            onClick={() => handleAction(order.id, 'Assigned')}
+                                            className="flex-[2] bg-brand-purple text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-purple/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                                        >
+                                            <Package size={18} /> Accept Task
+                                        </button>
+                                    </div>
+                                )}
+
                                 {activeTab === "Assigned" && (
-                                    <button 
-                                        onClick={() => handleAction(order.id, 'Picked Up')}
-                                        className="flex-[2] bg-brand-orange hover:bg-brand-orange-hover text-white px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-orange/20 active:scale-95 min-w-[140px]"
-                                    >
-                                        <Truck size={18} /> Mark Picked Up
-                                    </button>
+                                    <div className="flex gap-3">
+                                        {order.status === 'Assigned' ? (
+                                            <button 
+                                                onClick={() => handleAction(order.id, 'Start Pickup')}
+                                                className="w-full bg-brand-blue text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-blue/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                                            >
+                                                <Truck size={18} /> Start Pickup
+                                            </button>
+                                        ) : (
+                                            <button 
+                                                onClick={() => handleAction(order.id, 'Picked Up')}
+                                                className="w-full bg-brand-orange text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-orange/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                                            >
+                                                <CheckCircle2 size={18} /> Mark Picked Up
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
 
                                 {activeTab === "Picked Up" && (
-                                    <button 
-                                        onClick={() => handleAction(order.id, 'Delivered')}
-                                        className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 min-w-[160px]"
-                                    >
-                                        <CheckCircle2 size={18} /> Complete Delivery
-                                    </button>
+                                    <div className="flex gap-3">
+                                        {order.status === 'Picked Up' ? (
+                                            <button 
+                                                onClick={() => handleAction(order.id, 'Start Delivery')}
+                                                className="w-full bg-brand-purple text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-purple/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                                            >
+                                                <Navigation size={18} /> Start Delivery
+                                            </button>
+                                        ) : (
+                                            <button 
+                                                onClick={() => handleAction(order.id, 'Delivered')}
+                                                className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                                            >
+                                                <CheckCircle2 size={18} /> Complete Delivery
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
 
-                                {activeTab === "New" && (
-                                    <div className="flex gap-2 flex-[2] min-w-[180px]">
-                                         <button 
-                                            className="flex-1 bg-rose-500 text-white p-4 rounded-2xl flex justify-center items-center shadow-lg shadow-rose-500/20"
-                                            onClick={() => handleAction(order.id, 'Rejected')}
-                                        >
-                                            <XCircle size={20} />
-                                        </button>
-                                        <button 
-                                            className="flex-[3] bg-brand-purple text-white p-4 rounded-2xl font-bold shadow-lg shadow-brand-purple/20"
-                                            onClick={() => handleAction(order.id, 'Assigned')}
-                                        >
-                                            Accept Order
-                                        </button>
+                                {activeTab === "Delivered" && (
+                                    <div className="flex items-center justify-center gap-2 py-2 text-emerald-600 font-bold text-sm">
+                                        <CheckCircle2 size={18} /> Successfully Delivered
                                     </div>
                                 )}
                             </div>
