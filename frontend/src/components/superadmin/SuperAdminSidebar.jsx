@@ -147,26 +147,6 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
             );
           })}
         </nav>
-
-        <div className="p-4 mt-auto space-y-2">
-            <button 
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-brand-pink hover:bg-brand-pink/5 transition-all font-normal text-sm group"
-            >
-                <LogOut size={18} className="group-hover:rotate-12 transition-transform" />
-                <span>Logout</span>
-            </button>
-
-            <div className="bg-brand-purple-light/30 rounded-[2rem] p-4 border border-brand-purple-light">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-purple flex items-center justify-center font-medium text-xs text-white shadow-lg shadow-brand-purple/20">SA</div>
-                    <div>
-                        <div className="text-[11px] font-medium text-brand-navy leading-none mb-1">Super Admin</div>
-                        <div className="text-[10px] text-brand-text-gray font-normal uppercase tracking-tighter">Control Center</div>
-                    </div>
-                </div>
-            </div>
-        </div>
       </div>
     </>
   );

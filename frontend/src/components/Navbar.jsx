@@ -224,10 +224,10 @@ const Navbar = () => {
                       <p className="text-sm font-bold text-slate-800 truncate">{user.first_name || 'User'}</p>
                       <p className="text-xs text-slate-500 truncate">{user.email}</p>
                     </div>
-                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-brand-purple hover:bg-slate-50 transition-colors">
+                    <Link to="/profile?tab=profile" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-brand-purple hover:bg-slate-50 transition-colors">
                       <User size={16} /> My Profile
                     </Link>
-                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-brand-purple hover:bg-slate-50 transition-colors">
+                    <Link to="/profile?tab=orders" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-brand-purple hover:bg-slate-50 transition-colors">
                       <Package size={16} /> My Orders
                     </Link>
                     <button 
