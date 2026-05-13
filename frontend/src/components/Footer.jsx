@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Mail, CreditCard, Landmark, Wallet, Globe, Camera, MessageCircle, Briefcase } from 'lucide-react';
+import { Phone, Mail, CreditCard, Landmark, Wallet, Globe, Camera, MessageCircle, Briefcase, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePlatform } from '../context/PlatformContext';
 
@@ -7,33 +7,33 @@ const Footer = () => {
   const { platformName, settings } = usePlatform();
 
   return (
-    <footer className="bg-brand-navy text-white/70 pt-20 pb-8 border-t border-brand-purple/10 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Top & Links Section - Flex on large screens, Stack on small */}
-        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-24 mb-20">
-          
-          {/* LOGO + ABOUT Section */}
-          <div className="lg:w-1/3 flex flex-col items-start text-left">
-            <Link to="/" className="text-3xl font-black text-white italic tracking-tighter mb-6">
+    <footer className="bg-brand-navy text-white/60 mt-auto">
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-16 pb-10">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
+
+          {/* Brand Column */}
+          <div className="lg:w-72 shrink-0 flex flex-col gap-6">
+            <Link to="/" className="text-3xl font-black text-white italic tracking-tighter">
               {platformName}<span className="text-brand-purple">.</span>
             </Link>
-            <p className="text-sm font-medium mb-8 max-w-sm leading-relaxed">
-              Your one-stop online shopping destination. We provide a pure premium shopping experience with curated essentials.
+            <p className="text-base leading-relaxed text-white/70">
+              Your one-stop premium shopping destination with curated essentials delivered with care.
             </p>
-            <div className="flex flex-col gap-4 text-sm">
+            <div className="flex flex-col gap-3 text-base">
               {settings?.support_phone && (
-                <a href={`tel:${settings.support_phone}`} className="flex items-center gap-4 hover:text-brand-purple transition-all group">
-                  <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all">
-                    <Phone size={18} />
+                <a href={`tel:${settings.support_phone}`} className="flex items-center gap-3 text-white/70 hover:text-brand-purple transition-colors group">
+                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all shrink-0">
+                    <Phone size={15} />
                   </div>
                   <span>{settings.support_phone}</span>
                 </a>
               )}
               {settings?.support_email && (
-                <a href={`mailto:${settings.support_email}`} className="flex items-center gap-4 hover:text-brand-purple transition-all group">
-                  <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all">
-                    <Mail size={18} />
+                <a href={`mailto:${settings.support_email}`} className="flex items-center gap-3 text-white/70 hover:text-brand-purple transition-colors group">
+                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-all shrink-0">
+                    <Mail size={15} />
                   </div>
                   <span>{settings.support_email}</span>
                 </a>
@@ -41,82 +41,92 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* LINKS GRID */}
-          <div className="lg:w-2/3 grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
-            
+          {/* Divider */}
+          <div className="hidden lg:block w-px bg-white/5 self-stretch" />
+
+          {/* Links Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 flex-1">
+
             {/* SHOP */}
-            <div className="flex flex-col">
-              <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Shop</h3>
-              <ul className="space-y-4 text-sm">
-                <li><Link to="/new-arrivals" className="text-white/60 hover:text-brand-purple transition-all">New Arrivals</Link></li>
-                <li><Link to="/categories" className="text-white/60 hover:text-brand-purple transition-all">Categories</Link></li>
-                <li><Link to="/best-sellers" className="text-white/60 hover:text-brand-purple transition-all">Best Sellers</Link></li>
-                <li><Link to="/offers" className="text-white/60 hover:text-brand-purple transition-all">Offers</Link></li>
+            <div>
+              <h3 className="text-white text-sm font-black uppercase tracking-[0.2em] mb-6">Shop</h3>
+              <ul className="space-y-3.5 text-base">
+                <li><Link to="/new-arrivals" className="text-white/70 hover:text-brand-purple transition-colors">New Arrivals</Link></li>
+                <li><Link to="/categories" className="text-white/70 hover:text-brand-purple transition-colors">Categories</Link></li>
+                <li><Link to="/best-sellers" className="text-white/70 hover:text-brand-purple transition-colors">Best Sellers</Link></li>
+                <li><Link to="/offers" className="text-white/70 hover:text-brand-purple transition-colors">Offers</Link></li>
               </ul>
             </div>
 
             {/* HELP */}
-            <div className="flex flex-col">
-              <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Help</h3>
-              <ul className="space-y-4 text-sm">
-                <li><Link to="/track-order" className="text-white/60 hover:text-brand-purple transition-all">Track Order</Link></li>
-                <li><Link to="/shipping-info" className="text-white/60 hover:text-brand-purple transition-all">Shipping Info</Link></li>
-                <li><Link to="/returns" className="text-white/60 hover:text-brand-purple transition-all">Returns</Link></li>
-                <li><Link to="/contact-us" className="text-white/60 hover:text-brand-purple transition-all">Contact Us</Link></li>
+            <div>
+              <h3 className="text-white text-sm font-black uppercase tracking-[0.2em] mb-6">Help</h3>
+              <ul className="space-y-3.5 text-base">
+                <li><Link to="/track-order" className="text-white/70 hover:text-brand-purple transition-colors">Track Order</Link></li>
+                <li><Link to="/shipping-info" className="text-white/70 hover:text-brand-purple transition-colors">Shipping Info</Link></li>
+                <li><Link to="/returns" className="text-white/70 hover:text-brand-purple transition-colors">Returns</Link></li>
+                <li><Link to="/contact-us" className="text-white/70 hover:text-brand-purple transition-colors">Contact Us</Link></li>
               </ul>
             </div>
 
             {/* COMPANY */}
-            <div className="flex flex-col">
-              <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Company</h3>
-              <ul className="space-y-4 text-sm">
-                <li><Link to="/about-us" className="text-white/60 hover:text-brand-purple transition-all">About Us</Link></li>
-                <li><Link to="/become-seller" className="text-white/60 hover:text-brand-purple transition-all">Sell with Us</Link></li>
+            <div>
+              <h3 className="text-white text-sm font-black uppercase tracking-[0.2em] mb-6">Company</h3>
+              <ul className="space-y-3.5 text-base">
+                <li><Link to="/about-us" className="text-white/70 hover:text-brand-purple transition-colors">About Us</Link></li>
+                <li><Link to="/become-seller" className="text-white/70 hover:text-brand-purple transition-colors">Sell with Us</Link></li>
               </ul>
             </div>
 
             {/* FOLLOW US */}
             {(settings?.facebook_link || settings?.instagram_link || settings?.twitter_link || settings?.linkedin_link) && (
-              <div className="flex flex-col">
-                <h3 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-8">Follow Us</h3>
-                <ul className="space-y-4 text-sm ">
+              <div>
+                <h3 className="text-white text-sm font-black uppercase tracking-[0.2em] mb-6">Follow Us</h3>
+                <ul className="space-y-3.5 text-base">
                   {settings?.facebook_link && (
-                    <li><a href={settings.facebook_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Globe size={18} /> Facebook</a></li>
+                    <li><a href={settings.facebook_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/70 hover:text-brand-purple transition-colors"><Globe size={14} /> Facebook</a></li>
                   )}
                   {settings?.instagram_link && (
-                    <li><a href={settings.instagram_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Camera size={18} /> Instagram</a></li>
+                    <li><a href={settings.instagram_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/70 hover:text-brand-purple transition-colors"><Camera size={14} /> Instagram</a></li>
                   )}
                   {settings?.twitter_link && (
-                    <li><a href={settings.twitter_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><MessageCircle size={18} /> Twitter</a></li>
+                    <li><a href={settings.twitter_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/70 hover:text-brand-purple transition-colors"><MessageCircle size={14} /> Twitter</a></li>
                   )}
                   {settings?.linkedin_link && (
-                    <li><a href={settings.linkedin_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/60 hover:text-brand-purple transition-all"><Briefcase size={18} /> LinkedIn</a></li>
+                    <li><a href={settings.linkedin_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/70 hover:text-brand-purple transition-colors"><Briefcase size={14} /> LinkedIn</a></li>
                   )}
                 </ul>
               </div>
             )}
-
           </div>
         </div>
+      </div>
 
-        {/* PAYMENT METHODS */}
-        <div className="py-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-           <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em]">
-              <span className="text-white/30">Secure Payment:</span>
-           </div>
-           <div className="flex items-center gap-8">
-              <div className="flex items-center gap-2 text-white/40 font-bold hover:text-brand-purple transition-all cursor-pointer"><Landmark size={20} /> UPI</div>
-              <div className="flex items-center gap-2 text-white/40 font-bold hover:text-brand-purple transition-all cursor-pointer"><CreditCard size={20} /> Visa</div>
-              <div className="flex items-center gap-2 text-white/40 font-bold hover:text-brand-purple transition-all cursor-pointer"><CreditCard size={20} /> MasterCard</div>
-              <div className="flex items-center gap-2 text-white/40 font-bold hover:text-brand-purple transition-all cursor-pointer"><Wallet size={20} /> COD</div>
-           </div>
-        </div>
+      {/* Bottom Strip */}
+      <div className="border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 
-        {/* COPYRIGHT */}
-        <div className="py-8 border-t border-white/5 text-center text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mt-4">
-          &copy; 2026 {platformName}. Excellence in every detail.
+          {/* Copyright */}
+          <p className="text-xs font-bold text-white/70 uppercase tracking-[0.25em]">
+            &copy; 2026 {platformName}. Excellence in every detail.
+          </p>
+
+          {/* Payment Methods */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white/70">
+              <ShieldCheck size={13} className="text-brand-purple/60" /> Secure
+            </div>
+            <div className="flex items-center gap-4 text-white/70">
+              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><Landmark size={15} /> UPI</span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><CreditCard size={15} /> Visa</span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><CreditCard size={15} /> Mastercard</span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><Wallet size={15} /> COD</span>
+            </div>
+          </div>
+
         </div>
       </div>
+
     </footer>
   );
 };
