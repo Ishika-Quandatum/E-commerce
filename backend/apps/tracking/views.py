@@ -93,7 +93,8 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         new_status = request.data.get('status')
         valid_statuses = [
             'Dispatch Queue', 'Assigned', 'Start Pickup', 'Picked Up', 
-            'Start Delivery', 'In Transit', 'Reached', 'Delivered'
+            'Start Delivery', 'In Transit', 'Reached', 'Delivered',
+            'Rejected', 'Failed', 'Returned'
         ]
         
         if new_status in valid_statuses:
@@ -391,7 +392,7 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         try:
             shipment = self.get_object()
             
-            latest_tracking = LiveOrderTracking.objects.filter(shipment=shipment).first()
+            latest_tracking = LiveOrderTracking.objects.filter(shipment=shipment).order_by('-timestamp').first()
             history = LiveOrderTracking.objects.filter(shipment=shipment).order_by('-timestamp')[:20]
             
             # Map products safely
@@ -410,15 +411,9 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                         'price': float(item.price),
                         'image': image_url
                     })
-                else:
-                    items_data.append({
-                        'name': "Unknown Product",
-                        'qty': item.quantity,
-                        'price': float(item.price),
-                        'image': None
-                    })
 
             data = {
+                'id': shipment.id,
                 'shipment_status': shipment.status,
                 'order_status': shipment.order.status,
                 'tracking_number': shipment.tracking_number,
@@ -427,8 +422,17 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                     'phone': shipment.rider.user.phone if shipment.rider else "",
                     'vehicle': shipment.rider.vehicle_type if shipment.rider else "Bike",
                 },
-                'customer_location': {
+                'vendor_info': {
+                    'shop_name': shipment.order.vendor.shop_name,
+                    'address': shipment.order.vendor.shop_address,
+                    'phone': shipment.order.vendor.pickup_contact or shipment.order.vendor.user.phone,
+                    'lat': shipment.order.vendor.location_lat,
+                    'lng': shipment.order.vendor.location_lng
+                },
+                'customer_info': {
+                    'name': shipment.order.user.get_full_name() or shipment.order.user.username,
                     'address': shipment.order.address,
+                    'phone': shipment.order.phone,
                     'lat': shipment.order.latitude or 12.9716,
                     'lng': shipment.order.longitude or 77.5946
                 },
@@ -437,13 +441,29 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                 'eta': shipment.estimated_delivery_time,
                 'payment_method': shipment.order.payment_method,
                 'order_date': shipment.order.created_at,
-                'customer_name': shipment.order.user.get_full_name() or shipment.order.user.username,
                 'order_items': items_data
             }
             return Response(data)
         except Exception as e:
             print(f"[TRACKING ERROR] {str(e)}")
             return Response({'error': 'Internal server error while fetching tracking data', 'details': str(e)}, status=500)
+
+    @action(detail=False, methods=['get'])
+    def current_active_task(self, request):
+        """Returns the most relevant active task for the logged-in rider."""
+        if request.user.role != 'rider':
+            return Response({'error': 'Unauthorized'}, status=403)
+        
+        active_statuses = ['Assigned', 'Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached']
+        shipment = Shipment.objects.filter(
+            rider__user=request.user, 
+            status__in=active_statuses
+        ).first()
+        
+        if not shipment:
+            return Response({'message': 'No active task found'}, status=404)
+            
+        return self.track(request, pk=shipment.pk)
 
 
 class RiderViewSet(viewsets.ModelViewSet):
@@ -465,13 +485,35 @@ class RiderViewSet(viewsets.ModelViewSet):
         active = self.queryset.filter(is_active=True).count()
         online = self.queryset.filter(availability_status='Online').count()
         # Pending deliveries assigned to any rider
-        pending = Shipment.objects.filter(status__in=['Pending', 'Packed', 'Ready for Dispatch', 'Assigned', 'Dispatched', 'Out for Delivery']).count()
+        pending = Shipment.objects.filter(status__in=['Pending', 'Packed', 'Ready for Dispatch', 'Assigned', 'Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached']).count()
 
         return Response({
             'total_delivery_boys': total,
             'active_riders': active,
             'online_now': online,
             'pending_deliveries': pending
+        })
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Returns statistics for the logged-in rider."""
+        if request.user.role != 'rider':
+            return Response({'error': 'Unauthorized'}, status=403)
+            
+        rider = request.user.rider_profile
+        completed = Shipment.objects.filter(rider=rider, status='Delivered').count()
+        active = Shipment.objects.filter(rider=rider, status__in=['Assigned', 'Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached']).count()
+        
+        # Total distance is a mock for now, or sum from location history if available
+        # In a real app, we'd sum distances between history points
+        total_distance = completed * 5.2 # Mock average
+        
+        return Response({
+            'completed_deliveries': completed,
+            'active_orders': active,
+            'total_distance_km': round(total_distance, 1),
+            'rating': rider.rating,
+            'wallet_balance': rider.wallet.current_balance if hasattr(rider, 'wallet') else 0.0
         })
 
     @action(detail=False, methods=['get'])
@@ -590,7 +632,7 @@ class RiderViewSet(viewsets.ModelViewSet):
         if user.role != 'rider':
             return Response({'error': 'Unauthorized'}, status=403)
         # Include 'Delivered' so Completed tab can show history
-        tasks = Shipment.objects.filter(rider__user=user, status__in=['Assigned', 'Picked Up', 'In Transit', 'Reached', 'Delivered'])
+        tasks = Shipment.objects.filter(rider__user=user, status__in=['Assigned', 'Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached', 'Delivered'])
         return Response(ShipmentSerializer(tasks, many=True, context={'request': request}).data)
 
     def destroy(self, request, *args, **kwargs):
@@ -601,7 +643,7 @@ class RiderViewSet(viewsets.ModelViewSet):
         # Deletion Guard: Check for active shipments
         active_shipments = Shipment.objects.filter(
             rider=instance, 
-            status__in=['Assigned', 'Picked Up', 'In Transit', 'Reached', 'Dispatched', 'Out for Delivery']
+            status__in=['Assigned', 'Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached']
         )
         
         if active_shipments.exists():

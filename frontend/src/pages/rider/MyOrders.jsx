@@ -95,8 +95,10 @@ const MyOrders = () => {
                 setActiveTab("Delivered");
             } else {
                 await riderService.updateStatus(id, status);
-                if (status === 'Picked Up') setActiveTab("Picked Up");
-                if (status === 'Start Delivery') setActiveTab("Picked Up");
+                // Move to In Transit tab for any movement step
+                if (['Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit'].includes(status)) {
+                    setActiveTab("Picked Up");
+                }
             }
             fetchOrders();
         } catch (err) {
@@ -115,8 +117,8 @@ const MyOrders = () => {
         });
 
         if (activeTab === "New") return filtered.filter(o => o.status === 'Dispatch Queue' || o.status === 'Pending');
-        if (activeTab === "Assigned") return filtered.filter(o => o.status === 'Assigned' || o.status === 'Start Pickup');
-        if (activeTab === "Picked Up") return filtered.filter(o => ['Picked Up', 'Start Delivery', 'In Transit', 'Reached'].includes(o.status));
+        if (activeTab === "Assigned") return filtered.filter(o => o.status === 'Assigned');
+        if (activeTab === "Picked Up") return filtered.filter(o => ['Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached'].includes(o.status));
         if (activeTab === "Delivered") return filtered.filter(o => o.status === 'Delivered');
         return [];
     };
@@ -254,7 +256,10 @@ const MyOrders = () => {
                                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:border-brand-blue/30 transition-colors">
                                         <h5 className="font-black text-slate-900 mb-1">{order.vendor_info?.shop_name || "Vendor Shop"}</h5>
                                         <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3 leading-relaxed">
-                                            {order.vendor_info?.address || "Shop Address not available"}
+                                            {order.vendor_info?.address}
+                                            {order.vendor_info?.city && `, ${order.vendor_info.city}`}
+                                            {order.vendor_info?.pincode && ` - ${order.vendor_info.pincode}`}
+                                            {!order.vendor_info?.address && "Shop Address not available"}
                                         </p>
                                         <div className="flex items-center gap-2">
                                             <a 

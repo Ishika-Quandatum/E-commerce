@@ -155,6 +155,11 @@ export const vendorService = {
 
   approve: (id) => api.post(`vendors/${id}/approve/`),
   reject: (id) => api.post(`vendors/${id}/reject/`),
+
+  // Profile & Settings
+  getProfile: () => api.get('vendors/profile/'),
+  updateProfile: (data) => api.patch('vendors/profile/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateSettings: (data) => api.patch('vendors/vendor_settings/', data),
 };
 
 export const riderService = {
@@ -173,6 +178,8 @@ export const riderService = {
   verifyCODSubmission: (id, data) => api.post(`tracking/wallet-transactions/${id}/verify_submission/`, data),
   paySalary: (id) => api.post(`tracking/settlements/${id}/pay_salary/`),
   getRiderDashboardStats: () => api.get('tracking/riders/dashboard_stats/'),
+  getActiveTask: () => api.get('tracking/shipments/current_active_task/'),
+  getStats: () => api.get('tracking/riders/stats/'),
 };
 
 export const platformService = {

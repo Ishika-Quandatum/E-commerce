@@ -64,6 +64,90 @@ class VendorViewSet(viewsets.ModelViewSet):
             'user': UserSerializer(new_user).data
         }, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['get', 'patch'], permission_classes=[permissions.IsAuthenticated])
+    def profile(self, request):
+        try:
+            vendor = request.user.vendor_profile
+        except Vendor.DoesNotExist:
+            return Response({'error': 'Vendor profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'GET':
+            serializer = self.get_serializer(vendor)
+            return Response(serializer.data)
+        
+        elif request.method == 'PATCH':
+            data = request.data
+            user = request.user
+            user_updated = False
+            
+            # Handle User updates
+            if 'email' in data and data['email'] != user.email:
+                from apps.users.models import User
+                if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
+                    return Response({'email': ['A user with this email already exists.']}, status=status.HTTP_400_BAD_REQUEST)
+                user.email = data['email']
+                user.username = data['email']
+                user_updated = True
+            
+            if 'phone' in data:
+                user.phone = data['phone']
+                user_updated = True
+                
+            if 'password' in data and data['password']:
+                user.set_password(data['password'])
+                user_updated = True
+                
+            if user_updated:
+                user.save()
+
+            serializer = self.get_serializer(vendor, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def vendor_settings(self, request):
+        try:
+            vendor = request.user.vendor_profile
+        except Vendor.DoesNotExist:
+            return Response({'error': 'Vendor profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        data = request.data
+
+        # Update User fields if provided
+        user_updated = False
+        if 'email' in data and data['email'] != user.email:
+            from apps.users.models import User
+            if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
+                return Response({'email': ['A user with this email already exists.']}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = data['email']
+            user.username = data['email'] # Assuming email is username
+            user_updated = True
+        
+        if 'phone' in data:
+            user.phone = data['phone']
+            user_updated = True
+            
+        if 'password' in data and data['password']:
+            user.set_password(data['password'])
+            user_updated = True
+            
+        if user_updated:
+            user.save()
+
+        # Update Vendor fields (partial update)
+        serializer = self.get_serializer(vendor, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Settings updated successfully',
+                'vendor': serializer.data,
+                'user': UserSerializer(user).data if user_updated else None
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def approve(self, request, pk=None):
         isAdmin = request.user.role in ['superadmin', 'admin'] or request.user.is_staff

@@ -12,6 +12,10 @@ class Vendor(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='vendor_profile')
     shop_name = models.CharField(max_length=255)
     shop_type = models.CharField(max_length=100)
+    # Branding & Info
+    shop_logo = models.ImageField(upload_to='vendor_logos/', null=True, blank=True)
+    shop_banner = models.ImageField(upload_to='vendor_banners/', null=True, blank=True)
+    shop_description = models.TextField(null=True, blank=True)
     
     # Logistics & Address
     shop_address = models.TextField(null=True, blank=True)
@@ -19,7 +23,18 @@ class Vendor(models.Model):
     state = models.CharField(max_length=100, null=True, blank=True)
     pincode = models.CharField(max_length=10, null=True, blank=True)
     pickup_contact = models.CharField(max_length=15, null=True, blank=True)
+    alternative_contact = models.CharField(max_length=15, null=True, blank=True)
     
+    # Shop Timing
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
+    working_days = models.JSONField(default=list, blank=True) # e.g. ["Mon", "Tue", ...]
+    
+    # Logistics Settings
+    pickup_availability = models.BooleanField(default=True)
+    delivery_radius = models.DecimalField(max_digits=10, decimal_places=2, default=10.0) # In KM
+    estimated_dispatch_time = models.CharField(max_length=50, null=True, blank=True) # e.g. "24 Hours"
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=10.00)  # Percentage
     location_lat = models.FloatField(null=True, blank=True)

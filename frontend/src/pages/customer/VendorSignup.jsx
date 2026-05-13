@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { vendorService } from '../../services/api';
+import { vendorService, productService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Store, ShoppingBag, Truck, CheckCircle, MapPin, Phone, Map, Loader2, Navigation, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const VendorSignup = () => {
   const { user, completeSignup, vendorStatus } = useAuth();
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     shop_name: '',
-    shop_type: 'Grocery',
+    shop_type: '',
     shop_address: '',
     city: '',
     state: '',
@@ -32,7 +33,20 @@ const VendorSignup = () => {
     if (user?.role === 'vendor' && vendorStatus === 'Approved') {
       navigate('/vendor');
     }
+    fetchCategories();
   }, [user, vendorStatus, navigate]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await productService.getCategories({ top_level: 'true' });
+      setCategories(res.data);
+      if (res.data.length > 0 && !formData.shop_type) {
+        setFormData(prev => ({ ...prev, shop_type: res.data[0].name }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  };
 
   const fetchCoordinates = async () => {
     if (!formData.shop_address || !formData.city || !formData.state || !formData.pincode) {
@@ -271,9 +285,10 @@ const VendorSignup = () => {
                         value={formData.shop_type}
                         onChange={(e) => setFormData({...formData, shop_type: e.target.value})}
                       >
-                        <option value="Grocery">Grocery</option>
-                        <option value="Fashion">Fashion</option>
-                        <option value="Electronics">Electronics</option>
+                        <option value="">Select Category</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
                         <option value="Other">Other</option>
                       </select>
                     </div>

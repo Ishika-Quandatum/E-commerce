@@ -126,68 +126,65 @@ const VendorShop = () => {
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
-            {/* Vendor Header (Meesho Style) */}
-            <div className="bg-white border-b border-slate-200 shadow-sm pt-8 pb-8">
-                <div className="max-w-7xl mx-auto px-4">
-                    {/* Breadcrumbs */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-6">
-                        <Link to="/" className="hover:text-primary-600 transition-colors">Home</Link>
-                        <ChevronRight size={12} />
-                        <span className="font-bold text-slate-800">{vendor.shop_name} Shop</span>
+            {/* Hero Section / Branding */}
+            <div className="relative">
+                <div className="h-48 md:h-64 w-full bg-slate-200 overflow-hidden shadow-inner border-b border-white">
+                    {vendor.shop_banner ? (
+                        <img src={vendor.shop_banner} alt="Banner" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary-600 to-primary-900 flex items-center justify-center opacity-10">
+                            <ShieldCheck size={100} className="text-white" />
+                        </div>
+                    )}
+                </div>
+
+                <div className="max-w-7xl mx-auto px-4 relative">
+                    <div className="absolute -top-12 left-4 md:left-8 flex flex-col md:flex-row items-end gap-6">
+                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-white p-1.5 shadow-2xl border border-slate-100 overflow-hidden shrink-0">
+                            {vendor.shop_logo ? (
+                                <img src={vendor.shop_logo} alt="Logo" className="w-full h-full object-cover rounded-2xl" />
+                            ) : (
+                                <div className="w-full h-full bg-slate-50 flex items-center justify-center rounded-2xl">
+                                    <ShieldCheck size={40} className="text-primary-600" />
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="mb-2 md:mb-4">
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight drop-shadow-sm">{vendor.shop_name}</h1>
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest flex items-center gap-1 border border-emerald-100">
+                                    <ShieldCheck size={10} /> Verified
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-4 mt-2">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded flex items-center gap-1 text-[11px] font-black border border-emerald-100">
+                                        {vendor.rating} <Star size={10} fill="currentColor" />
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase">{vendor.total_ratings} Reviews</span>
+                                </div>
+                                <div className="w-px h-3 bg-slate-200" />
+                                <span className="text-[10px] text-slate-500 font-bold uppercase">{vendor.followers_count} Followers</span>
+                                <div className="w-px h-3 bg-slate-200" />
+                                <span className="text-[10px] text-slate-500 font-bold uppercase">{vendor.products_count} Products</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                        {/* Profile Info */}
-                        <div className="flex-1 flex flex-col md:flex-row items-center gap-6">
-                            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm">
-                                {vendor.avatar ? (
-                                    <img src={vendor.avatar} alt={vendor.shop_name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <ShieldCheck size={40} className="text-primary-600" />
-                                )}
-                            </div>
-                            <div className="text-center md:text-left">
-                                <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                                    <h1 className="text-2xl font-bold text-slate-900">{vendor.shop_name}</h1>
-                                    <ShieldCheck size={20} className="text-emerald-500" />
-                                </div>
-                                <div className="flex items-center justify-center md:justify-start gap-4 mt-4">
-                                    <div className="text-center">
-                                        <div className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md flex items-center gap-1 text-sm font-bold border border-emerald-100">
-                                            {vendor.rating} <Star size={14} fill="currentColor" />
-                                        </div>
-                                        <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold">{vendor.total_ratings.toLocaleString()} Ratings</p>
-                                    </div>
-                                    <div className="w-px h-8 bg-slate-200" />
-                                    <div className="text-center">
-                                        <p className="text-lg font-bold text-slate-900 leading-none">{vendor.followers_count.toLocaleString()}</p>
-                                        <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold">Followers</p>
-                                    </div>
-                                    <div className="w-px h-8 bg-slate-200" />
-                                    <div className="text-center">
-                                        <p className="text-lg font-bold text-slate-900 leading-none">{vendor.products_count.toLocaleString()}</p>
-                                        <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold">Products</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-4">
-                            <button 
-                                onClick={handleFollow}
-                                disabled={isFollowLoading}
-                                className={`px-8 h-12 rounded-lg font-bold text-sm transition-all shadow-sm flex items-center justify-center min-w-[140px] ${
-                                    isFollowLoading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' :
-                                    isFollowing ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'
-                                }`}
-                            >
-                                {isFollowLoading ? (
-                                    <span className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
-                                ) : isFollowing ? 'Following' : 'Follow'}
-                            </button>
-            
-                        </div>
+                    <div className="flex justify-end pt-4 pb-4">
+                        <button 
+                            onClick={handleFollow}
+                            disabled={isFollowLoading}
+                            className={`px-8 h-10 rounded-xl font-black text-[10px] uppercase tracking-[0.1em] transition-all shadow-lg flex items-center justify-center min-w-[120px] ${
+                                isFollowLoading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' :
+                                isFollowing ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-500/30'
+                            }`}
+                        >
+                            {isFollowLoading ? (
+                                <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
+                            ) : isFollowing ? 'Following' : 'Follow Shop'}
+                        </button>
                     </div>
                 </div>
             </div>

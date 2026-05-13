@@ -12,15 +12,19 @@ class VendorSerializer(serializers.ModelSerializer):
     total_ratings = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     products_count = serializers.SerializerMethodField()
+    total_orders_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Vendor
         fields = [
             'id', 'user', 'username', 'email', 'vendor_name', 'shop_name', 'shop_type', 
-            'shop_address', 'city', 'state', 'pincode', 'pickup_contact',
+            'shop_address', 'city', 'state', 'pincode', 'pickup_contact', 'alternative_contact',
+            'shop_logo', 'shop_banner', 'shop_description',
+            'opening_time', 'closing_time', 'working_days',
+            'pickup_availability', 'delivery_radius', 'estimated_dispatch_time',
             'location_lat', 'location_lng',
             'status', 'created_at', 'avatar', 'rating', 'total_ratings', 
-            'followers_count', 'products_count'
+            'followers_count', 'products_count', 'total_orders_count'
         ]
         read_only_fields = ['user', 'status', 'created_at']
 
@@ -31,6 +35,7 @@ class VendorSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.user.avatar.url)
             return obj.user.avatar.url
         return None
+
 
     def get_rating(self, obj):
         from django.db.models import Avg
@@ -47,6 +52,9 @@ class VendorSerializer(serializers.ModelSerializer):
 
     def get_products_count(self, obj):
         return obj.products.filter(status='Active').count()
+
+    def get_total_orders_count(self, obj):
+        return obj.orders.count()
 
 
 class VendorSignupSerializer(serializers.ModelSerializer):

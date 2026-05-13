@@ -262,6 +262,8 @@ class ShipmentSerializer(serializers.ModelSerializer):
         return {
             'shop_name': vendor.shop_name,
             'address': vendor.shop_address,
+            'city': vendor.city,
+            'pincode': vendor.pincode,
             'phone': vendor.pickup_contact or vendor.user.phone,
             'lat': vendor.location_lat,
             'lng': vendor.location_lng
