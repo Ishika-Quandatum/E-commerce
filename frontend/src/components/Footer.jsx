@@ -104,25 +104,12 @@ const Footer = () => {
 
       {/* Bottom Strip */}
       <div className="border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-center gap-4">
 
           {/* Copyright */}
-          <p className="text-xs font-bold text-white/70 uppercase tracking-[0.25em]">
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em] text-center">
             &copy; 2026 {platformName}. Excellence in every detail.
           </p>
-
-          {/* Payment Methods */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white/70">
-              <ShieldCheck size={13} className="text-brand-purple/60" /> Secure
-            </div>
-            <div className="flex items-center gap-4 text-white/70">
-              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><Landmark size={15} /> UPI</span>
-              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><CreditCard size={15} /> Visa</span>
-              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><CreditCard size={15} /> Mastercard</span>
-              <span className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-purple transition-colors cursor-pointer"><Wallet size={15} /> COD</span>
-            </div>
-          </div>
 
         </div>
       </div>
