@@ -155,22 +155,16 @@ const AdminProductList = () => {
   };
 
   const StatCard = ({ title, value, subtitle, icon: Icon, colorClass }) => (
-    <div className="bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all group">
-      <div className="flex items-center justify-between">
-        <div className={`p-4 rounded-2xl ${colorClass} group-hover:scale-110 transition-transform duration-500`}>
-          <Icon size={24} className="opacity-90" />
+    <div className="bg-white border border-slate-100 p-4 sm:p-5 rounded-[1.5rem] shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all group">
+      <div className="flex flex-col items-start gap-3">
+        <div className={`p-2.5 sm:p-3 rounded-xl ${colorClass} group-hover:scale-110 transition-transform duration-500`}>
+          <Icon size={18} className="sm:w-5 sm:h-5 opacity-90" />
         </div>
-        <div className="text-right">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
-          <h3 className="text-2xl font-black text-slate-900 leading-none">
+        <div className="w-full">
+          <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 leading-tight">{title}</p>
+          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">
             {statsLoading ? "..." : value.toLocaleString()}
           </h3>
-        </div>
-      </div>
-      <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
-        <span className="text-[10px] font-bold text-slate-400 uppercase">{subtitle}</span>
-        <div className="flex -space-x-2">
-            {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-slate-100" />)}
         </div>
       </div>
     </div>
@@ -197,46 +191,41 @@ const AdminProductList = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
         <StatCard 
           title="Total Products" 
           value={stats.total_products} 
-          subtitle="All Products" 
           icon={Package} 
           colorClass="bg-indigo-50 text-indigo-600" 
         />
         <StatCard 
           title="Active Products" 
           value={stats.active_products} 
-          subtitle="Active" 
           icon={RefreshCw} 
           colorClass="bg-emerald-50 text-emerald-600" 
         />
         <StatCard 
           title="Inactive Products" 
           value={stats.inactive_products} 
-          subtitle="Inactive" 
           icon={AlertCircle} 
           colorClass="bg-orange-50 text-orange-600" 
         />
         <StatCard 
           title="Out of Stock" 
           value={stats.out_of_stock} 
-          subtitle="Out of Stock" 
           icon={AlertCircle} 
           colorClass="bg-rose-50 text-rose-600" 
         />
         <StatCard 
           title="Low Stock" 
           value={stats.low_stock} 
-          subtitle="Low Stock" 
           icon={IndianRupee} 
           colorClass="bg-amber-50 text-amber-600" 
         />
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 shadow-xl shadow-slate-200/40 space-y-6">
+      <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
           {/* Search */}
           <div className="sm:col-span-2 lg:col-span-1 space-y-2">
@@ -246,7 +235,7 @@ const AdminProductList = () => {
                 <input 
                 type="text" 
                 placeholder="Search products..."
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all"
+                className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/20 focus:bg-white outline-none transition-all"
                 value={filters.search}
                 onChange={(e) => setFilters({...filters, search: e.target.value, tab: "All Products"})}
                 />
@@ -258,7 +247,7 @@ const AdminProductList = () => {
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Category</label>
             <div className="relative">
                 <select 
-                    className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/20 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
                     value={filters.category}
                     onChange={(e) => setFilters({...filters, category: e.target.value})}
                 >
@@ -274,7 +263,7 @@ const AdminProductList = () => {
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Vendor</label>
             <div className="relative">
                 <select 
-                    className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/20 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
                     value={filters.vendor}
                     onChange={(e) => setFilters({...filters, vendor: e.target.value})}
                 >
@@ -290,7 +279,7 @@ const AdminProductList = () => {
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Status</label>
             <div className="relative">
                 <select 
-                    className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/20 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
                     value={filters.status}
                     onChange={(e) => setFilters({...filters, status: e.target.value})}
                 >
@@ -307,7 +296,7 @@ const AdminProductList = () => {
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Stock</label>
             <div className="relative">
                 <select 
-                    className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/20 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
                     value={filters.stock_status}
                     onChange={(e) => setFilters({...filters, stock_status: e.target.value})}
                 >
@@ -321,7 +310,7 @@ const AdminProductList = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 sm:gap-6 items-end">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-4 sm:gap-6 items-end">
             <div className="xl:col-span-4 space-y-2">
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Price Range</label>
                 <div className="grid grid-cols-2 gap-3">
@@ -347,33 +336,33 @@ const AdminProductList = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input 
                         type="date" 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none cursor-pointer"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/20 focus:bg-white outline-none cursor-pointer"
                         value={filters.start_date}
                         onChange={(e) => setFilters({...filters, start_date: e.target.value})}
                     />
                     <input 
                         type="date" 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600 outline-none cursor-pointer"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/20 focus:bg-white outline-none cursor-pointer"
                         value={filters.end_date}
                         onChange={(e) => setFilters({...filters, end_date: e.target.value})}
                     />
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 xl:col-span-3">
+            <div className="flex items-center justify-end gap-3 xl:col-span-3">
                 <button 
                   onClick={fetchProducts}
-                  className="w-full flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+                  className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 active:scale-95 whitespace-nowrap"
                 >
-                    <Filter size={18} />
-                    <span>Apply Filters</span>
+                    <Filter size={14} />
+                    <span>Apply</span>
                 </button>
                 <button 
                   onClick={handleReset}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-100 text-slate-600 px-6 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2 bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95 whitespace-nowrap"
                 >
-                    <RefreshCw size={18} />
-                    <span className="sm:hidden lg:inline">Reset</span>
+                    <RefreshCw size={14} />
+                    <span>Reset</span>
                 </button>
             </div>
         </div>
@@ -539,7 +528,7 @@ const AdminProductList = () => {
                             <div className="space-y-3">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.category_name}</p>
-                                    <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h4>
+                                    <h4 className="text-sm sm:text-lg font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2">{p.name}</h4>
                                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase">SKU: {p.sku || "N/A"}</p>
                                         {p.is_new_arrival && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title="New Arrival" />}
