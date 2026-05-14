@@ -10,6 +10,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
+import useGoogleDistance from '../../../hooks/useGoogleDistance';
+
 const OrderTracking = () => {
     const { id } = useParams(); // shipmentId
     const navigate = useNavigate();
@@ -19,10 +21,41 @@ const OrderTracking = () => {
     const mapRef = useRef(null);
     const [googleLoaded, setGoogleLoaded] = useState(false);
 
+    // Dynamic origin and destination for distance calculation
+    const [origin, setOrigin] = useState(null);
+    const [destination, setDestination] = useState(null);
+
     const fetchTracking = async () => {
         try {
             const res = await trackingService.getTrackingDetails(id);
-            setTrackingData(res.data);
+            const data = res.data;
+            setTrackingData(data);
+            
+            // Set dynamic points for Distance calculation
+            if (data.customer_info) {
+                setDestination({ 
+                    lat: parseFloat(data.customer_info.lat), 
+                    lng: parseFloat(data.customer_info.lng) 
+                });
+            }
+
+            const riderPos = data.current_location ? {
+                lat: parseFloat(data.current_location.latitude),
+                lng: parseFloat(data.current_location.longitude)
+            } : null;
+
+            const vendorPos = data.vendor_info ? {
+                lat: parseFloat(data.vendor_info.lat),
+                lng: parseFloat(data.vendor_info.lng)
+            } : null;
+
+            // Logic: Before Pickup -> Vendor to Customer. After Pickup -> Rider to Customer.
+            if (['Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached'].includes(data.shipment_status) && riderPos) {
+                setOrigin(riderPos);
+            } else if (vendorPos) {
+                setOrigin(vendorPos);
+            }
+
             setLoading(false);
         } catch (err) {
             console.error("Tracking Error:", err);
@@ -31,9 +64,11 @@ const OrderTracking = () => {
         }
     };
 
+    const googleMetrics = useGoogleDistance(origin, destination, googleLoaded);
+
     useEffect(() => {
         fetchTracking();
-        const interval = setInterval(fetchTracking, 10000); // Poll every 10s
+        const interval = setInterval(fetchTracking, 5000); // Poll every 5s for real-time
         return () => clearInterval(interval);
     }, [id]);
 
@@ -44,100 +79,154 @@ const OrderTracking = () => {
             return;
         }
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=geometry`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'}&libraries=geometry`;
         script.async = true;
         script.defer = true;
         script.onload = () => setGoogleLoaded(true);
         document.head.appendChild(script);
     }, []);
 
+    const mapInstance = useRef(null);
+    const directionsRenderer = useRef(null);
+    const markers = useRef({ rider: null, vendor: null, customer: null });
+
     // Map Initialization and Update
     useEffect(() => {
-        if (googleLoaded && trackingData && mapRef.current) {
-            const riderPos = trackingData.current_location ? {
-                lat: parseFloat(trackingData.current_location.latitude),
-                lng: parseFloat(trackingData.current_location.longitude)
-            } : null;
-            
-            const customerPos = {
-                lat: parseFloat(trackingData.customer_info?.lat || 12.9716),
-                lng: parseFloat(trackingData.customer_info?.lng || 77.5946)
-            };
+        if (!googleLoaded || !trackingData || !mapRef.current) return;
 
-            const vendorPos = trackingData.vendor_info ? {
-                lat: parseFloat(trackingData.vendor_info.lat),
-                lng: parseFloat(trackingData.vendor_info.lng)
-            } : null;
+        const riderPos = (trackingData.current_location && trackingData.current_location.latitude && trackingData.current_location.longitude) ? {
+            lat: parseFloat(trackingData.current_location.latitude),
+            lng: parseFloat(trackingData.current_location.longitude)
+        } : null;
+        
+        const customerPos = {
+            lat: parseFloat(trackingData.customer_info?.lat || 12.9716),
+            lng: parseFloat(trackingData.customer_info?.lng || 77.5946)
+        };
 
-            const map = new window.google.maps.Map(mapRef.current, {
+        const vendorPos = (trackingData.vendor_info && trackingData.vendor_info.lat && trackingData.vendor_info.lng) ? {
+            lat: parseFloat(trackingData.vendor_info.lat),
+            lng: parseFloat(trackingData.vendor_info.lng)
+        } : null;
+
+        // Initialize Map once
+        if (!mapInstance.current) {
+            mapInstance.current = new window.google.maps.Map(mapRef.current, {
                 center: customerPos,
                 zoom: 14,
-                styles: [
-                    { "featureType": "all", "elementType": "labels.text.fill", "stylers": [{ "color": "#7c93a3" }, { "lightness": "-10" }] },
-                    { "featureType": "administrative.country", "elementType": "geometry", "stylers": [{ "visibility": "on" }] },
-                    { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] },
-                    { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#e9e9e9" }] }
-                ],
+                styles: MapStyles,
                 disableDefaultUI: true,
                 zoomControl: true
             });
 
-            // Markers
-            new window.google.maps.Marker({
+            directionsRenderer.current = new window.google.maps.DirectionsRenderer({
+                map: mapInstance.current,
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#6d28d9",
+                    strokeWeight: 5,
+                    strokeOpacity: 0.8
+                }
+            });
+        }
+
+        const map = mapInstance.current;
+
+        // Update/Create Markers
+        if (!markers.current.customer) {
+            markers.current.customer = new window.google.maps.Marker({
                 position: customerPos,
                 map,
                 title: "Your Location",
-                icon: {
-                    path: window.google.maps.SymbolPath.CIRCLE,
-                    scale: 10,
-                    fillColor: "#10b981",
-                    fillOpacity: 1,
-                    strokeWeight: 2,
-                    strokeColor: "#ffffff"
-                }
+                icon: CustomerMarker
             });
+        } else {
+            markers.current.customer.setPosition(customerPos);
+        }
 
-            if (vendorPos) {
-                new window.google.maps.Marker({
+        if (vendorPos) {
+            if (!markers.current.vendor) {
+                markers.current.vendor = new window.google.maps.Marker({
                     position: vendorPos,
                     map,
                     title: "Vendor Location",
-                    icon: {
-                        path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                        scale: 6,
-                        fillColor: "#3b82f6",
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: "#ffffff"
-                    }
+                    icon: VendorMarker
                 });
+            } else {
+                markers.current.vendor.setPosition(vendorPos);
             }
+        }
 
-            if (riderPos) {
-                new window.google.maps.Marker({
+        if (riderPos) {
+            if (!markers.current.rider) {
+                markers.current.rider = new window.google.maps.Marker({
                     position: riderPos,
                     map,
                     title: "Rider",
-                    icon: {
-                        path: "M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z",
-                        scale: 1.5,
-                        fillColor: "#6d28d9",
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: "#ffffff",
-                        rotation: 0 // Could animate rotation based on movement
-                    }
+                    icon: RiderMarker
                 });
-
-                // Auto-fit bounds
-                const bounds = new window.google.maps.LatLngBounds();
-                bounds.extend(customerPos);
-                bounds.extend(riderPos);
-                if (vendorPos) bounds.extend(vendorPos);
-                map.fitBounds(bounds, 50);
+            } else {
+                markers.current.rider.setPosition(riderPos);
             }
+
+            // Update Route
+            const directionsService = new window.google.maps.DirectionsService();
+            const routeOrigin = riderPos;
+            const routeDestination = customerPos;
+
+            directionsService.route({
+                origin: routeOrigin,
+                destination: routeDestination,
+                travelMode: window.google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === "OK") {
+                    directionsRenderer.current.setDirections(result);
+                }
+            });
+
+            // Auto-fit bounds occasionally or when significantly moved
+            const bounds = new window.google.maps.LatLngBounds();
+            bounds.extend(customerPos);
+            bounds.extend(riderPos);
+            if (vendorPos) bounds.extend(vendorPos);
+            map.fitBounds(bounds, 80);
         }
     }, [googleLoaded, trackingData]);
+
+    // Marker/Style Definitions
+    const MapStyles = [
+        { "featureType": "all", "elementType": "labels.text.fill", "stylers": [{ "color": "#7c93a3" }, { "lightness": "-10" }] },
+        { "featureType": "administrative.country", "elementType": "geometry", "stylers": [{ "visibility": "on" }] },
+        { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] },
+        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#e9e9e9" }] }
+    ];
+
+    const CustomerMarker = {
+        path: window.google?.maps?.SymbolPath?.CIRCLE || 0,
+        scale: 10,
+        fillColor: "#10b981",
+        fillOpacity: 1,
+        strokeWeight: 2,
+        strokeColor: "#ffffff"
+    };
+
+    const VendorMarker = {
+        path: window.google?.maps?.SymbolPath?.BACKWARD_CLOSED_ARROW || 0,
+        scale: 6,
+        fillColor: "#3b82f6",
+        fillOpacity: 1,
+        strokeWeight: 2,
+        strokeColor: "#ffffff"
+    };
+
+    const RiderMarker = {
+        path: "M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z",
+        scale: 1.5,
+        fillColor: "#6d28d9",
+        fillOpacity: 1,
+        strokeWeight: 2,
+        strokeColor: "#ffffff"
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -192,7 +281,7 @@ const OrderTracking = () => {
                                 <div>
                                     <p className="text-brand-purple-light/40 text-[10px] font-black uppercase tracking-widest mb-1">Estimated Arrival</p>
                                     <p className="text-lg font-black">
-                                        {trackingData.eta ? new Date(trackingData.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Calculating...'}
+                                        {googleMetrics.duration !== '0 min' ? googleMetrics.duration : (trackingData.eta ? new Date(trackingData.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Calculating...')}
                                     </p>
                                 </div>
                                 <div>
@@ -351,11 +440,15 @@ const OrderTracking = () => {
                             <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Distance</p>
-                                    <p className="text-lg font-black text-white">{trackingData.distance || '0.0'} km</p>
+                                    <p className="text-lg font-black text-white">
+                                        {googleMetrics.distance && googleMetrics.distance !== '0.0 km' ? googleMetrics.distance : (trackingData.distance || 'Calculating...')}
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">ETA</p>
-                                    <p className="text-lg font-black text-white">~15 Mins</p>
+                                    <p className="text-lg font-black text-white">
+                                        {googleMetrics.duration && googleMetrics.duration !== '0 min' ? googleMetrics.duration : '~15 Mins'}
+                                    </p>
                                 </div>
                             </div>
                         </div>

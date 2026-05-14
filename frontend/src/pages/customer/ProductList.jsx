@@ -15,14 +15,29 @@ const ProductList = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialCategory = queryParams.get('category') ? queryParams.get('category').split(',') : [];
+  const initialSubCategory = queryParams.get('subcategory') ? queryParams.get('subcategory').split(',') : [];
 
   const [filters, setFilters] = useState({
     category: initialCategory,
+    subcategory: initialSubCategory,
     priceRange: [0, 100000],
     rating: 0,
     search: '',
     sort: 'relevance'
   });
+
+  // Re-sync filters when URL changes (e.g. clicking from navbar)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category') ? params.get('category').split(',') : [];
+    const sub = params.get('subcategory') ? params.get('subcategory').split(',') : [];
+    
+    setFilters(prev => ({
+      ...prev,
+      category: cat,
+      subcategory: sub
+    }));
+  }, [location.search]);
 
   useEffect(() => {
     fetchInitialData();
@@ -34,7 +49,7 @@ const ProductList = () => {
 
   const fetchInitialData = async () => {
     try {
-      const catRes = await productService.getCategories();
+      const catRes = await productService.getCategories({ top_level: 'true' });
       const categoryData = Array.isArray(catRes.data) ? catRes.data : (catRes.data.results || []);
       setCategories(categoryData);
     } catch (err) {
@@ -47,9 +62,10 @@ const ProductList = () => {
     try {
       const params = {
         category: filters.category.join(','),
+        subcategory: filters.subcategory.join(','),
         search: filters.search,
         max_price: filters.priceRange[1],
-        min_rating: filters.rating > 0 ? filters.rating : undefined,
+        rating: filters.rating > 0 ? filters.rating : undefined,
         sort: filters.sort
       };
       const res = await productService.getProducts(params);
@@ -63,16 +79,34 @@ const ProductList = () => {
     }
   };
 
-  const handleCategoryToggle = (categoryId) => {
+  const handleCategoryToggle = (catId, catSlug) => {
     setFilters(prev => {
-      const currentCategories = [...prev.category];
-      const index = currentCategories.indexOf(categoryId.toString());
-      if (index > -1) {
-        currentCategories.splice(index, 1);
+      let currentCategories = [...prev.category];
+      const hasId = currentCategories.includes(catId.toString());
+      const hasSlug = catSlug && currentCategories.includes(catSlug);
+      
+      if (hasId || hasSlug) {
+        currentCategories = currentCategories.filter(c => c !== catId.toString() && c !== catSlug);
       } else {
-        currentCategories.push(categoryId.toString());
+        currentCategories.push(catId.toString());
       }
-      return { ...prev, category: currentCategories };
+      // Clear subcategories when switching/adding main categories from sidebar to avoid impossible filter combinations
+      return { ...prev, category: currentCategories, subcategory: [] };
+    });
+  };
+
+  const handleSubCategoryToggle = (subId, subSlug) => {
+    setFilters(prev => {
+      let currentSubCategories = [...prev.subcategory];
+      const hasId = currentSubCategories.includes(subId.toString());
+      const hasSlug = subSlug && currentSubCategories.includes(subSlug);
+      
+      if (hasId || hasSlug) {
+        currentSubCategories = currentSubCategories.filter(s => s !== subId.toString() && s !== subSlug);
+      } else {
+        currentSubCategories.push(subId.toString());
+      }
+      return { ...prev, subcategory: currentSubCategories };
     });
   };
 
@@ -93,12 +127,15 @@ const ProductList = () => {
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 bg-white p-3 rounded-lg border border-slate-100">
         <Link to="/" className="hover:text-primary-600 transition-colors cursor-pointer">Home</Link> <ChevronRight size={12} />
-        {filters.category.length > 0 ? (
+        {filters.category.length > 0 || filters.subcategory.length > 0 ? (
           <>
-            <Link to="/products" className="hover:text-primary-600 transition-colors cursor-pointer" onClick={() => setFilters({...filters, category: []})}>Products</Link>
+            <Link to="/products" className="hover:text-primary-600 transition-colors cursor-pointer" onClick={() => setFilters({...filters, category: [], subcategory: []})}>Products</Link>
             <ChevronRight size={12} />
             <span className="font-bold text-slate-800">
-              {categories.filter(c => filters.category.includes(c.id.toString()) || filters.category.includes(c.slug)).map(c => c.name).join(', ')}
+              {[
+                ...categories.filter(c => filters.category.includes(c.id.toString()) || filters.category.includes(c.slug)),
+                ...categories.flatMap(c => c.children || []).filter(s => filters.subcategory.includes(s.id.toString()) || filters.subcategory.includes(s.slug))
+              ].map(c => c.name).filter((v, i, a) => a.indexOf(v) === i).join(', ')}
             </span>
           </>
         ) : (
@@ -165,17 +202,36 @@ const ProductList = () => {
                       />
                     </div>
                     
-                    <div className="max-h-60 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                    <div className="max-h-80 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
                       {filteredCategories.map(cat => (
-                        <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
-                          <input 
-                            type="checkbox" 
-                            checked={filters.category.includes(cat.id.toString()) || filters.category.includes(cat.slug)}
-                            onChange={() => handleCategoryToggle(cat.id)}
-                            className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{cat.name}</span>
-                        </label>
+                        <div key={cat.id} className="space-y-3">
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <input 
+                              type="checkbox" 
+                              checked={filters.category.includes(cat.id.toString()) || (cat.slug && filters.category.includes(cat.slug))}
+                              onChange={() => handleCategoryToggle(cat.id, cat.slug)}
+                              className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                            />
+                            <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 transition-colors uppercase tracking-tight">{cat.name}</span>
+                          </label>
+
+                          {/* Nested Subcategories */}
+                          {(filters.category.includes(cat.id.toString()) || (cat.slug && filters.category.includes(cat.slug))) && cat.children && cat.children.length > 0 && (
+                            <div className="ml-7 space-y-2 pb-1 border-l-2 border-slate-50 pl-4 animate-in fade-in slide-in-from-left-2 duration-300">
+                              {cat.children.map(sub => (
+                                <label key={sub.id} className="flex items-center gap-3 cursor-pointer group">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={filters.subcategory.includes(sub.id.toString()) || (sub.slug && filters.subcategory.includes(sub.slug))}
+                                    onChange={() => handleSubCategoryToggle(sub.id, sub.slug)}
+                                    className="w-3.5 h-3.5 rounded border-slate-300 text-primary-500 focus:ring-primary-400 cursor-pointer"
+                                  />
+                                  <span className="text-xs text-slate-500 group-hover:text-slate-800 transition-colors">{sub.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ))}
                       {filteredCategories.length === 0 && (
                         <p className="text-sm text-slate-500 italic text-center py-2">No categories found</p>
@@ -248,7 +304,7 @@ const ProductList = () => {
               <h3 className="text-lg font-bold text-slate-800">No products found</h3>
               <p className="text-slate-500 mb-6">Try adjusting your filters to find what you're looking for.</p>
               <button
-                onClick={() => setFilters({ category: [], priceRange: [0, 100000], rating: 0, search: '', sort: 'relevance' })}
+                onClick={() => setFilters({ category: [], subcategory: [], priceRange: [0, 100000], rating: 0, search: '', sort: 'relevance' })}
                 className="text-primary-600 font-bold hover:underline"
               >
                 Clear all filters

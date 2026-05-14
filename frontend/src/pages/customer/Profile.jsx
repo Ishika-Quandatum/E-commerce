@@ -280,7 +280,7 @@ const Profile = () => {
                         <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
                           <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
                             <img
-                              src={item.product?.primary_image || "https://placehold.co/100"}
+                              src={item.product?.primary_image ? (item.product.primary_image.startsWith('http') ? item.product.primary_image : `http://127.0.0.1:8000${item.product.primary_image}`) : "https://placehold.co/100"}
                               alt={item.product?.name}
                               className="w-full h-full object-cover"
                             />

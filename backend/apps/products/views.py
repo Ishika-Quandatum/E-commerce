@@ -49,10 +49,27 @@ class ProductViewSet(viewsets.ModelViewSet):
         if category_param and category_param != 'All Categories':
             categories = [c.strip() for c in category_param.split(',') if c.strip()]
             if categories:
-                if categories[0].isdigit():
-                    queryset = queryset.filter(category__id__in=categories)
-                else:
-                    queryset = queryset.filter(category__slug__in=categories)
+                q_cat = Q()
+                cat_ids = [c for c in categories if c.isdigit()]
+                cat_slugs = [c for c in categories if not c.isdigit()]
+                if cat_ids:
+                    q_cat |= Q(category__id__in=cat_ids)
+                if cat_slugs:
+                    q_cat |= Q(category__slug__in=cat_slugs)
+                queryset = queryset.filter(q_cat)
+        
+        subcategory_param = self.request.query_params.get('subcategory')
+        if subcategory_param and subcategory_param != 'All Subcategories':
+            subcategories = [s.strip() for s in subcategory_param.split(',') if s.strip()]
+            if subcategories:
+                q_sub = Q()
+                sub_ids = [s for s in subcategories if s.isdigit()]
+                sub_slugs = [s for s in subcategories if not s.isdigit()]
+                if sub_ids:
+                    q_sub |= Q(subcategory__id__in=sub_ids)
+                if sub_slugs:
+                    q_sub |= Q(subcategory__slug__in=sub_slugs)
+                queryset = queryset.filter(q_sub)
                 
         search = self.request.query_params.get('search')
         if search:
@@ -87,6 +104,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         if max_price and max_price.isdigit():
             queryset = queryset.filter(price__lte=max_price)
             
+        # Rating Filtering
+        rating_param = self.request.query_params.get('rating')
+        if rating_param:
+            try:
+                r_val = float(rating_param)
+                # If an exact star is selected (e.g. 2), show products in that range (2.0 - 2.99)
+                queryset = queryset.filter(rating__gte=r_val, rating__lt=r_val + 1)
+            except ValueError:
+                pass
+
         min_rating = self.request.query_params.get('min_rating')
         if min_rating:
             try:

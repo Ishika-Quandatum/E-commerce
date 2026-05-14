@@ -10,6 +10,8 @@ import { riderService, trackingService } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import clsx from "clsx";
 
+import useGoogleDistance from "../../hooks/useGoogleDistance";
+
 const LiveTracking = () => {
     const { user } = useAuth();
     const [shipment, setShipment] = useState(null);
@@ -20,6 +22,10 @@ const LiveTracking = () => {
     const mapInstance = useRef(null);
     const directionsRenderer = useRef(null);
 
+    // Dynamic origin and destination for distance calculation
+    const [origin, setOrigin] = useState(null);
+    const [destination, setDestination] = useState(null);
+
     // Google Maps Loader
     useEffect(() => {
         if (window.google) {
@@ -27,7 +33,7 @@ const LiveTracking = () => {
             return;
         }
         const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=geometry,directions`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'}&libraries=geometry,directions`;
         script.async = true;
         script.defer = true;
         script.onload = () => setGoogleLoaded(true);
@@ -40,8 +46,44 @@ const LiveTracking = () => {
                 riderService.getActiveTask(),
                 riderService.getStats()
             ]);
-            setShipment(taskRes.data);
+            const data = taskRes.data;
+            setShipment(data);
             setStats(statsRes.data);
+
+            if (data) {
+                const riderPos = data.current_location ? {
+                    lat: parseFloat(data.current_location.latitude),
+                    lng: parseFloat(data.current_location.longitude)
+                } : null;
+
+                const vendorPos = {
+                    lat: parseFloat(data.vendor_info.lat),
+                    lng: parseFloat(data.vendor_info.lng)
+                };
+
+                const customerPos = {
+                    lat: parseFloat(data.customer_info.lat),
+                    lng: parseFloat(data.customer_info.lng)
+                };
+
+                // Logic: 
+                // If status is 'Start Pickup' -> Origin = Rider (or self), Destination = Vendor
+                // If status is 'Picked Up' or 'Start Delivery' -> Origin = Rider, Destination = Customer
+                if (data.shipment_status === 'Start Pickup') {
+                    setDestination(vendorPos);
+                } else {
+                    setDestination(customerPos);
+                }
+
+                if (riderPos) {
+                    setOrigin(riderPos);
+                } else {
+                    // Fallback to getting current browser position for origin if riderPos not yet in DB
+                    navigator.geolocation.getCurrentPosition(pos => {
+                        setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    });
+                }
+            }
         } catch (err) {
             if (err.response?.status === 404) {
                 setShipment(null);
@@ -52,9 +94,11 @@ const LiveTracking = () => {
         }
     };
 
+    const googleMetrics = useGoogleDistance(origin, destination, googleLoaded);
+
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 15000); // Poll every 15s
+        const interval = setInterval(fetchData, 5000); // Poll every 5s
         return () => clearInterval(interval);
     }, []);
 
@@ -81,7 +125,7 @@ const LiveTracking = () => {
                     { enableHighAccuracy: true }
                 );
             }
-        }, 10000); // Every 10s
+        }, 5000); // Every 5s for real-time tracking
 
         return () => clearInterval(syncInterval);
     }, [shipment?.id, shipment?.shipment_status]);

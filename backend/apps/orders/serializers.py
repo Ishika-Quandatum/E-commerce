@@ -15,7 +15,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'price', 'subtotal', 'return_status', 'has_active_return', 'can_return', 'refund_details']
+        fields = ['id', 'product', 'product_id', 'quantity', 'price', 'size', 'subtotal', 'return_status', 'has_active_return', 'can_return', 'refund_details']
     def get_product(self, obj):
         request = self.context.get('request')
         return ProductListSerializer(obj.product, context={'request': request}).data

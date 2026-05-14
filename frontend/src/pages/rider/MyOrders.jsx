@@ -17,6 +17,48 @@ import { motion, AnimatePresence } from "framer-motion";
 import { adminService, riderService, trackingService } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import clsx from "clsx";
+import useGoogleDistance from "../../hooks/useGoogleDistance";
+
+const DistanceDisplay = ({ order, googleLoaded }) => {
+    const [origin, setOrigin] = useState(null);
+    const [destination, setDestination] = useState(null);
+
+    useEffect(() => {
+        if (!order) return;
+
+        // Determine destination based on status
+        if ((order.status === 'Assigned' || order.status === 'Start Pickup') && order.vendor_info?.lat && order.vendor_info?.lng) {
+            setDestination({ lat: parseFloat(order.vendor_info.lat), lng: parseFloat(order.vendor_info.lng) });
+        } else if (order.customer_info?.lat && order.customer_info?.lng) {
+            setDestination({ lat: parseFloat(order.customer_info.lat), lng: parseFloat(order.customer_info.lng) });
+        }
+
+        // Get current position for origin
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            });
+        }
+    }, [order]);
+
+    const metrics = useGoogleDistance(origin, destination, googleLoaded);
+
+    if (!metrics.distance || metrics.distance === '0.0 km') return null;
+
+    return (
+        <div className="flex items-center gap-4 mt-2 px-4 py-2 bg-slate-100/50 rounded-xl border border-slate-100">
+            <div className="flex items-center gap-1.5">
+                <MapPin size={14} className="text-brand-purple" />
+                <span className="text-[10px] font-black text-slate-700">{metrics.distance}</span>
+            </div>
+            <div className="w-px h-3 bg-slate-200"></div>
+            <div className="flex items-center gap-1.5">
+                <Clock size={14} className="text-brand-orange" />
+                <span className="text-[10px] font-black text-slate-700">{metrics.duration}</span>
+            </div>
+        </div>
+    );
+};
 
 const MyOrders = () => {
     const [activeTab, setActiveTab] = useState("Assigned");
@@ -24,6 +66,21 @@ const MyOrders = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [googleLoaded, setGoogleLoaded] = useState(false);
+
+    // Google Maps Loader
+    useEffect(() => {
+        if (window.google) {
+            setGoogleLoaded(true);
+            return;
+        }
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'}&libraries=geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setGoogleLoaded(true);
+        document.head.appendChild(script);
+    }, []);
 
     const tabs = [
         { id: "New", label: "New Tasks", icon: <Package size={18} /> },
@@ -36,7 +93,7 @@ const MyOrders = () => {
     useEffect(() => {
         let interval;
         const inTransitOrders = (orders || []).filter(o => 
-            ['Picked Up', 'Start Delivery', 'In Transit', 'Reached'].includes(o.status)
+            ['Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached'].includes(o.status)
         );
         
         if (inTransitOrders.length > 0) {
@@ -57,7 +114,7 @@ const MyOrders = () => {
                         { enableHighAccuracy: true }
                     );
                 }
-            }, 10000); // 10 seconds
+            }, 5000); // 5 seconds for real-time tracking
         }
 
         return () => clearInterval(interval);
@@ -237,6 +294,13 @@ const MyOrders = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Optional Distance/ETA for Active Tasks */}
+                            {['Assigned', 'Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit'].includes(order.status) && (
+                                <div className="px-6 pb-2 pt-2 bg-slate-50/50">
+                                    <DistanceDisplay order={order} googleLoaded={googleLoaded} />
+                                </div>
+                            )}
 
                             {/* Card Body: Dual Address Workflow */}
                             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 relative">

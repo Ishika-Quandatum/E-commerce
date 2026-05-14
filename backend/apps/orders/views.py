@@ -129,6 +129,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             # Clear the cart
             cart.items.all().delete()
             
+            if not created_orders:
+                return Response({'error': 'Failed to create any orders from cart items.'}, status=status.HTTP_400_BAD_REQUEST)
+                
             return Response(OrderSerializer(created_orders, many=True, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):

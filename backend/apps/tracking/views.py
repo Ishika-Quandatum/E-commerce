@@ -401,17 +401,21 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                 product = item.product
                 image_url = None
                 if product:
-                    first_image = product.images.first()
-                    if first_image:
-                        image_url = first_image.image.url
+                    try:
+                        first_image = product.images.first()
+                        if first_image and hasattr(first_image, 'image') and first_image.image:
+                            image_url = first_image.image.url
+                    except Exception:
+                        image_url = None
 
                     items_data.append({
-                        'name': product.name,
+                        'name': product.name if product else "Unknown Product",
                         'qty': item.quantity,
                         'price': float(item.price),
                         'image': image_url
                     })
 
+            vendor = shipment.order.vendor
             data = {
                 'id': shipment.id,
                 'shipment_status': shipment.status,
@@ -423,11 +427,11 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                     'vehicle': shipment.rider.vehicle_type if shipment.rider else "Bike",
                 },
                 'vendor_info': {
-                    'shop_name': shipment.order.vendor.shop_name,
-                    'address': shipment.order.vendor.shop_address,
-                    'phone': shipment.order.vendor.pickup_contact or shipment.order.vendor.user.phone,
-                    'lat': shipment.order.vendor.location_lat,
-                    'lng': shipment.order.vendor.location_lng
+                    'shop_name': vendor.shop_name if vendor else "N/A",
+                    'address': vendor.shop_address if vendor else "N/A",
+                    'phone': (vendor.pickup_contact or vendor.user.phone) if vendor else "N/A",
+                    'lat': vendor.location_lat if vendor else None,
+                    'lng': vendor.location_lng if vendor else None
                 },
                 'customer_info': {
                     'name': shipment.order.user.get_full_name() or shipment.order.user.username,

@@ -299,15 +299,20 @@ class ShipmentSerializer(serializers.ModelSerializer):
 
     def get_distance(self, obj):
         import math
-        request = self.context.get('request')
-        rider = getattr(request.user, 'rider_profile', None) if request and request.user else None
+        rider = obj.rider
         
         if not rider or not rider.current_lat or not rider.current_lng:
             return 0.0
             
-        # Distance to Vendor (Pick up point)
-        vendor = obj.order.vendor
-        if not vendor or not vendor.location_lat:
+        # Destination logic: If not picked up -> Vendor. If picked up -> Customer.
+        if obj.status in ['Picked Up', 'Start Delivery', 'In Transit', 'Reached']:
+            dest_lat = obj.order.latitude
+            dest_lng = obj.order.longitude
+        else:
+            dest_lat = obj.order.vendor.location_lat if obj.order.vendor else None
+            dest_lng = obj.order.vendor.location_lng if obj.order.vendor else None
+
+        if not dest_lat or not dest_lng:
             return 0.0
             
         def haversine(lat1, lon1, lat2, lon2):
@@ -318,7 +323,7 @@ class ShipmentSerializer(serializers.ModelSerializer):
             a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
             return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-        dist = haversine(rider.current_lat, rider.current_lng, vendor.location_lat, vendor.location_lng)
+        dist = haversine(rider.current_lat, rider.current_lng, dest_lat, dest_lng)
         return round(dist, 1)
 
     def get_customer_name(self, obj):
