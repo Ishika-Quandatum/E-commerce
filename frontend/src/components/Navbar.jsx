@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart, User, LogOut, Menu, Search, ChevronDown, ChevronRight, LayoutGrid, Package, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +21,21 @@ const Navbar = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
+
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -212,7 +227,7 @@ const Navbar = () => {
               )}
             </Link>
             {user ? (
-              <div className="relative group">
+              <div className="relative group" ref={profileRef}>
                 <button 
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="relative p-2 sm:p-2.5 text-brand-navy/70 hover:text-brand-orange transition-all bg-brand-soft-gray rounded-xl sm:rounded-2xl border border-slate-100 flex items-center justify-center"
