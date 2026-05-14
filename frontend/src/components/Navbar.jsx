@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Menu, Search, ChevronDown, ChevronRight, LayoutGrid, Package } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu, Search, ChevronDown, ChevronRight, LayoutGrid, Package, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { usePlatform } from '../context/PlatformContext';
@@ -17,6 +17,8 @@ const Navbar = () => {
   const location = useLocation();
 
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
 
@@ -34,6 +36,8 @@ const Navbar = () => {
 
   useEffect(() => {
     setIsMegaMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsProfileMenuOpen(false);
   }, [location.pathname]);
 
   const handleCategoryClick = (slug) => {
@@ -59,10 +63,10 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20">
           <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl font-black tracking-tighter text-brand-purple uppercase italic flex items-center">
+            <Link to="/" className="text-xl sm:text-2xl font-black tracking-tighter text-brand-purple uppercase italic flex items-center">
               <span>{logoMain}</span>
               {logoLast && (
-                <span className="text-brand-orange not-italic font-black text-3xl -ml-0.5 transform -translate-y-0.5">{logoLast}</span>
+                <span className="text-brand-orange not-italic font-black text-2xl sm:text-3xl -ml-0.5 transform -translate-y-0.5">{logoLast}</span>
               )}
             </Link>
             <div className="hidden md:flex items-center gap-8">
@@ -189,7 +193,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="hidden sm:flex items-center bg-brand-soft-gray rounded-2xl px-4 py-2 gap-2 border border-slate-200 focus-within:border-brand-purple/30 focus-within:bg-white transition-all">
               <Search size={18} className="text-brand-navy/40" />
               <input 
@@ -199,8 +203,8 @@ const Navbar = () => {
               />
             </div>
 
-            <Link to="/cart" className="relative p-2.5 text-brand-navy/70 hover:text-brand-orange transition-all bg-brand-soft-gray rounded-2xl border border-slate-100 group">
-              <ShoppingCart size={22} className="group-hover:scale-110 transition-transform" />
+            <Link to="/cart" className="relative p-2 sm:p-2.5 text-brand-navy/70 hover:text-brand-orange transition-all bg-brand-soft-gray rounded-xl sm:rounded-2xl border border-slate-100 group">
+              <ShoppingCart className="w-5 h-5 sm:w-[22px] sm:h-[22px] group-hover:scale-110 transition-transform" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-brand-orange text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg min-w-[20px] text-center shadow-lg shadow-brand-orange/40">
                   {cartCount}
@@ -209,16 +213,22 @@ const Navbar = () => {
             </Link>
             {user ? (
               <div className="relative group">
-                <Link to="/profile" className="relative p-2.5 text-brand-navy/70 hover:text-brand-orange transition-all bg-brand-soft-gray rounded-2xl border border-slate-100 flex items-center justify-center">
-                  <User size={22} className="group-hover:scale-110 transition-transform" />
+                <button 
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="relative p-2 sm:p-2.5 text-brand-navy/70 hover:text-brand-orange transition-all bg-brand-soft-gray rounded-xl sm:rounded-2xl border border-slate-100 flex items-center justify-center"
+                >
+                  <User className="w-5 h-5 sm:w-[22px] sm:h-[22px] group-hover:scale-110 transition-transform" />
                   {user?.unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-brand-orange text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg min-w-[20px] text-center shadow-lg shadow-brand-orange/40">
                       {user.unreadCount}
                     </span>
                   )}
-                </Link>
+                </button>
                 
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <div className={clsx(
+                  "absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 transition-all duration-300 z-50",
+                  isProfileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"
+                )}>
                   <div className="py-2">
                     <div className="px-4 py-2 border-b border-slate-100 mb-2">
                       <p className="text-sm font-bold text-slate-800 truncate">{user.first_name || 'User'}</p>
@@ -241,24 +251,72 @@ const Navbar = () => {
               </div>
             ) : (
               <>
-                <Link to="/login" className="relative p-2.5 text-brand-navy/70 hover:text-brand-purple transition-all bg-brand-soft-gray rounded-2xl border border-slate-100 group hidden sm:flex">
-                  <User size={22} className="group-hover:scale-110 transition-transform" />
+                <Link to="/login" className="relative p-2 sm:p-2.5 text-brand-navy/70 hover:text-brand-purple transition-all bg-brand-soft-gray rounded-xl sm:rounded-2xl border border-slate-100 group hidden sm:flex">
+                  <User className="w-5 h-5 sm:w-[22px] sm:h-[22px] group-hover:scale-110 transition-transform" />
                 </Link>
                 <Link 
                   to="/login" 
-                  className="bg-brand-purple text-white px-6 py-2.5 rounded-2xl font-black text-sm transition-all shadow-xl shadow-brand-purple/20 active:scale-95 hover:bg-brand-purple/90"
+                  className="bg-brand-purple text-white px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl font-bold sm:font-black text-xs sm:text-sm transition-all shadow-md sm:shadow-xl shadow-brand-purple/20 active:scale-95 hover:bg-brand-purple/90 whitespace-nowrap"
                 >
                   Sign In
                 </Link>
               </>
             )}
             
-            <button className="md:hidden p-2 text-brand-navy/60 hover:text-brand-purple">
-              <Menu size={24} />
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-1 sm:p-2 text-brand-navy/60 hover:text-brand-purple">
+              {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-b border-slate-100 overflow-hidden"
+          >
+            <div className="px-4 py-6 flex flex-col gap-4">
+              <div className="flex items-center bg-brand-soft-gray rounded-xl px-4 py-2 gap-2 border border-slate-200 focus-within:border-brand-purple/30 focus-within:bg-white transition-all">
+                <Search size={18} className="text-brand-navy/40" />
+                <input 
+                  type="text" 
+                  placeholder="Search premium goods..." 
+                  className="bg-transparent border-none outline-none text-sm w-full placeholder:text-brand-navy/30 text-brand-navy font-medium"
+                />
+              </div>
+              <div className="flex flex-col space-y-2 mt-4">
+                <Link to="/products" className="text-brand-navy/70 hover:text-brand-purple transition-all font-bold text-sm uppercase tracking-widest py-2 border-b border-slate-50">
+                  Shop All
+                </Link>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      handleCategoryClick(cat.slug);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-left text-brand-navy/70 hover:text-brand-purple transition-all font-bold text-sm uppercase tracking-widest py-2 border-b border-slate-50 flex items-center justify-between"
+                  >
+                    {cat.name} <ChevronRight size={16} />
+                  </button>
+                ))}
+                
+                {user && user.role === 'superadmin' && (
+                  <Link to="/admin" className="text-brand-purple font-bold text-sm uppercase tracking-widest py-2 border-b border-slate-50">Admin Dashboard</Link>
+                )}
+                {user && user.role === 'vendor' && (
+                  <Link to="/vendor" className="text-brand-orange font-bold text-sm uppercase tracking-widest py-2 border-b border-slate-50">Vendor Panel</Link>
+                )}
+                {(!user || user.role === 'user') && (
+                  <Link to="/become-seller" className="text-brand-purple font-black text-sm uppercase tracking-tighter hover:text-brand-purple/80 transition-colors py-2 border-b border-slate-50">Become Partner</Link>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
