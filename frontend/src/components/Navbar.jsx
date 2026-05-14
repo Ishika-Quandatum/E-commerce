@@ -75,7 +75,7 @@ const Navbar = () => {
   return (
     <>
     <nav className="sticky top-0 z-50 bg-white border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between items-center h-16 lg:h-20">
           <div className="flex items-center gap-8">
             <Link to="/" className="text-xl sm:text-2xl font-black tracking-tighter text-brand-purple uppercase italic flex items-center">
@@ -90,7 +90,7 @@ const Navbar = () => {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-purple transition-all group-hover:w-full" />
               </Link>
               <div 
-                className="relative group h-full flex items-center"
+                className="group h-full flex items-center"
                 onMouseEnter={() => setIsMegaMenuOpen(true)}
                 onMouseLeave={() => setIsMegaMenuOpen(false)}
               >
@@ -111,10 +111,10 @@ const Navbar = () => {
                 <AnimatePresence>
                   {isMegaMenuOpen && (
                     <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute top-10 left-0 mt-4 w-[1000px] max-w-[calc(100vw-2rem)] bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] border border-slate-100 overflow-hidden flex z-[100]"
+                      initial={{ opacity: 0, y: 10, x: '-50%' }}
+                      animate={{ opacity: 1, y: 0, x: '-50%' }}
+                      exit={{ opacity: 0, y: 10, x: '-50%' }}
+                      className="absolute top-full left-1/2 mt-4 w-[1000px] max-w-[calc(100vw-2rem)] bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] border border-slate-100 overflow-hidden flex z-[100]"
                     >
                       {/* Sidebar */}
                       <div className="w-[320px] bg-slate-50 p-6 space-y-2 border-r border-slate-100 overflow-y-auto max-h-[500px] custom-scrollbar shrink-0">

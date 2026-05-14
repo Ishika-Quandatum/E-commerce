@@ -23,7 +23,7 @@ const VendorManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState(''); // '' means All
-  const [viewMode, setViewMode] = useState('grid'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
   useEffect(() => {
     fetchVendors();
@@ -138,25 +138,23 @@ const VendorManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {vendors.map((vendor) => (
                 <div key={vendor.id} className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all group relative">
-                    <div className="flex justify-between items-start mb-8">
-                        <div className="flex items-center gap-5">
-                            <div className="w-16 h-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center text-indigo-600 border border-slate-100 p-4 transition-transform group-hover:scale-110 duration-500">
-                                <Store size={32} />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900 leading-tight">{vendor.shop_name}</h3>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1 bg-slate-50 rounded-full mt-2 inline-block">
-                                    {vendor.shop_type || "Marketplace"}
-                                </span>
-                            </div>
+                    <div className="flex items-start gap-4 mb-8">
+                        <div className="w-16 h-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center text-indigo-600 border border-slate-100 p-4 transition-transform group-hover:scale-110 duration-500 shrink-0">
+                            <Store size={32} />
                         </div>
-                        <div className={clsx(
-                            "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm",
-                            vendor.status === 'Approved' ? 'bg-emerald-500 text-white' :
-                            vendor.status === 'Rejected' ? 'bg-rose-500 text-white' :
-                            'bg-amber-500 text-white'
-                        )}>
-                            {vendor.status}
+                        <div className="flex-1 min-w-0 flex flex-col items-start">
+                            <div className={clsx(
+                                "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm w-fit mb-2",
+                                vendor.status === 'Approved' ? 'bg-emerald-500 text-white' :
+                                vendor.status === 'Rejected' ? 'bg-rose-500 text-white' :
+                                'bg-amber-500 text-white'
+                            )}>
+                                {vendor.status}
+                            </div>
+                            <h3 className="text-xl font-black text-slate-900 leading-tight break-words w-full">{vendor.shop_name}</h3>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1 bg-slate-50 rounded-full mt-2 inline-block truncate max-w-full">
+                                {vendor.shop_type || "Marketplace"}
+                            </span>
                         </div>
                     </div>
 
