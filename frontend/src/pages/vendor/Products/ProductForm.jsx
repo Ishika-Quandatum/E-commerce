@@ -16,12 +16,17 @@ import {
   FileQuestion,
   Loader2,
   Zap,
-  Tag
+  Tag,
+  CreditCard,
+  Wallet,
+  Banknote
 } from "lucide-react";
 import { clsx } from "clsx";
 import { useNavigate } from "react-router-dom";
+import { usePlatform } from "../../../context/PlatformContext";
 
 const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
+  const { settings } = usePlatform();
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -51,6 +56,10 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     is_new_arrival: false,
     is_best_seller: false,
     is_offer_product: false,
+    allow_razorpay: true,
+    allow_paypal: true,
+    allow_cod: true,
+    allow_wallet: true,
   });
   const [previewUrls, setPreviewUrls] = useState([]);
   const [error, setError] = useState(null);
@@ -134,6 +143,10 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         is_new_arrival: initialData.is_new_arrival || false,
         is_best_seller: initialData.is_best_seller || false,
         is_offer_product: initialData.is_offer_product || false,
+        allow_razorpay: initialData.allow_razorpay ?? true,
+        allow_paypal: initialData.allow_paypal ?? true,
+        allow_cod: initialData.allow_cod ?? true,
+        allow_wallet: initialData.allow_wallet ?? true,
       });
       if (initialData.images && initialData.images.length > 0) {
         setPreviewUrls(initialData.images.map(img => img.image));
@@ -294,6 +307,8 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
         data.append(key, formData[key] === "" ? "0" : formData[key]);
       } else if (key === 'sizes') {
         data.append(key, JSON.stringify(formData[key]));
+      } else if (key.startsWith('is_') || key.startsWith('allow_')) {
+        data.append(key, formData[key] ? 'true' : 'false');
       } else if (formData[key] !== null && formData[key] !== "") {
         data.append(key, formData[key]);
       }
@@ -945,6 +960,131 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                   </div>
                 </div>
               </div>
+
+              {/* Payment Configuration */}
+              {(settings?.payment_razorpay || settings?.payment_paypal || settings?.payment_cod || settings?.payment_wallet) && (
+                <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-8 space-y-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center">
+                      <CreditCard size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-lg">Payment Methods</h3>
+                      <p className="text-slate-500 text-xs">Enable/disable specific payment options for this product</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {settings?.payment_razorpay && (
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                            <CreditCard size={16} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">Razorpay</p>
+                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Accept cards & UPI payments</p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => setFormData({...formData, allow_razorpay: !formData.allow_razorpay})}
+                          className={clsx(
+                            "w-12 h-6 rounded-full relative transition-all duration-300",
+                            formData.allow_razorpay ? "bg-indigo-600 shadow-lg shadow-indigo-200" : "bg-slate-200"
+                          )}
+                        >
+                          <div className={clsx(
+                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
+                            formData.allow_razorpay ? "left-7" : "left-1"
+                          )} />
+                        </button>
+                      </div>
+                    )}
+
+                    {settings?.payment_paypal && (
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <CreditCard size={16} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">PayPal</p>
+                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">International wallet payments</p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => setFormData({...formData, allow_paypal: !formData.allow_paypal})}
+                          className={clsx(
+                            "w-12 h-6 rounded-full relative transition-all duration-300",
+                            formData.allow_paypal ? "bg-blue-600 shadow-lg shadow-blue-200" : "bg-slate-200"
+                          )}
+                        >
+                          <div className={clsx(
+                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
+                            formData.allow_paypal ? "left-7" : "left-1"
+                          )} />
+                        </button>
+                      </div>
+                    )}
+
+                    {settings?.payment_cod && (
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <Banknote size={16} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">Cash on Delivery</p>
+                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Pay at time of delivery</p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => setFormData({...formData, allow_cod: !formData.allow_cod})}
+                          className={clsx(
+                            "w-12 h-6 rounded-full relative transition-all duration-300",
+                            formData.allow_cod ? "bg-emerald-600 shadow-lg shadow-emerald-200" : "bg-slate-200"
+                          )}
+                        >
+                          <div className={clsx(
+                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
+                            formData.allow_cod ? "left-7" : "left-1"
+                          )} />
+                        </button>
+                      </div>
+                    )}
+
+                    {settings?.payment_wallet && (
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+                            <Wallet size={16} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">Wallet</p>
+                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Deduct from customer wallet</p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => setFormData({...formData, allow_wallet: !formData.allow_wallet})}
+                          className={clsx(
+                            "w-12 h-6 rounded-full relative transition-all duration-300",
+                            formData.allow_wallet ? "bg-amber-600 shadow-lg shadow-amber-200" : "bg-slate-200"
+                          )}
+                        >
+                          <div className={clsx(
+                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
+                            formData.allow_wallet ? "left-7" : "left-1"
+                          )} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
             </div>
           </div>

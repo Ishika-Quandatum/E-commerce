@@ -4,9 +4,11 @@ import { CreditCard, Truck, MapPin, CheckCircle, ArrowLeft, Plus, X, Home, Brief
 import { useCart } from '../../context/CartContext';
 import { orderService, addressService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePlatform } from '../../context/PlatformContext';
 
 const Checkout = () => {
   const { cart, fetchCart } = useCart();
+  const { settings } = usePlatform();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -36,6 +38,74 @@ const Checkout = () => {
     expiryDate: '',
     cvv: ''
   });
+
+  const getAvailablePaymentMethods = () => {
+    if (!settings || !cart?.items) return [];
+
+    const methods = [];
+    
+    // Check if ALL products in cart allow a specific method
+    const allAllowRazorpay = cart.items.every(item => item.product.allow_razorpay !== false);
+    const allAllowPaypal = cart.items.every(item => item.product.allow_paypal !== false);
+    const allAllowCOD = cart.items.every(item => item.product.allow_cod !== false);
+    const allAllowWallet = cart.items.every(item => item.product.allow_wallet !== false);
+
+    if (settings.payment_razorpay && allAllowRazorpay) {
+      methods.push({ 
+        id: 'upi', 
+        label: 'UPI Payment', 
+        description: 'Pay using Google Pay, PhonePe, or Paytm',
+        icon: <div className="flex -space-x-1">
+          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[8px] font-black text-blue-600 border border-white">G</div>
+          <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[8px] font-black text-purple-600 border border-white">P</div>
+          <div className="w-6 h-6 rounded-full bg-sky-100 flex items-center justify-center text-[8px] font-black text-sky-600 border border-white">Py</div>
+        </div>
+      });
+      methods.push({ 
+        id: 'card', 
+        label: 'Credit / Debit Card', 
+        description: 'All major cards supported',
+        icon: <CreditCard size={18} className="text-blue-500" />
+      });
+    }
+
+    if (settings.payment_paypal && allAllowPaypal) {
+      methods.push({ 
+        id: 'paypal', 
+        label: 'PayPal', 
+        description: 'Secure international payments',
+        icon: <CreditCard size={18} className="text-blue-600" />
+      });
+    }
+
+    if (settings.payment_cod && allAllowCOD) {
+      methods.push({ 
+        id: 'cod', 
+        label: 'Cash on Delivery', 
+        description: 'Pay in cash or QR during delivery',
+        icon: <Truck size={18} className="text-emerald-500" />
+      });
+    }
+
+    if (settings.payment_wallet && allAllowWallet) {
+      methods.push({ 
+        id: 'wallet', 
+        label: 'Wallet Payment', 
+        description: 'Pay using your account balance',
+        icon: <Briefcase size={18} className="text-amber-500" />
+      });
+    }
+
+    return methods;
+  };
+
+  const availableMethods = getAvailablePaymentMethods();
+
+  useEffect(() => {
+    if (availableMethods.length > 0 && !availableMethods.find(m => m.id === formData.payment_method)) {
+      setFormData(prev => ({ ...prev, payment_method: availableMethods[0].id }));
+    }
+  }, [availableMethods]);
 
   useEffect(() => {
     fetchAddresses();
@@ -242,30 +312,7 @@ const Checkout = () => {
                 </div>
 
                 <div className="space-y-4 mb-10">
-                  {[
-                    { 
-                      id: 'upi', 
-                      label: 'UPI Payment', 
-                      description: 'Pay using Google Pay, PhonePe, or Paytm',
-                      icon: <div className="flex -space-x-1">
-                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[8px] font-black text-blue-600 border border-white">G</div>
-                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[8px] font-black text-purple-600 border border-white">P</div>
-                        <div className="w-6 h-6 rounded-full bg-sky-100 flex items-center justify-center text-[8px] font-black text-sky-600 border border-white">Py</div>
-                      </div>
-                    },
-                    { 
-                      id: 'card', 
-                      label: 'Credit / Debit Card', 
-                      description: 'All major cards supported',
-                      icon: <CreditCard size={18} className="text-blue-500" />
-                    },
-                    { 
-                      id: 'cod', 
-                      label: 'Cash on Delivery', 
-                      description: 'Pay in cash or QR during delivery',
-                      icon: <Truck size={18} className="text-emerald-500" />
-                    }
-                  ].map((method) => (
+                  {availableMethods.length > 0 ? availableMethods.map((method) => (
                     <div 
                       key={method.id}
                       onClick={() => setFormData({ ...formData, payment_method: method.id })}
@@ -380,19 +427,31 @@ const Checkout = () => {
                                 </div>
                               )}
 
-                              {method.id === 'cod' && (
-                                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
-                                  <CheckCircle size={18} className="text-emerald-500" />
-                                  <p className="text-sm font-medium text-emerald-800">You can pay using Cash, UPI, or Cards at the time of delivery.</p>
-                                </div>
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ))}
-                </div>
+                                {method.id === 'cod' && (
+                                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
+                                    <CheckCircle size={18} className="text-emerald-500" />
+                                    <p className="text-sm font-medium text-emerald-800">You can pay using Cash, UPI, or Cards at the time of delivery.</p>
+                                  </div>
+                                )}
+
+                                {method.id === 'wallet' && (
+                                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-3">
+                                    <CheckCircle size={18} className="text-amber-500" />
+                                    <p className="text-sm font-medium text-amber-800">Payment will be deducted from your account balance.</p>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )) : (
+                      <div className="p-8 bg-rose-50 border-2 border-dashed border-rose-100 rounded-[2rem] text-center">
+                        <p className="text-rose-600 font-bold">No compatible payment methods available for the items in your cart.</p>
+                        <p className="text-rose-400 text-xs mt-1">Please contact support or check platform availability.</p>
+                      </div>
+                    )}
+                  </div>
 
                 <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 mb-10">
                   <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">

@@ -58,7 +58,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'discount_type', 'tax', 'sku', 'status',
             'stock', 'quantity', 'unit', 'category', 'category_name', 'category_slug',
             'subcategory', 'subcategory_name', 'brand', 'brand_name',
-            'rating', 'reviews_count', 'is_featured', 'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 'created_at', 'images', 'image', 'shipping_charge',
+            'rating', 'reviews_count', 'is_featured', 'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 
+            'allow_razorpay', 'allow_paypal', 'allow_cod', 'allow_wallet',
+            'created_at', 'images', 'image', 'shipping_charge',
             'reviews', 'review_metrics', 'can_review', 'eligibility_message', 'sizes', 'vendor'
         ]
 
@@ -181,7 +183,9 @@ class ProductListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'full_description', 'price', 'discount_price', 'stock', 'quantity', 'unit',
             'category', 'category_name', 'brand', 'brand_name', 'status', 'rating', 'reviews_count', 'is_featured',
-            'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 'primary_image', 'discount_percentage', 'shipping_charge', 'vendor', 'vendor_name', 'sku', 'created_at', 'sizes', 'tax', 'discount_type'
+            'is_deal', 'is_new_arrival', 'is_best_seller', 'is_offer_product', 
+            'allow_razorpay', 'allow_paypal', 'allow_cod', 'allow_wallet',
+            'primary_image', 'discount_percentage', 'shipping_charge', 'vendor', 'vendor_name', 'sku', 'created_at', 'sizes', 'tax', 'discount_type'
         ]
 
     def get_primary_image(self, obj):

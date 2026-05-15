@@ -67,8 +67,13 @@ class Product(models.Model):
     is_best_seller = models.BooleanField(default=False)
     is_offer_product = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    # Payment Methods Control (Vendor Level)
+    allow_razorpay = models.BooleanField(default=True)
+    allow_paypal = models.BooleanField(default=True)
+    allow_cod = models.BooleanField(default=True)
+    allow_wallet = models.BooleanField(default=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
     @property
     def reviews_count(self):
         return self.reviews.filter(is_approved=True).count()
