@@ -83,7 +83,8 @@ const Settings = () => {
       showNotification("Settings updated successfully!");
     } catch (err) {
       console.error("Failed to update settings", err);
-      showNotification("Failed to update settings.", "error");
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || "Failed to update settings.";
+      showNotification(errorMsg, "error");
     } finally {
       setSaving(false);
     }

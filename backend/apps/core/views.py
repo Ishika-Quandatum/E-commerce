@@ -4,21 +4,24 @@ from rest_framework.decorators import action
 from .models import PlatformSetting
 from .serializers import PlatformSettingSerializer
 
-class PlatformSettingViewSet(viewsets.ViewSet):
+class PlatformSettingViewSet(viewsets.ModelViewSet):
+    queryset = PlatformSetting.objects.all()
+    serializer_class = PlatformSettingSerializer
+    
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action in ['list', 'platform_stats']:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         settings = PlatformSetting.get_settings()
-        serializer = PlatformSettingSerializer(settings)
+        serializer = self.get_serializer(settings)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['patch'])
+    @action(detail=False, methods=['patch', 'post'])
     def update_settings(self, request):
         settings = PlatformSetting.get_settings()
-        serializer = PlatformSettingSerializer(settings, data=request.data, partial=True)
+        serializer = self.get_serializer(settings, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -35,7 +38,6 @@ class PlatformSettingViewSet(viewsets.ViewSet):
         vendors = Vendor.objects.filter(status='Approved').count()
         cities = Vendor.objects.filter(status='Approved').exclude(city__isnull=True).values('city').distinct().count()
         
-        # Adding base counts so the platform doesn't look empty in development
         return Response({
             'customers': customers + 150,
             'products': products + 120,
