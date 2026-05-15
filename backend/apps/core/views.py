@@ -21,11 +21,17 @@ class PlatformSettingViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['patch', 'post'])
     def update_settings(self, request):
         settings = PlatformSetting.get_settings()
+        # Ensure we handle potential string-to-decimal conversions and partial updates
         serializer = self.get_serializer(settings, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # If invalid, return the specific error details
+        return Response({
+            "error": "Validation Failed",
+            "details": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def platform_stats(self, request):

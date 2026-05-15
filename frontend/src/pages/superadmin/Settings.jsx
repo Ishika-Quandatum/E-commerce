@@ -83,7 +83,17 @@ const Settings = () => {
       showNotification("Settings updated successfully!");
     } catch (err) {
       console.error("Failed to update settings", err);
-      const errorMsg = err.response?.data?.message || err.response?.data?.error || "Failed to update settings.";
+      let errorMsg = "Failed to update settings.";
+      
+      if (err.response?.data?.details) {
+        const details = err.response.data.details;
+        const firstField = Object.keys(details)[0];
+        const firstError = Array.isArray(details[firstField]) ? details[firstField][0] : details[firstField];
+        errorMsg = `${firstField}: ${firstError}`;
+      } else {
+        errorMsg = err.response?.data?.message || err.response?.data?.error || errorMsg;
+      }
+      
       showNotification(errorMsg, "error");
     } finally {
       setSaving(false);
