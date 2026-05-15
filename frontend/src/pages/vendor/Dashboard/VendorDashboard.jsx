@@ -6,7 +6,7 @@ import { useAuth } from "../../../context/AuthContext";
 import clsx from "clsx";
 
 const VendorDashboard = () => {
-  const { vendorStatus } = useAuth();
+  const { vendorStatus, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     total_products: 0,
@@ -18,12 +18,12 @@ const VendorDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (vendorStatus === 'Approved') {
+    if (vendorStatus === 'Approved' || isSuperAdmin) {
       fetchData();
     } else {
       setLoading(false);
     }
-  }, [vendorStatus]);
+  }, [vendorStatus, isSuperAdmin]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -49,7 +49,7 @@ const VendorDashboard = () => {
       case 'delivered': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'shipped': return 'bg-blue-50 text-blue-600 border-blue-100';
       case 'processing': return 'bg-sky-50 text-sky-600 border-sky-100';
-      case 'packed': return 'bg-amber-50 text-amber-600 border-amber-100';
+      case 'packed': return 'bg-amber-50 text-amber-100 border-amber-100';
       case 'pending': return 'bg-rose-50 text-rose-600 border-rose-100';
       default: return 'bg-slate-50 text-slate-500 border-slate-100';
     }
@@ -63,7 +63,7 @@ const VendorDashboard = () => {
     );
   }
 
-  if (vendorStatus !== 'Approved') {
+  if (vendorStatus !== 'Approved' && !isSuperAdmin) {
     return (
       <div className="max-w-3xl mx-auto py-12 px-4">
         <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/50 p-12 text-center overflow-hidden relative">

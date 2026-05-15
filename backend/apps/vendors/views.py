@@ -69,6 +69,28 @@ class VendorViewSet(viewsets.ModelViewSet):
         try:
             vendor = request.user.vendor_profile
         except Vendor.DoesNotExist:
+            if request.user.role in ['superadmin', 'admin'] or request.user.is_staff:
+                # Return mock data for admins to prevent 404 during testing
+                return Response({
+                    'id': 0,
+                    'shop_name': 'Admin Test Store',
+                    'shop_description': 'This is a mock vendor profile for testing as an administrator.',
+                    'shop_address': 'Admin Headquarters',
+                    'city': 'Admin City',
+                    'state': 'Admin State',
+                    'pincode': '000000',
+                    'email': request.user.email,
+                    'pickup_contact': getattr(request.user, 'phone', '0000000000') or '0000000000',
+                    'followers_count': 0,
+                    'products_count': 0,
+                    'rating': 5.0,
+                    'total_orders_count': 0,
+                    'shop_type': 'Test',
+                    'created_at': '2026-05-15T00:00:00Z',
+                    'pickup_availability': True,
+                    'delivery_radius': 10,
+                    'estimated_dispatch_time': 'Immediate'
+                })
             return Response({'error': 'Vendor profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
         if request.method == 'GET':

@@ -32,7 +32,10 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         # Data Isolation
         if not user.is_anonymous:
-            if user.role == 'vendor':
+            # Staff and Super Admin can see all (for management)
+            if user.role in ['superadmin', 'admin'] or user.is_staff:
+                pass 
+            elif user.role == 'vendor':
                 vendor = getattr(user, 'vendor_profile', None)
                 if vendor:
                     queryset = queryset.filter(vendor=vendor)
@@ -40,7 +43,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                     queryset = queryset.none()
             elif user.role in ['user', 'rider']:
                 queryset = queryset.filter(status='Active')
-            # Super Admin and Admin can see all (for management)
         else:
             # Anonymous users only see active products
             queryset = queryset.filter(status='Active')
@@ -193,6 +195,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         if user.role == 'vendor':
             vendor = getattr(user, 'vendor_profile', None)
             serializer.save(vendor=vendor)
+        elif user.is_staff or user.role in ['admin', 'superadmin']:
+            # If staff is creating, check if a vendor was passed in the request data
+            vendor_id = self.request.data.get('vendor')
+            if vendor_id:
+                serializer.save(vendor_id=vendor_id)
+            else:
+                # Default to first vendor to avoid orphaned products
+                from apps.vendors.models import Vendor
+                first_vendor = Vendor.objects.first()
+                serializer.save(vendor=first_vendor)
         else:
             serializer.save()
 
