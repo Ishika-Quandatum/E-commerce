@@ -1,0 +1,31 @@
+import React, { useState, useEffect } from "react";
+import { Settings as SettingsIcon, Bell, Globe, Database, Pencil, Save, CheckCircle2, RefreshCw, Phone, Mail, Camera, MessageCircle, Briefcase, Coins, Percent, CreditCard, Wallet, Banknote, Languages, Clock, ArrowRight } from "lucide-react";
+import { platformService } from "../../services/api";
+import { usePlatform } from "../../context/PlatformContext";
+import { motion, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
+
+const Settings = () => {
+  const { platformName, updateBranding, refreshSettings } = usePlatform();
+  const [settings, setSettings] = useState({
+    platform_name: "",
+    global_commission: 0,
+    two_factor_enabled: false,
+    auto_update_check: true,
+    support_phone: "",
+    support_email: "",
+    facebook_link: "",
+    instagram_link: "",
+    twitter_link: "",
+    linkedin_link: "",
+    currency: "INR",
+    language: "English",
+    timezone: "Asia/Kolkata",
+    tax_type: "GST",
+    default_tax: 18,
+    tax_included: false,
+    payment_razorpay: true,
+    payment_paypal: false,
+    payment_cod: true,
+    payment_wallet: true
+  });
