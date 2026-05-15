@@ -13,6 +13,7 @@ import {
   FileSpreadsheet,
   Download,
   X,
+  Edit2,
   FileQuestion,
   Loader2,
   Zap,
@@ -38,6 +39,9 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
   const [showSubcategoryInput, setShowSubcategoryInput] = useState(false);
   const [newSubcategoryName, setNewSubcategoryName] = useState("");
   const [newSubcategoryImage, setNewSubcategoryImage] = useState(null);
+  const [isEditingBrand, setIsEditingBrand] = useState(false);
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [isEditingSubcategory, setIsEditingSubcategory] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
@@ -100,32 +104,64 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
   const handleCreateBrand = async () => {
     if (!newBrandName.trim()) return;
     try {
-      const res = await adminService.createBrand({ name: newBrandName });
-      setBrands([...brands, res.data]);
-      setFormData({ ...formData, brand: res.data.id });
+      if (isEditingBrand && formData.brand) {
+        const res = await adminService.updateBrand(formData.brand, { name: newBrandName });
+        setBrands(brands.map(b => b.id === res.data.id ? res.data : b));
+      } else {
+        const res = await adminService.createBrand({ name: newBrandName });
+        setBrands([...brands, res.data]);
+        setFormData({ ...formData, brand: res.data.id });
+      }
       setShowBrandInput(false);
       setNewBrandName("");
+      setIsEditingBrand(false);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to create brand");
+      setError(err.response?.data?.error || "Failed to process brand");
+    }
+  };
+
+  const handleEditBrand = () => {
+    const selectedBrand = brands.find(b => b.id === parseInt(formData.brand) || b.id === formData.brand);
+    if (selectedBrand) {
+      setNewBrandName(selectedBrand.name);
+      setIsEditingBrand(true);
+      setShowBrandInput(true);
     }
   };
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
     try {
-      const formData = new FormData();
-      formData.append('name', newCategoryName);
+      const formDataObj = new FormData();
+      formDataObj.append('name', newCategoryName);
       if (newCategoryImage) {
-        formData.append('image', newCategoryImage);
+        formDataObj.append('image', newCategoryImage);
       }
-      const res = await adminService.createCategory(formData);
-      setCategories([...categories, res.data]);
-      setFormData({ ...formData, category: res.data.id });
+      
+      if (isEditingCategory && formData.category) {
+        const res = await adminService.updateCategory(formData.category, formDataObj);
+        setCategories(categories.map(c => c.id === res.data.id ? res.data : c));
+      } else {
+        const res = await adminService.createCategory(formDataObj);
+        setCategories([...categories, res.data]);
+        setFormData({ ...formData, category: res.data.id });
+      }
       setShowCategoryInput(false);
       setNewCategoryName("");
       setNewCategoryImage(null);
+      setIsEditingCategory(false);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to create category");
+      setError(err.response?.data?.error || "Failed to process category");
+    }
+  };
+
+  const handleEditCategory = () => {
+    const selectedCat = categories.find(c => c.id === parseInt(formData.category) || c.id === formData.category);
+    if (selectedCat) {
+      setNewCategoryName(selectedCat.name);
+      setIsEditingCategory(true);
+      setShowCategoryInput(true);
+      // We can't pre-fill file input, but we can show name
     }
   };
 
@@ -138,14 +174,30 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
       if (newSubcategoryImage) {
         formDataToSend.append('image', newSubcategoryImage);
       }
-      const res = await adminService.createCategory(formDataToSend);
-      setSubcategories([...subcategories, res.data]);
-      setFormData({ ...formData, subcategory: res.data.id });
+      
+      if (isEditingSubcategory && formData.subcategory) {
+        const res = await adminService.updateCategory(formData.subcategory, formDataToSend);
+        setSubcategories(subcategories.map(s => s.id === res.data.id ? res.data : s));
+      } else {
+        const res = await adminService.createCategory(formDataToSend);
+        setSubcategories([...subcategories, res.data]);
+        setFormData({ ...formData, subcategory: res.data.id });
+      }
       setShowSubcategoryInput(false);
       setNewSubcategoryName("");
       setNewSubcategoryImage(null);
+      setIsEditingSubcategory(false);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to create subcategory");
+      setError(err.response?.data?.error || "Failed to process subcategory");
+    }
+  };
+
+  const handleEditSubcategory = () => {
+    const selectedSub = subcategories.find(s => s.id === parseInt(formData.subcategory) || s.id === formData.subcategory);
+    if (selectedSub) {
+      setNewSubcategoryName(selectedSub.name);
+      setIsEditingSubcategory(true);
+      setShowSubcategoryInput(true);
     }
   };
 
@@ -522,18 +574,29 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                   <div>
                     <div className="flex justify-between items-center mb-2">
                        <label className="block text-xs font-bold text-slate-700">Brand</label>
-                       <button type="button" onClick={() => setShowBrandInput(!showBrandInput)} className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:text-indigo-700"><Plus size={14}/> {showBrandInput ? "Cancel" : "Add New Brand"}</button>
+                       <div className="flex gap-3">
+                         {formData.brand && !showBrandInput && (
+                            <button type="button" onClick={handleEditBrand} className="text-amber-600 text-xs font-bold flex items-center gap-1 hover:text-amber-700">
+                              <Edit2 size={14}/> Edit
+                            </button>
+                         )}
+                         <button type="button" onClick={() => { setShowBrandInput(!showBrandInput); setIsEditingBrand(false); setNewBrandName(""); }} className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:text-indigo-700">
+                           <Plus size={14}/> {showBrandInput ? "Cancel" : "Add New Brand"}
+                         </button>
+                       </div>
                     </div>
                     {showBrandInput ? (
                       <div className="flex gap-2">
                         <input
                           type="text"
                           className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm placeholder:text-slate-400"
-                          placeholder="Enter new brand name"
+                          placeholder={isEditingBrand ? "Edit brand name" : "Enter new brand name"}
                           value={newBrandName}
                           onChange={(e) => setNewBrandName(e.target.value)}
                         />
-                        <button type="button" onClick={handleCreateBrand} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">Add</button>
+                        <button type="button" onClick={handleCreateBrand} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors whitespace-nowrap">
+                          {isEditingBrand ? "Update" : "Add"}
+                        </button>
                       </div>
                     ) : (
                       <select
@@ -554,16 +617,23 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                          <label className="block text-xs font-bold text-slate-700">Category <span className="text-red-500">*</span></label>
-                         <button type="button" onClick={() => setShowCategoryInput(!showCategoryInput)} className="text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-indigo-700">
-                           <Plus size={12}/> {showCategoryInput ? "Cancel" : "Add New Category"}
-                         </button>
+                         <div className="flex gap-3">
+                           {formData.category && !showCategoryInput && (
+                              <button type="button" onClick={handleEditCategory} className="text-amber-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-amber-700">
+                                <Edit2 size={12}/> Edit
+                              </button>
+                           )}
+                           <button type="button" onClick={() => { setShowCategoryInput(!showCategoryInput); setIsEditingCategory(false); setNewCategoryName(""); setNewCategoryImage(null); }} className="text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-indigo-700">
+                             <Plus size={12}/> {showCategoryInput ? "Cancel" : "Add New Category"}
+                           </button>
+                         </div>
                       </div>
                       {showCategoryInput ? (
                         <div className="space-y-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
                           <input
                             type="text"
                             className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 transition-all outline-none text-xs font-bold"
-                            placeholder="Category Name"
+                            placeholder={isEditingCategory ? "Edit category name" : "Category Name"}
                             value={newCategoryName}
                             onChange={(e) => setNewCategoryName(e.target.value)}
                           />
@@ -573,7 +643,9 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                                 <span className="text-[10px] font-bold text-slate-500">{newCategoryImage ? newCategoryImage.name : "Category Image"}</span>
                                 <input type="file" className="hidden" accept="image/*" onChange={(e) => setNewCategoryImage(e.target.files[0])} />
                              </label>
-                             <button type="button" onClick={handleCreateCategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700">Add</button>
+                             <button type="button" onClick={handleCreateCategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 whitespace-nowrap">
+                               {isEditingCategory ? "Update" : "Add"}
+                             </button>
                           </div>
                         </div>
                       ) : (
@@ -593,18 +665,23 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-xs font-bold text-slate-700">Subcategory</label>
-                        {formData.category && (
-                           <button type="button" onClick={() => setShowSubcategoryInput(!showSubcategoryInput)} className="text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-indigo-700">
-                             <Plus size={12}/> {showSubcategoryInput ? "Cancel" : "Add New Subcategory"}
-                           </button>
-                        )}
+                        <div className="flex gap-3">
+                          {formData.subcategory && !showSubcategoryInput && (
+                             <button type="button" onClick={handleEditSubcategory} className="text-amber-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-amber-700">
+                               <Edit2 size={12}/> Edit
+                             </button>
+                          )}
+                          <button type="button" onClick={() => { setShowSubcategoryInput(!showSubcategoryInput); setIsEditingSubcategory(false); setNewSubcategoryName(""); setNewSubcategoryImage(null); }} className="text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-indigo-700">
+                            <Plus size={12}/> {showSubcategoryInput ? "Cancel" : "Add New Subcategory"}
+                          </button>
+                        </div>
                       </div>
                       {showSubcategoryInput ? (
                         <div className="space-y-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
                           <input
                             type="text"
                             className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 transition-all outline-none text-xs font-bold"
-                            placeholder="Subcategory Name"
+                            placeholder={isEditingSubcategory ? "Edit subcategory name" : "Subcategory Name"}
                             value={newSubcategoryName}
                             onChange={(e) => setNewSubcategoryName(e.target.value)}
                           />
@@ -614,7 +691,9 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                                 <span className="text-[10px] font-bold text-slate-500">{newSubcategoryImage ? newSubcategoryImage.name : "Sub Image"}</span>
                                 <input type="file" className="hidden" accept="image/*" onChange={(e) => setNewSubcategoryImage(e.target.files[0])} />
                              </label>
-                             <button type="button" onClick={handleCreateSubcategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700">Add</button>
+                             <button type="button" onClick={handleCreateSubcategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 whitespace-nowrap">
+                               {isEditingSubcategory ? "Update" : "Add"}
+                             </button>
                           </div>
                         </div>
                       ) : (

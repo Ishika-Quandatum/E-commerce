@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutGrid, ChevronRight, Search, Box, ArrowRight } from 'lucide-react';
+import { LayoutGrid, ChevronRight, Search, ArrowRight } from 'lucide-react';
 import { productService } from '../../services/api';
 import { Link } from 'react-router-dom';
 
@@ -79,7 +79,7 @@ const Categories = () => {
                       {cat.image ? (
                         <img src={cat.image} alt="" className="w-8 h-8 object-contain" />
                       ) : (
-                        <Box size={32} />
+                        <LayoutGrid size={32} />
                       )}
                    </div>
                    <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2 group-hover:text-indigo-600 transition-colors">{cat.name}</h3>
