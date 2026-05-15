@@ -196,27 +196,38 @@ class AdminRiderSerializer(serializers.ModelSerializer):
         alphabet = string.ascii_letters + string.digits
         password = ''.join(secrets.choice(alphabet) for i in range(12))
 
-        with transaction.atomic():
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name,
-                role='rider',
-                phone=phone,
-                address=address
-            )
-            
-            rider_profile = RiderProfile.objects.create(
-                user=user,
-                vehicle_type=validated_data.get('vehicle_type', ''),
-                license_number=validated_data.get('license_number', ''),
-                is_active=True
-            )
-            
-            rider_profile.generated_password = password
-            return rider_profile
+        from django.db import IntegrityError
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role='rider',
+                    phone=phone,
+                    address=address
+                )
+                
+                rider_profile = RiderProfile.objects.create(
+                    user=user,
+                    vehicle_type=validated_data.get('vehicle_type', ''),
+                    license_number=validated_data.get('license_number', ''),
+                    is_active=True
+                )
+                
+                rider_profile.generated_password = password
+                return rider_profile
+        except IntegrityError as e:
+            error_msg = str(e).lower()
+            if 'username' in error_msg:
+                raise serializers.ValidationError({"username": "This username is already taken."})
+            if 'email' in error_msg:
+                raise serializers.ValidationError({"email": "This email is already registered."})
+            if 'phone' in error_msg:
+                raise serializers.ValidationError({"phone": "This phone number is already registered."})
+            raise serializers.ValidationError({"error": f"Failed to create rider account: {str(e)}"})
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

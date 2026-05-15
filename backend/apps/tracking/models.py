@@ -281,4 +281,6 @@ class LiveOrderTracking(models.Model):
 @receiver(post_save, sender=RiderProfile)
 def create_rider_financials(sender, instance, created, **kwargs):
     if created:
-        RiderWallet.objects.create(rider=instance)
+        from apps.tracking.models import RiderWallet, SalaryConfiguration
+        RiderWallet.objects.get_or_create(rider=instance)
+        SalaryConfiguration.objects.get_or_create(rider=instance)
