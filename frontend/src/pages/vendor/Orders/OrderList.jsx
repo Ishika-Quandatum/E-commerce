@@ -214,7 +214,7 @@ const OrderList = () => {
                         "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm",
                         getStatusStyle(o.display_status || o.status)
                       )}>
-                        {o.display_status || o.status}
+                        {(o.display_status || o.status) === 'Pending' ? 'Order Placed' : (o.display_status || o.status)}
                       </span>
                     </td>
                     <td className="px-10 py-8">

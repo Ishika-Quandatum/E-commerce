@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CreditCard, Truck, MapPin, CheckCircle, ArrowLeft, Plus, X, Home, Briefcase, User } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { orderService, addressService } from '../../services/api';
@@ -10,6 +10,9 @@ const Checkout = () => {
   const { cart, fetchCart } = useCart();
   const { settings } = usePlatform();
   const navigate = useNavigate();
+  const location = useLocation();
+  const directItem = location.state?.directCheckoutItem;
+  const itemsToRender = directItem ? [directItem] : (cart?.items || []);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState('address'); // address, payment
@@ -40,15 +43,15 @@ const Checkout = () => {
   });
 
   const getAvailablePaymentMethods = () => {
-    if (!settings || !cart?.items) return [];
+    if (!settings || !itemsToRender) return [];
 
     const methods = [];
     
-    // Check if ALL products in cart allow a specific method
-    const allAllowRazorpay = cart.items.every(item => item.product.allow_razorpay !== false);
-    const allAllowPaypal = cart.items.every(item => item.product.allow_paypal !== false);
-    const allAllowCOD = cart.items.every(item => item.product.allow_cod !== false);
-    const allAllowWallet = cart.items.every(item => item.product.allow_wallet !== false);
+    // Check if ALL products allow a specific method
+    const allAllowRazorpay = itemsToRender.every(item => item.product.allow_razorpay !== false);
+    const allAllowPaypal = itemsToRender.every(item => item.product.allow_paypal !== false);
+    const allAllowCOD = itemsToRender.every(item => item.product.allow_cod !== false);
+    const allAllowWallet = itemsToRender.every(item => item.product.allow_wallet !== false);
 
     if (settings.payment_razorpay && allAllowRazorpay) {
       methods.push({ 
@@ -139,9 +142,9 @@ const Checkout = () => {
     }
   };
 
-  const subtotal = cart?.items?.reduce((acc, item) => acc + (parseFloat(item.product.discount_price || item.product.price) * item.quantity), 0) || 0;
-  const shipping = cart?.items?.reduce((acc, item) => acc + (parseFloat(item.product.shipping_charge || 0) * item.quantity), 0) || 0;
-  const tax = cart?.items?.reduce((acc, item) => {
+  const subtotal = itemsToRender.reduce((acc, item) => acc + (parseFloat(item.product.discount_price || item.product.price) * item.quantity), 0) || 0;
+  const shipping = itemsToRender.reduce((acc, item) => acc + (parseFloat(item.product.shipping_charge || 0) * item.quantity), 0) || 0;
+  const tax = itemsToRender.reduce((acc, item) => {
     const price = parseFloat(item.product.discount_price || item.product.price);
     const taxRate = parseFloat(item.product.tax || 0);
     return acc + (price * item.quantity * (taxRate / 100));
@@ -157,13 +160,22 @@ const Checkout = () => {
     setLoading(true);
     try {
       const addressString = `${selectedAddress.full_name}, ${selectedAddress.street_address}, ${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pincode}. Phone: ${selectedAddress.phone}${selectedAddress.alternative_phone ? ` (Alt: ${selectedAddress.alternative_phone})` : ''}`;
-      await orderService.placeOrder({
+      
+      const payload = {
         address: addressString,
         phone: selectedAddress.phone,
         alternative_phone: selectedAddress.alternative_phone,
         payment_method: formData.payment_method,
         total_price: total
-      });
+      };
+
+      if (directItem) {
+        payload.product_id = directItem.product.id;
+        payload.quantity = directItem.quantity;
+        payload.size = directItem.size;
+      }
+
+      await orderService.placeOrder(payload);
       setSuccess(true);
       await fetchCart();
       setTimeout(() => navigate('/profile'), 3000);
@@ -487,7 +499,7 @@ const Checkout = () => {
           <div className="bg-slate-900 text-white p-10 rounded-[3rem] shadow-2xl sticky top-24">
             <h2 className="text-2xl font-bold mb-8">Order Summary</h2>
             <div className="space-y-6 max-h-[400px] overflow-y-auto pr-4 custom-scrollbar mb-8">
-              {cart?.items.map((item) => (
+              {itemsToRender.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="w-16 h-16 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
                     <img

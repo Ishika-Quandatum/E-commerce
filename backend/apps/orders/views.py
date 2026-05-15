@@ -52,26 +52,51 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
-            # We override create because we might create multiple orders (one per vendor)
-            cart, created = Cart.objects.get_or_create(user=request.user)
-            cart_items = cart.items.all()
-    
-            if not cart_items.exists():
-                return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
-    
-            # Group items by vendor and verify stock
+            product_id = request.data.get('product_id')
+            quantity = int(request.data.get('quantity', 1))
+            size = request.data.get('size')
+            
             vendor_items = {}
-            for item in cart_items:
-                if item.product.stock < item.quantity:
-                    return Response(
-                        {'error': f'Not enough stock for {item.product.name}. Available: {item.product.stock}'}, 
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+            
+            if product_id:
+                # Direct checkout for a single product
+                from apps.products.models import Product
+                try:
+                    product = Product.objects.get(id=product_id)
+                except Product.DoesNotExist:
+                    return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
                 
-                vendor = item.product.vendor
-                if vendor not in vendor_items:
-                    vendor_items[vendor] = []
-                vendor_items[vendor].append(item)
+                if product.stock < quantity:
+                    return Response({'error': f'Not enough stock for {product.name}. Available: {product.stock}'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                class MockCartItem:
+                    def __init__(self, product, quantity, size):
+                        self.product = product
+                        self.quantity = quantity
+                        self.size = size
+                
+                item = MockCartItem(product, quantity, size)
+                vendor_items[product.vendor] = [item]
+            else:
+                # Use cart items
+                cart, created = Cart.objects.get_or_create(user=request.user)
+                cart_items = cart.items.all()
+        
+                if not cart_items.exists():
+                    return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+        
+                # Group items by vendor and verify stock
+                for item in cart_items:
+                    if item.product.stock < item.quantity:
+                        return Response(
+                            {'error': f'Not enough stock for {item.product.name}. Available: {item.product.stock}'}, 
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
+                    vendor = item.product.vendor
+                    if vendor not in vendor_items:
+                        vendor_items[vendor] = []
+                    vendor_items[vendor].append(item)
     
             created_orders = []
             # Create an order per vendor
@@ -126,8 +151,9 @@ class OrderViewSet(viewsets.ModelViewSet):
                 )
                 created_orders.append(order)
     
-            # Clear the cart
-            cart.items.all().delete()
+            # Clear the cart if it was not a direct checkout
+            if not product_id:
+                cart.items.all().delete()
             
             if not created_orders:
                 return Response({'error': 'Failed to create any orders from cart items.'}, status=status.HTTP_400_BAD_REQUEST)

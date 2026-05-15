@@ -223,12 +223,7 @@ SKU: ${product.sku || 'N/A'}
       alert("Please select a size first");
       return;
     }
-    try {
-      await addToCart(product.id, quantity, selectedSize);
-      navigate('/checkout');
-    } catch (err) {
-      console.error("Error in Buy Now", err);
-    }
+    navigate('/checkout', { state: { directCheckoutItem: { product, quantity, size: selectedSize } } });
   };
 
   return (
@@ -275,20 +270,28 @@ SKU: ${product.sku || 'N/A'}
 
            {/* Split Action Buttons */}
            <div className="flex gap-3">
-              <button
-                onClick={handleAddToCart}
-                className="flex-1 h-14 bg-white border border-[#6D28D9] text-[#6D28D9] rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all active:scale-95 cursor-pointer"
-              >
-                <ShoppingCart size={20} />
-                Add to Cart
-              </button>
-              <button
-                onClick={handleBuyNow}
-                className="flex-1 h-14 bg-[#6D28D9] hover:bg-[#5B21B6] text-white rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all shadow-lg shadow-[#6D28D9]/20 active:scale-95 cursor-pointer"
-              >
-                <ChevronsRight size={20} className="text-white" />
-                Buy Now
-              </button>
+              {product.stock === 0 ? (
+                <div className="flex-1 h-14 bg-slate-100 text-slate-400 rounded-lg flex items-center justify-center font-bold text-base border border-slate-200">
+                  Out of Stock
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 h-14 bg-white border border-[#6D28D9] text-[#6D28D9] rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all active:scale-95 cursor-pointer"
+                  >
+                    <ShoppingCart size={20} />
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={handleBuyNow}
+                    className="flex-1 h-14 bg-[#6D28D9] hover:bg-[#5B21B6] text-white rounded-lg flex items-center justify-center gap-2 font-bold text-base transition-all shadow-lg shadow-[#6D28D9]/20 active:scale-95 cursor-pointer"
+                  >
+                    <ChevronsRight size={20} className="text-white" />
+                    Buy Now
+                  </button>
+                </>
+              )}
            </div>
         </div>
 

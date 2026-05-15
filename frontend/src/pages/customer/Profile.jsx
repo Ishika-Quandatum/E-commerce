@@ -276,19 +276,11 @@ const Profile = () => {
                     <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Placed On</p>
                     <p className="text-sm font-bold text-slate-900">{new Date(order.created_at).toLocaleDateString()}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Status</p>
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${order.status === 'Delivered' ? 'bg-green-100 text-green-600' :
-                        order.status === 'Shipped' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
-                      }`}>
-                      {order.status}
-                    </span>
-                  </div>
                 </div>
                 <div className="flex items-center gap-6">
-                  {order.shipment_id && order.status !== 'Delivered' && (
+                  {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
                     <button
-                      onClick={() => navigate(`/tracking/${order.shipment_id}`)}
+                      onClick={() => navigate(`/tracking/${order.shipment_id || order.id}`)}
                       className="flex items-center gap-2 bg-brand-purple text-white px-4 py-2 rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-brand-purple/20 transition-all"
                     >
                       <MapPin size={14} />

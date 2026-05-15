@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { trackingService } from '../../../services/api';
+import api, { trackingService } from '../../../services/api';
 import { 
   Package, MapPin, Navigation, Clock, Phone, MessageSquare, 
   ChevronRight, AlertTriangle, HelpCircle, ShieldCheck, 
@@ -59,8 +59,25 @@ const OrderTracking = () => {
             setLoading(false);
         } catch (err) {
             console.error("Tracking Error:", err);
-            setError(err.response?.data?.error || err.response?.data?.detail || "Unable to load tracking details.");
-            setLoading(false);
+            // Fallback to order details if tracking not found
+            try {
+                const orderRes = await api.get(`orders/${id}/`);
+                const orderData = orderRes.data;
+                setTrackingData({
+                    tracking_number: `ORD-${orderData.id.toString().padStart(5, '0')}`,
+                    shipment_status: 'Order Placed',
+                    customer_info: { address: orderData.address },
+                    order_items: orderData.items.map(item => ({
+                        name: item.product.name,
+                        price: item.price,
+                        qty: item.quantity
+                    }))
+                });
+                setLoading(false);
+            } catch (orderErr) {
+                setError(err.response?.data?.error || err.response?.data?.detail || "Unable to load tracking details.");
+                setLoading(false);
+            }
         }
     };
 
@@ -251,7 +268,7 @@ const OrderTracking = () => {
     );
 
     const stages = [
-        { label: 'Confirmed', statuses: ['Dispatch Queue', 'Assigned'], icon: <Package size={18} /> },
+        { label: 'Confirmed', statuses: ['Dispatch Queue', 'Assigned', 'Accepted', 'Order Placed'], icon: <Package size={18} /> },
         { label: 'Pickup', statuses: ['Start Pickup'], icon: <Store size={18} /> },
         { label: 'Picked Up', statuses: ['Picked Up'], icon: <Truck size={18} /> },
         { label: 'Delivering', statuses: ['Start Delivery', 'In Transit', 'Reached'], icon: <Navigation size={18} /> },
