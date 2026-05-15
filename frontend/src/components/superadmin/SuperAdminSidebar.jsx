@@ -57,7 +57,14 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
       ]
     },
     { name: "Returns", path: "/admin/returns", icon: RotateCcw },
-    { name: "Delivery Boys", path: "/admin/delivery-boys", icon: Bike },
+    { name: "Delivery Boys", 
+      path: "/admin/delivery-boys", 
+      icon: Bike,
+      subItems: [
+        { name: "Active Riders", path: "/admin/delivery-boys" },
+        { name: "Rider Requests", path: "/admin/delivery-requests" },
+      ]
+    },
     { name: "Tracking", path: "/admin/tracking", icon: MapPin },
     { name: "Settings", path: "/admin/settings", icon: SettingsIcon },
   ];

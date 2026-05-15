@@ -177,6 +177,10 @@ export const riderService = {
   getSettlements: (params) => api.get('tracking/settlements/', { params }),
   verifyCODSubmission: (id, data) => api.post(`tracking/wallet-transactions/${id}/verify_submission/`, data),
   paySalary: (id) => api.post(`tracking/settlements/${id}/pay_salary/`),
+  // Rider Onboarding
+  register: (formData) => api.post('tracking/riders/register/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getPendingRequests: () => api.get('tracking/riders/pending_requests/'),
+  updateVerificationStatus: (id, data) => api.patch(`tracking/riders/${id}/update_verification_status/`, data),
   getRiderDashboardStats: () => api.get('tracking/riders/dashboard_stats/'),
   getActiveTask: () => api.get('tracking/shipments/current_active_task/'),
   getStats: () => api.get('tracking/riders/stats/'),

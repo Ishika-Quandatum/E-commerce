@@ -20,6 +20,7 @@ import TrackOrderSearch from '../pages/customer/Tracking/TrackOrderSearch'
 import ShippingInfo from '../pages/customer/ShippingInfo'
 import Returns from '../pages/customer/Returns'
 import VendorShop from '../pages/customer/VendorShop'
+import BecomeRider from '../pages/rider/BecomeRider'
 
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -38,6 +39,7 @@ const CustomerRoutes = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/become-seller" element={<VendorSignup />} />
+        <Route path="/become-rider" element={<BecomeRider />} />
         <Route path="/tracking/:id" element={<OrderTracking />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/contact-us" element={<ContactUs />} />

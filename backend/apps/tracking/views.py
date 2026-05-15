@@ -12,7 +12,8 @@ from .serializers import (
     AttendanceSerializer, RiderWalletSerializer, SalaryConfigurationSerializer,
     CODCollectionSerializer, RiderMonthlySettlementSerializer,
     RiderWalletTransactionSerializer, RiderSalaryTransactionSerializer,
-    LiveOrderTrackingSerializer, RiderFinancialLogSerializer
+    LiveOrderTrackingSerializer, RiderFinancialLogSerializer,
+    PublicRiderRegistrationSerializer
 )
 import random
 from django.utils import timezone
@@ -480,6 +481,56 @@ class RiderViewSet(viewsets.ModelViewSet):
             return AdminRiderSerializer
         return self.serializer_class
     
+    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
+    def register(self, request):
+        serializer = PublicRiderRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            rider = serializer.save()
+            return Response({
+                'message': 'Registration successful. Your application is now pending verification.',
+                'rider_id': rider.id
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def pending_requests(self, request):
+        if request.user.role not in ['superadmin', 'admin']:
+            return Response({'error': 'Unauthorized'}, status=403)
+        
+        pending = self.queryset.filter(verification_status='Pending')
+        return Response(self.serializer_class(pending, many=True, context={'request': request}).data)
+
+    @action(detail=True, methods=['patch'])
+    def update_verification_status(self, request, pk=None):
+        if request.user.role not in ['superadmin', 'admin']:
+            return Response({'error': 'Unauthorized'}, status=403)
+        
+        rider = self.get_object()
+        new_status = request.data.get('status')
+        reason = request.data.get('reason', '')
+        
+        if new_status not in ['Approved', 'Rejected', 'Suspended', 'Pending Verification']:
+            return Response({'error': 'Invalid status'}, status=400)
+        
+        rider.verification_status = new_status
+        if new_status == 'Approved':
+            rider.is_active = True
+            rider.user.is_active = True
+            rider.user.save()
+            rider.rejection_reason = None
+        elif new_status == 'Rejected':
+            rider.is_active = False
+            rider.user.is_active = False
+            rider.user.save()
+            rider.rejection_reason = reason
+        elif new_status == 'Suspended':
+            rider.is_active = False
+            rider.user.is_active = False
+            rider.user.save()
+            
+        rider.save()
+        return Response({'status': 'Verification status updated', 'new_status': rider.verification_status})
+
     @action(detail=False, methods=['get'])
     def admin_rider_stats(self, request):
         if request.user.role not in ['superadmin', 'admin']:

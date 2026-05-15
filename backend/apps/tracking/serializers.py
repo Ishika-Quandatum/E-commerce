@@ -157,7 +157,13 @@ class RiderProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RiderProfile
-        fields = '__all__'
+        fields = [
+            'id', 'user', 'rider_name', 'address', 'city', 'vehicle_type', 'vehicle_number',
+            'license_number', 'license_image', 'id_proof_image', 'profile_photo',
+            'bank_account_number', 'ifsc_code', 'emergency_contact', 'verification_status',
+            'is_active', 'rejection_reason', 'availability_status', 'rating',
+            'total_distance', 'join_date', 'assigned_orders_count', 'wallet', 'last_activity'
+        ]
     
     def get_assigned_orders_count(self, obj):
         return obj.assigned_shipments.count()
@@ -214,7 +220,8 @@ class AdminRiderSerializer(serializers.ModelSerializer):
                     user=user,
                     vehicle_type=validated_data.get('vehicle_type', ''),
                     license_number=validated_data.get('license_number', ''),
-                    is_active=True
+                    is_active=True,
+                    verification_status='Approved'
                 )
                 
                 rider_profile.generated_password = password
@@ -362,3 +369,72 @@ class RiderFinancialLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiderFinancialLog
         fields = '__all__'
+
+class PublicRiderRegistrationSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    confirm_password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    email = serializers.EmailField()
+    phone = serializers.CharField()
+    
+    class Meta:
+        model = RiderProfile
+        fields = [
+            'full_name', 'email', 'phone', 'password', 'confirm_password',
+            'address', 'city', 'vehicle_type', 'vehicle_number', 'license_number',
+            'license_image', 'id_proof_image', 'profile_photo',
+            'bank_account_number', 'ifsc_code', 'emergency_contact'
+        ]
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+        return data
+
+    def create(self, validated_data):
+        from apps.users.models import User
+        from django.db import transaction, IntegrityError
+        
+        validated_data.pop('confirm_password')
+        password = validated_data.pop('password')
+        full_name = validated_data.pop('full_name').split(' ')
+        first_name = full_name[0]
+        last_name = " ".join(full_name[1:]) if len(full_name) > 1 else ""
+        
+        email = validated_data.pop('email')
+        phone = validated_data.pop('phone')
+        
+        # Ensure unique username
+        base_username = email.split('@')[0]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role='rider',
+                    is_active=False,  # Rider cannot login until admin approves
+                    phone=phone,
+                    address=validated_data.get('address', '')
+                )
+                
+                rider_profile = RiderProfile.objects.create(
+                    user=user,
+                    **validated_data
+                )
+                return rider_profile
+        except IntegrityError as e:
+            error_msg = str(e).lower()
+            if 'email' in error_msg:
+                raise serializers.ValidationError({"email": "This email is already registered."})
+            if 'phone' in error_msg:
+                raise serializers.ValidationError({"phone": "This phone number is already registered."})
+            raise serializers.ValidationError({"error": f"Registration failed: {str(e)}"})

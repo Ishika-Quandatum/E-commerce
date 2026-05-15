@@ -6,20 +6,49 @@ from django.dispatch import receiver
 import uuid
 
 class RiderProfile(models.Model):
+    VERIFICATION_STATUS = [
+        ('Pending', 'Pending Verification'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+        ('Suspended', 'Suspended')
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='rider_profile')
-    vehicle_number = models.CharField(max_length=50, blank=True)
+    
+    # Basic Info (Extending what's in User)
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    
+    # Vehicle Info
     vehicle_type = models.CharField(max_length=50, blank=True)
-    is_active = models.BooleanField(default=True)
+    vehicle_number = models.CharField(max_length=50, blank=True)
+    license_number = models.CharField(max_length=100, blank=True)
+    
+    # Documents (KYC)
+    license_image = models.ImageField(upload_to='riders/docs/license/', null=True, blank=True)
+    id_proof_image = models.ImageField(upload_to='riders/docs/id_proof/', null=True, blank=True)
+    profile_photo = models.ImageField(upload_to='riders/docs/profile/', null=True, blank=True)
+    
+    # Bank Details
+    bank_account_number = models.CharField(max_length=50, blank=True)
+    ifsc_code = models.CharField(max_length=20, blank=True)
+    emergency_contact = models.CharField(max_length=20, blank=True)
+    
+    # Status and Verification
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default='Pending')
+    is_active = models.BooleanField(default=False)
+    rejection_reason = models.TextField(blank=True, null=True)
+    
+    # Operational Info
     current_lat = models.FloatField(null=True, blank=True)
     current_lng = models.FloatField(null=True, blank=True)
-    license_number = models.CharField(max_length=100, blank=True)
-    availability_status = models.CharField(max_length=20, choices=[('Online', 'Online'), ('Offline', 'Offline')],default='Offline')
+    availability_status = models.CharField(max_length=20, choices=[('Online', 'Online'), ('Offline', 'Offline')], default='Offline')
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=5.0)
     total_distance = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     join_date = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Rider: {self.user.username}"
+        return f"Rider: {self.user.get_full_name() or self.user.username} ({self.verification_status})"
 
 
 class Shipment(models.Model):

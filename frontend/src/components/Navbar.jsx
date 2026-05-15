@@ -203,7 +203,11 @@ const Navbar = () => {
                 <Link to="/vendor" className="bg-brand-orange text-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg shadow-brand-orange/20 hover:scale-105 transition-transform">Vendor Panel</Link>
               )}
               {(!user || user.role === 'user') && (
-                <Link to="/become-seller" className="text-brand-purple font-black text-xs uppercase tracking-tighter hover:text-brand-purple/80 transition-colors">Become Partner</Link>
+                <div className="flex items-center gap-3">
+                  <Link to="/become-seller" className="text-brand-purple font-black text-xs uppercase tracking-tighter hover:text-brand-purple/80 transition-colors">Become Partner</Link>
+                  <span className="text-slate-200">|</span>
+                  <Link to="/become-rider" className="text-brand-purple font-black text-xs uppercase tracking-tighter hover:text-brand-purple/80 transition-colors">Become Rider</Link>
+                </div>
               )}
             </div>
           </div>
@@ -325,7 +329,11 @@ const Navbar = () => {
                   <Link to="/vendor" className="text-brand-orange font-bold text-sm uppercase tracking-widest py-2 border-b border-slate-50">Vendor Panel</Link>
                 )}
                 {(!user || user.role === 'user') && (
-                  <Link to="/become-seller" className="text-brand-purple font-black text-sm uppercase tracking-tighter hover:text-brand-purple/80 transition-colors py-2 border-b border-slate-50">Become Partner</Link>
+                  <div className="flex items-center gap-3 py-2 border-b border-slate-50">
+                    <Link to="/become-seller" className="text-brand-purple font-black text-sm uppercase tracking-tighter hover:text-brand-purple/80 transition-colors">Become Partner</Link>
+                    <span className="text-slate-200">|</span>
+                    <Link to="/become-rider" className="text-brand-purple font-black text-sm uppercase tracking-tighter hover:text-brand-purple/80 transition-colors">Become Rider</Link>
+                  </div>
                 )}
               </div>
             </div>
