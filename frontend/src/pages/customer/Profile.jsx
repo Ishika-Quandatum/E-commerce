@@ -21,6 +21,9 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '' });
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -47,6 +50,37 @@ const Profile = () => {
     };
     if (user) fetchWallet();
   }, [user]);
+
+  const handleUpdatePasswords = async () => {
+    if (!passwords.current || !passwords.new) {
+      setError("Please fill in both current and new passwords.");
+      return;
+    }
+    if (passwords.new.length < 6) {
+      setError("New password must be at least 6 characters long.");
+      return;
+    }
+
+    setUpdating(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await authService.changePassword({
+        old_password: passwords.current,
+        new_password: passwords.new
+      });
+      setSuccess("Password updated successfully!");
+      setPasswords({ current: '', new: '' });
+      alert("Password updated successfully!");
+    } catch (err) {
+      console.error("Error updating password", err);
+      const msg = err.response?.data?.old_password || err.response?.data?.new_password || err.response?.data?.error || "Failed to update password. Please check your current password.";
+      setError(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -192,8 +226,15 @@ const Profile = () => {
             </div>
           </div>
 
-          <button className="w-full bg-slate-900 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all">
-            Update Security Credentials
+          {error && <p className="text-rose-500 text-xs font-bold bg-rose-50 p-4 rounded-2xl border border-rose-100">{error}</p>}
+          {success && <p className="text-emerald-600 text-xs font-bold bg-emerald-50 p-4 rounded-2xl border border-emerald-100">{success}</p>}
+
+          <button 
+            onClick={handleUpdatePasswords}
+            disabled={updating}
+            className="w-full bg-slate-900 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+          >
+            {updating ? 'Updating...' : 'Update Security Credentials'}
           </button>
         </div>
       </div>

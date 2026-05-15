@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.promotions',
     'apps.returns',
+    'apps.payroll',
     'channels',
 ]
 

@@ -34,7 +34,7 @@ const SuperAdminLayout = () => {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shrink-0">
+        <header className="bg-white border-b border-slate-200/60 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shrink-0">
           <div className="flex items-center gap-4">
             <button 
                 onClick={() => setIsSidebarOpen(true)}
@@ -139,8 +139,10 @@ const SuperAdminLayout = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-6 lg:p-10 bg-slate-50/50 overflow-y-auto">
-          <Outlet />   
+        <main className="flex-1 p-4 lg:p-6 bg-slate-50 overflow-y-auto">
+          <div className="max-w-[1600px] mx-auto w-full">
+            <Outlet />   
+          </div>
         </main>
       </div>
 

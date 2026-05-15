@@ -51,6 +51,8 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         { name: "Vendor Transactions", path: "/admin/payments/vendors" },
         { name: "COD Collections", path: "/admin/payments/cod-collections" },
         { name: "Rider Transactions", path: "/admin/payments/rider-transactions" },
+        { name: "Rider Payroll", path: "/admin/payments/rider-payroll" },
+        { name: "Payroll Settings", path: "/admin/payments/payroll-settings" },
         { name: "Settlements", path: "/admin/payments/settlements" },
       ]
     },

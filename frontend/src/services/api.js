@@ -206,4 +206,32 @@ export const promotionService = {
   deleteBanner: (id) => api.delete(`promotions/banners/${id}/`),
 };
 
+export const payrollService = {
+  getRules: () => api.get('payroll/rules/'),
+  createRule: (data) => api.post('payroll/rules/', data),
+  updateRule: (id, data) => api.patch(`payroll/rules/${id}/`, data),
+  deleteRule: (id) => api.delete(`payroll/rules/${id}/`),
+
+  // New Specialized Rules
+  getBonusRules: () => api.get('payroll/bonus-rules/'),
+  createBonusRule: (data) => api.post('payroll/bonus-rules/', data),
+  updateBonusRule: (id, data) => api.patch(`payroll/bonus-rules/${id}/`, data),
+  deleteBonusRule: (id) => api.delete(`payroll/bonus-rules/${id}/`),
+
+  getPenaltyRules: () => api.get('payroll/penalty-rules/'),
+  createPenaltyRule: (data) => api.post('payroll/penalty-rules/', data),
+  updatePenaltyRule: (id, data) => api.patch(`payroll/penalty-rules/${id}/`, data),
+  deletePenaltyRule: (id) => api.delete(`payroll/penalty-rules/${id}/`),
+
+  getConfig: () => api.get('payroll/config/'),
+  updateConfig: (data) => api.patch('payroll/config/update_config/', data),
+  
+  getPayrollStats: () => api.get('payroll/manage/'),
+  runPayroll: (id) => api.post(`payroll/manage/${id}/run_payroll/`),
+  markPaid: (id, data) => api.post(`payroll/manage/${id}/mark_paid/`, data),
+  
+  getSettlements: (params) => api.get('payroll/settlements/', { params }),
+  getWallets: (params) => api.get('payroll/wallets/', { params }),
+};
+
 export default api;

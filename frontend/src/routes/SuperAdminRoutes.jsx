@@ -14,6 +14,8 @@ import CustomerTransactions from "../pages/superadmin/Payments/CustomerTransacti
 import VendorTransactions from "../pages/superadmin/Payments/VendorTransactions";
 import CODCollections from "../pages/superadmin/Payments/CODCollections";
 import RiderTransactions from "../pages/superadmin/Payments/RiderTransactions";
+import RiderPayroll from "../pages/superadmin/Payments/RiderPayroll";
+import PayrollSettings from "../pages/superadmin/Payments/PayrollSettings";
 import RiderSettlements from "../pages/superadmin/Payments/RiderSettlements";
 import AdminUserList from "../pages/superadmin/Users/AdminUserList";
 import Settings from "../pages/superadmin/Settings";
@@ -52,6 +54,8 @@ const SuperAdminRoutes = () => {
         <Route path="payments/vendors" element={<VendorTransactions />} />
         <Route path="payments/cod-collections" element={<CODCollections />} />
         <Route path="payments/rider-transactions" element={<RiderTransactions />} />
+        <Route path="payments/rider-payroll" element={<RiderPayroll />} />
+        <Route path="payments/payroll-settings" element={<PayrollSettings />} />
         <Route path="payments/settlements" element={<RiderSettlements />} />
         <Route path="users" element={<AdminUserList />} />
         
