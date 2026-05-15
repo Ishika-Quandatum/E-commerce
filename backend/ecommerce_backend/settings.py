@@ -4,9 +4,13 @@ Django settings for ecommerce_backend project.
 
 from pathlib import Path
 import os
-from decouple import config
+from decouple import Config, RepositoryEnv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env from project root (parent of backend)
+env_path = BASE_DIR.parent / '.env'
+config = Config(RepositoryEnv(env_path))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
