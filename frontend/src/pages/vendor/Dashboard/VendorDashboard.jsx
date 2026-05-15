@@ -106,14 +106,7 @@ const VendorDashboard = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-[40px] font-black text-slate-900 tracking-tighter font-title uppercase italic">Command <span className="text-indigo-600">Center</span></h1>
-          <p className="mt-1 text-slate-500 font-medium italic">Live telemetry and performance metrics for your enterprise.</p>
-        </div>
-        <div className="flex items-center gap-3">
-             <div className="bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Operational</span>
-             </div>
+          <h1 className="text-[40px] font-black text-slate-900 tracking-tighter font-title uppercase italic">Vendor <span className="text-indigo-600">Dashboard</span></h1>
         </div>
       </div>
 
@@ -223,9 +216,6 @@ const StatCard = ({ title, value, icon, color, link, linkText }) => (
         <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{title}</p>
             <h4 className="text-4xl font-black text-slate-900 tracking-tighter italic">{value}</h4>
-        </div>
-        <div className="mt-8 pt-6 border-t border-slate-50">
-             <Link to={link} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">{linkText}</Link>
         </div>
     </div>
 );
