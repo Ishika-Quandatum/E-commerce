@@ -1,5 +1,41 @@
-# Logs
-logs
+# =========================
+# ENVIRONMENT VARIABLES
+# =========================
+.env
+.env.*
+
+# =========================
+# NODE MODULES & BUILD
+# =========================
+node_modules/
+dist/
+dist-ssr/
+
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# DJANGO
+# =========================
+db.sqlite3
+media/
+staticfiles/
+
+# =========================
+# VIRTUAL ENVIRONMENT
+# =========================
+venv/
+env/
+
+# =========================
+# LOGS
+# =========================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,50 +43,29 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# =========================
+# LOCAL FILES
+# =========================
 *.local
 
-# Editor directories and files
-.vscode/*
+# =========================
+# EDITOR / IDE
+# =========================
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
+
+# =========================
+# OS FILES
+# =========================
 .DS_Store
+Thumbs.db
+
+# =========================
+# WINDOWS / VISUAL STUDIO
+# =========================
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.env
-.env.*
-
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Environment variables (VERY IMPORTANT)
-.env
-
-# Django
-db.sqlite3
-media/
-staticfiles/
-
-# Logs
-*.log
-
-# Virtual environment
-venv/
-env/
-
-# VS Code / IDE
-.vscode/
-.idea/
-
-# OS files
-.DS_Store
-Thumbs.db
