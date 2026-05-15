@@ -32,8 +32,12 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
   const [brands, setBrands] = useState([]);
   const [showBrandInput, setShowBrandInput] = useState(false);
   const [newBrandName, setNewBrandName] = useState("");
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryImage, setNewCategoryImage] = useState(null);
   const [showSubcategoryInput, setShowSubcategoryInput] = useState(false);
   const [newSubcategoryName, setNewSubcategoryName] = useState("");
+  const [newSubcategoryImage, setNewSubcategoryImage] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
@@ -106,14 +110,40 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     }
   };
 
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    try {
+      const formData = new FormData();
+      formData.append('name', newCategoryName);
+      if (newCategoryImage) {
+        formData.append('image', newCategoryImage);
+      }
+      const res = await adminService.createCategory(formData);
+      setCategories([...categories, res.data]);
+      setFormData({ ...formData, category: res.data.id });
+      setShowCategoryInput(false);
+      setNewCategoryName("");
+      setNewCategoryImage(null);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to create category");
+    }
+  };
+
   const handleCreateSubcategory = async () => {
     if (!newSubcategoryName.trim() || !formData.category) return;
     try {
-      const res = await adminService.createCategory({ name: newSubcategoryName, parent: formData.category });
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', newSubcategoryName);
+      formDataToSend.append('parent', formData.category);
+      if (newSubcategoryImage) {
+        formDataToSend.append('image', newSubcategoryImage);
+      }
+      const res = await adminService.createCategory(formDataToSend);
       setSubcategories([...subcategories, res.data]);
       setFormData({ ...formData, subcategory: res.data.id });
       setShowSubcategoryInput(false);
       setNewSubcategoryName("");
+      setNewSubcategoryImage(null);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to create subcategory");
     }
@@ -522,36 +552,70 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-2">Category <span className="text-red-500">*</span></label>
-                      <select
-                        name="category"
-                        className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm appearance-none"
-                        value={formData.category}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map(c => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
+                      <div className="flex justify-between items-center mb-2">
+                         <label className="block text-xs font-bold text-slate-700">Category <span className="text-red-500">*</span></label>
+                         <button type="button" onClick={() => setShowCategoryInput(!showCategoryInput)} className="text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-indigo-700">
+                           <Plus size={12}/> {showCategoryInput ? "Cancel" : "Add New Category"}
+                         </button>
+                      </div>
+                      {showCategoryInput ? (
+                        <div className="space-y-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                          <input
+                            type="text"
+                            className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 transition-all outline-none text-xs font-bold"
+                            placeholder="Category Name"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                          />
+                          <div className="flex items-center gap-3">
+                             <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                                <ImageIcon size={14} className="text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-500">{newCategoryImage ? newCategoryImage.name : "Category Image"}</span>
+                                <input type="file" className="hidden" accept="image/*" onChange={(e) => setNewCategoryImage(e.target.files[0])} />
+                             </label>
+                             <button type="button" onClick={handleCreateCategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700">Add</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <select
+                          name="category"
+                          className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm appearance-none"
+                          value={formData.category}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Category</option>
+                          {categories.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-xs font-bold text-slate-700">Subcategory</label>
                         {formData.category && (
-                           <button type="button" onClick={() => setShowSubcategoryInput(!showSubcategoryInput)} className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:text-indigo-700"><Plus size={14}/> {showSubcategoryInput ? "Cancel" : "Add New Subcategory"}</button>
+                           <button type="button" onClick={() => setShowSubcategoryInput(!showSubcategoryInput)} className="text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-indigo-700">
+                             <Plus size={12}/> {showSubcategoryInput ? "Cancel" : "Add New Subcategory"}
+                           </button>
                         )}
                       </div>
                       {showSubcategoryInput ? (
-                        <div className="flex gap-2">
+                        <div className="space-y-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
                           <input
                             type="text"
-                            className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all outline-none text-slate-900 text-sm placeholder:text-slate-400"
-                            placeholder="Enter new subcategory"
+                            className="w-full bg-white px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 transition-all outline-none text-xs font-bold"
+                            placeholder="Subcategory Name"
                             value={newSubcategoryName}
                             onChange={(e) => setNewSubcategoryName(e.target.value)}
                           />
-                          <button type="button" onClick={handleCreateSubcategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">Add</button>
+                          <div className="flex items-center gap-3">
+                             <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                                <ImageIcon size={14} className="text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-500">{newSubcategoryImage ? newSubcategoryImage.name : "Sub Image"}</span>
+                                <input type="file" className="hidden" accept="image/*" onChange={(e) => setNewSubcategoryImage(e.target.files[0])} />
+                             </label>
+                             <button type="button" onClick={handleCreateSubcategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700">Add</button>
+                          </div>
                         </div>
                       ) : (
                         <select
