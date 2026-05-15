@@ -118,7 +118,7 @@ const Login = () => {
             <input
               required
               type="text"
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 h-14 focus:ring-2 ring-primary-500/20 outline-none"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl px-4 h-14 focus:ring-2 ring-primary-500/20 outline-none"
               placeholder="Your username"
               value={formData.username}
               onChange={(e) =>
@@ -136,7 +136,7 @@ const Login = () => {
               <input
                 required
                 type={showPassword ? 'text' : 'password'}
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 pr-12 h-14 focus:ring-2 ring-primary-500/20 outline-none"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl px-4 pr-12 h-14 focus:ring-2 ring-primary-500/20 outline-none"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) =>
