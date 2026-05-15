@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { usePlatform } from '../../context/PlatformContext';
 
 const ContactUs = () => {
-  const { platformName } = usePlatform();
+  const { platformName, settings } = usePlatform();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -50,9 +50,9 @@ const ContactUs = () => {
           {/* Contact Info Cards */}
           <div className="lg:col-span-1 space-y-6">
             {[
-              { icon: <Phone size={24} />, title: "Call Us", content: "+91 98765 43210", sub: "Mon-Sat, 9am-6pm" },
-              { icon: <Mail size={24} />, title: "Email Us", content: "support@rainbowstore.com", sub: "24/7 Support" },
-              { icon: <MapPin size={24} />, title: "Visit Us", content: "123 Business Street", sub: "City Center, India" },
+              { icon: <Phone size={24} />, title: "Call Us", content: settings?.support_phone || "+91 98765 43210", sub: "Mon-Sat, 9am-6pm" },
+              { icon: <Mail size={24} />, title: "Email Us", content: settings?.support_email || "support@rainbowstore.com", sub: "24/7 Support" },
+              { icon: <MapPin size={24} />, title: "Visit Us", content: settings?.store_address || "123 Business Street, City Center, India", sub: settings?.store_address ? "Our Headquarters" : "City Center, India" },
             ].map((item, i) => (
               <motion.div 
                 key={i}

@@ -38,6 +38,14 @@ const Footer = () => {
                   <span>{settings.support_email}</span>
                 </a>
               )}
+              {settings?.store_address && (
+                <div className="flex items-center gap-3 text-white/70 group">
+                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-purple shrink-0">
+                    <Globe size={15} />
+                  </div>
+                  <span className="text-sm leading-snug">{settings.store_address}</span>
+                </div>
+              )}
             </div>
           </div>
 
