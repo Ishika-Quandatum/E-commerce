@@ -79,8 +79,8 @@ const Login = () => {
       navigate("/", { replace: true });
     }
 
-  } catch (err) {
-    setError('Invalid username or password');
+    } catch (err) {
+    setError('Invalid username/email or password');
   } finally {
     setLoading(false);
   }
@@ -113,13 +113,13 @@ const Login = () => {
           {/* Username */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">
-              Username
+              Username / Email
             </label>
             <input
               required
               type="text"
               className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl px-4 h-14 focus:ring-2 ring-primary-500/20 outline-none"
-              placeholder="Your username"
+              placeholder="Your username or email"
               value={formData.username}
               onChange={(e) =>
                 setFormData({ ...formData, username: e.target.value })
