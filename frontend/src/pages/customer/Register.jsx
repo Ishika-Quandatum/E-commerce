@@ -50,7 +50,7 @@ const Register = () => {
               <label className="block text-sm font-bold text-slate-700 mb-1">First Name</label>
               <input
                 type="text"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
                 value={formData.first_name}
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
               />
@@ -59,7 +59,7 @@ const Register = () => {
               <label className="block text-sm font-bold text-slate-700 mb-1">Last Name</label>
               <input
                 type="text"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
                 value={formData.last_name}
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
               />
@@ -70,7 +70,7 @@ const Register = () => {
             <input
               required
               type="text"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
             />
@@ -80,7 +80,7 @@ const Register = () => {
             <input
               required
               type="email"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
@@ -91,7 +91,7 @@ const Register = () => {
               <input
                 required
                 type={showPassword ? 'text' : 'password'}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 pr-12 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 pr-12 h-12 focus:ring-2 ring-primary-500/20 outline-none transition-all"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />

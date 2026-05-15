@@ -223,7 +223,7 @@ const VendorSignup = () => {
                           <input 
                             type="text"
                             required
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
                             placeholder="John Doe"
                             value={formData.name}
                             onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -234,7 +234,7 @@ const VendorSignup = () => {
                           <input 
                             type="email"
                             required
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
                             placeholder="john@example.com"
                             value={formData.email}
                             onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -248,7 +248,7 @@ const VendorSignup = () => {
                           <input 
                             type={showPassword ? 'text' : 'password'}
                             required
-                            className="w-full px-4 py-3 pr-11 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                            className="w-full px-4 py-3 pr-11 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
                             placeholder="Min 6 characters"
                             value={formData.password}
                             onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -272,7 +272,7 @@ const VendorSignup = () => {
                       <input 
                         type="text"
                         required
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-bold text-primary-700"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-bold text-primary-700"
                         placeholder="e.g. My Awesome Shop"
                         value={formData.shop_name}
                         onChange={(e) => setFormData({...formData, shop_name: e.target.value})}
@@ -281,7 +281,7 @@ const VendorSignup = () => {
                     <div>
                       <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Shop Category</label>
                       <select 
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium appearance-none"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium appearance-none"
                         value={formData.shop_type}
                         onChange={(e) => setFormData({...formData, shop_type: e.target.value})}
                       >
@@ -310,7 +310,7 @@ const VendorSignup = () => {
                     <input 
                       type="tel"
                       required
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
                       placeholder="e.g. +91 98765 43210"
                       value={formData.pickup_contact}
                       onChange={(e) => setFormData({...formData, pickup_contact: e.target.value})}
@@ -322,7 +322,7 @@ const VendorSignup = () => {
                     <textarea 
                       required
                       rows="2"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium resize-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium resize-none"
                       placeholder="Floor, Building, Street name..."
                       value={formData.shop_address}
                       onChange={(e) => setFormData({...formData, shop_address: e.target.value})}
@@ -335,7 +335,7 @@ const VendorSignup = () => {
                       <input 
                         type="text"
                         required
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
                         placeholder="Coimbatore"
                         value={formData.city}
                         onChange={(e) => setFormData({...formData, city: e.target.value})}
@@ -346,7 +346,7 @@ const VendorSignup = () => {
                       <input 
                         type="text"
                         required
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
                         placeholder="Tamil Nadu"
                         value={formData.state}
                         onChange={(e) => setFormData({...formData, state: e.target.value})}
@@ -357,7 +357,7 @@ const VendorSignup = () => {
                       <input 
                         type="text"
                         required
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium"
                         placeholder="641001"
                         value={formData.pincode}
                         onChange={(e) => setFormData({...formData, pincode: e.target.value})}

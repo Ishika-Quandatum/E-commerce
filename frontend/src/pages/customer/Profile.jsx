@@ -319,23 +319,25 @@ const Profile = () => {
                     <div className="space-y-4">
                       {(order.items || []).map((item, idx) => (
                         <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                          <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
-                            <img
-                              src={item.product?.primary_image ? (item.product.primary_image.startsWith('http') ? item.product.primary_image : `http://127.0.0.1:8000${item.product.primary_image}`) : "https://placehold.co/100"}
-                              alt={item.product?.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-800 line-clamp-1">{item.product?.name}</p>
-                            <p className="text-xs text-slate-500">
-                              Qty: {item.quantity}
-                              {item.size && (
-                                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary-50 text-primary-600 font-black uppercase text-[8px] border border-primary-100">
-                                  {item.size}
-                                </span>
-                              )}
-                            </p>
+                          <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => navigate(`/products/${item.product?.id}`)}>
+                            <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
+                              <img
+                                src={item.product?.primary_image ? (item.product.primary_image.startsWith('http') ? item.product.primary_image : `http://127.0.0.1:8000${item.product.primary_image}`) : "https://placehold.co/100"}
+                                alt={item.product?.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-slate-800 line-clamp-1">{item.product?.name}</p>
+                              <p className="text-xs text-slate-500">
+                                Qty: {item.quantity}
+                                {item.size && (
+                                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary-50 text-primary-600 font-black uppercase text-[8px] border border-primary-100">
+                                    {item.size}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
                           </div>
                           <div className="flex flex-col items-end gap-2">
                             <div className="text-sm font-bold text-primary-600">₹{item.price}</div>
