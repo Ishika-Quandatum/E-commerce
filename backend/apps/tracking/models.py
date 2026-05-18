@@ -18,21 +18,34 @@ class RiderProfile(models.Model):
     # Basic Info (Extending what's in User)
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=20, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], blank=True)
     
     # Vehicle Info
-    vehicle_type = models.CharField(max_length=50, blank=True)
+    vehicle_type = models.CharField(max_length=50, blank=True) # Bike, Scooter, etc.
     vehicle_number = models.CharField(max_length=50, blank=True)
+    rc_number = models.CharField(max_length=100, blank=True)
     license_number = models.CharField(max_length=100, blank=True)
+    insurance_number = models.CharField(max_length=100, blank=True)
+    insurance_valid_till = models.DateField(null=True, blank=True)
+    vehicle_image = models.ImageField(upload_to='riders/vehicles/', null=True, blank=True)
     
     # Documents (KYC)
     license_image = models.ImageField(upload_to='riders/docs/license/', null=True, blank=True)
     id_proof_image = models.ImageField(upload_to='riders/docs/id_proof/', null=True, blank=True)
     profile_photo = models.ImageField(upload_to='riders/docs/profile/', null=True, blank=True)
+    bank_proof_image = models.ImageField(upload_to='riders/docs/bank/', null=True, blank=True)
     
     # Bank Details
+    account_holder_name = models.CharField(max_length=100, blank=True)
     bank_account_number = models.CharField(max_length=50, blank=True)
     ifsc_code = models.CharField(max_length=20, blank=True)
-    emergency_contact = models.CharField(max_length=20, blank=True)
+    bank_name = models.CharField(max_length=100, blank=True)
+    
+    # Emergency Contact
+    emergency_contact_name = models.CharField(max_length=100, blank=True)
+    emergency_contact_phone = models.CharField(max_length=20, blank=True)
+    emergency_contact_relationship = models.CharField(max_length=50, blank=True)
     
     # Status and Verification
     verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default='Pending')

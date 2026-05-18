@@ -4,7 +4,8 @@ import {
   User, Mail, Phone, Lock, MapPin, Truck, 
   CreditCard, PhoneCall, Upload, CheckCircle2, 
   AlertCircle, Building, Hash, Smartphone,
-  FileText, Landmark, ShieldCheck
+  FileText, Landmark, ShieldCheck, Calendar,
+  Briefcase, Heart
 } from 'lucide-react';
 import { riderService } from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
@@ -24,18 +25,29 @@ const BecomeRider = () => {
     confirm_password: '',
     address: '',
     city: '',
+    date_of_birth: '',
+    gender: 'Male',
     vehicle_type: 'Bike',
     vehicle_number: '',
+    rc_number: '',
     license_number: '',
+    insurance_number: '',
+    insurance_valid_till: '',
     bank_account_number: '',
     ifsc_code: '',
-    emergency_contact: ''
+    account_holder_name: '',
+    bank_name: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    emergency_contact_relationship: ''
   });
 
   const [files, setFiles] = useState({
     license_image: null,
     id_proof_image: null,
-    profile_photo: null
+    profile_photo: null,
+    vehicle_image: null,
+    bank_proof_image: null
   });
 
   const handleInputChange = (e) => {
@@ -61,7 +73,9 @@ const BecomeRider = () => {
     setError('');
 
     const data = new FormData();
-    Object.keys(formData).forEach(key => data.append(key, formData[key]));
+    Object.keys(formData).forEach(key => {
+      if (formData[key]) data.append(key, formData[key]);
+    });
     Object.keys(files).forEach(key => {
       if (files[key]) data.append(key, files[key]);
     });
@@ -100,7 +114,7 @@ const BecomeRider = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
@@ -124,46 +138,49 @@ const BecomeRider = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Personal Info */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-4">
+            <div className="space-y-12">
+              {/* 1. Personal Details */}
+              <section>
+                <div className="flex items-center gap-3 mb-8">
                   <div className="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
                     <User size={18} />
                   </div>
                   <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Personal Details</h3>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <InputField label="Full Name" name="full_name" icon={<User size={18}/>} value={formData.full_name} onChange={handleInputChange} required />
                   <InputField label="Email Address" name="email" type="email" icon={<Mail size={18}/>} value={formData.email} onChange={handleInputChange} required />
                   <InputField label="Mobile Number" name="phone" icon={<Smartphone size={18}/>} value={formData.phone} onChange={handleInputChange} required />
                   <div className="grid grid-cols-2 gap-4">
-                    <InputField label="Password" name="password" type="password" icon={<Lock size={18}/>} value={formData.password} onChange={handleInputChange} required />
-                    <InputField label="Confirm" name="confirm_password" type="password" icon={<Lock size={18}/>} value={formData.confirm_password} onChange={handleInputChange} required />
+                    <InputField label="Date of Birth" name="date_of_birth" type="date" icon={<Calendar size={18}/>} value={formData.date_of_birth} onChange={handleInputChange} required />
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Gender</label>
+                      <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-brand-navy outline-none focus:border-brand-purple">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
                   </div>
-                  <InputField label="Emergency Contact" name="emergency_contact" icon={<PhoneCall size={18}/>} value={formData.emergency_contact} onChange={handleInputChange} required />
+                  <InputField label="Password" name="password" type="password" icon={<Lock size={18}/>} value={formData.password} onChange={handleInputChange} required />
+                  <InputField label="Confirm Password" name="confirm_password" type="password" icon={<Lock size={18}/>} value={formData.confirm_password} onChange={handleInputChange} required />
                 </div>
-              </div>
+              </section>
 
-              {/* Vehicle & Documents */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-brand-orange/10 rounded-lg text-brand-orange">
+              {/* 2. Vehicle Details */}
+              <section className="pt-10 border-t border-slate-100">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
                     <Truck size={18} />
                   </div>
-                  <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Vehicle & Docs</h3>
+                  <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Vehicle Information</h3>
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Vehicle Type</label>
-                    <select 
-                      name="vehicle_type"
-                      value={formData.vehicle_type}
-                      onChange={handleInputChange}
-                      className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-brand-navy focus:border-brand-purple focus:ring-0 transition-all outline-none"
-                    >
+                    <select name="vehicle_type" value={formData.vehicle_type} onChange={handleInputChange} className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-brand-navy outline-none focus:border-brand-purple">
                       <option value="Bike">Bike</option>
                       <option value="Scooter">Scooter</option>
                       <option value="Cycle">Bicycle</option>
@@ -171,60 +188,83 @@ const BecomeRider = () => {
                     </select>
                   </div>
                   <InputField label="Vehicle Number" name="vehicle_number" icon={<Hash size={18}/>} value={formData.vehicle_number} onChange={handleInputChange} required />
+                  <InputField label="RC Number" name="rc_number" icon={<FileText size={18}/>} value={formData.rc_number} onChange={handleInputChange} required />
                   <InputField label="Driving License No." name="license_number" icon={<FileText size={18}/>} value={formData.license_number} onChange={handleInputChange} required />
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <FileUpload label="Profile Photo" name="profile_photo" onChange={handleFileChange} file={files.profile_photo} />
-                    <FileUpload label="License Copy" name="license_image" onChange={handleFileChange} file={files.license_image} />
-                    <FileUpload label="ID Proof" name="id_proof_image" onChange={handleFileChange} file={files.id_proof_image} />
-                  </div>
+                  <InputField label="Insurance Number" name="insurance_number" icon={<ShieldCheck size={18}/>} value={formData.insurance_number} onChange={handleInputChange} required />
+                  <InputField label="Insurance Valid Till" name="insurance_valid_till" type="date" icon={<Calendar size={18}/>} value={formData.insurance_valid_till} onChange={handleInputChange} required />
                 </div>
-              </div>
+              </section>
 
-              {/* Address & Bank */}
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-10 pt-6 border-t border-slate-100">
-                <div className="space-y-6">
-                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                      <MapPin size={18} />
+              {/* 3. Bank & Documents */}
+              <section className="pt-10 border-t border-slate-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
+                        <Landmark size={18} />
+                      </div>
+                      <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Bank Details</h3>
                     </div>
-                    <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Location</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <InputField label="City" name="city" icon={<Building size={18}/>} value={formData.city} onChange={handleInputChange} required />
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Full Address</label>
-                      <textarea 
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-brand-navy focus:border-brand-purple focus:ring-0 transition-all outline-none min-h-[100px]"
-                      />
+                    <div className="space-y-4">
+                      <InputField label="Account Holder Name" name="account_holder_name" icon={<User size={18}/>} value={formData.account_holder_name} onChange={handleInputChange} required />
+                      <InputField label="Account Number" name="bank_account_number" icon={<CreditCard size={18}/>} value={formData.bank_account_number} onChange={handleInputChange} required />
+                      <InputField label="IFSC Code" name="ifsc_code" icon={<Hash size={18}/>} value={formData.ifsc_code} onChange={handleInputChange} required />
+                      <InputField label="Bank Name" name="bank_name" icon={<Building size={18}/>} value={formData.bank_name} onChange={handleInputChange} required />
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-6">
-                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-green-100 rounded-lg text-green-600">
-                      <Landmark size={18} />
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
+                        <Upload size={18} />
+                      </div>
+                      <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">KYC Documents</h3>
                     </div>
-                    <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Bank Details</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <InputField label="Account Number" name="bank_account_number" icon={<CreditCard size={18}/>} value={formData.bank_account_number} onChange={handleInputChange} required />
-                    <InputField label="IFSC Code" name="ifsc_code" icon={<Hash size={18}/>} value={formData.ifsc_code} onChange={handleInputChange} required />
-                  </div>
-                  
-                  <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="flex gap-3 text-xs text-slate-500 leading-relaxed italic">
-                      <ShieldCheck size={24} className="text-brand-purple shrink-0" />
-                      <p>By submitting this form, you agree to our Terms of Service and Privacy Policy for Delivery Partners.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FileUpload label="Profile Photo" name="profile_photo" onChange={handleFileChange} file={files.profile_photo} />
+                      <FileUpload label="Vehicle Image" name="vehicle_image" onChange={handleFileChange} file={files.vehicle_image} />
+                      <FileUpload label="Driving License" name="license_image" onChange={handleFileChange} file={files.license_image} />
+                      <FileUpload label="ID Proof (Aadhaar)" name="id_proof_image" onChange={handleFileChange} file={files.id_proof_image} />
+                      <FileUpload label="Bank Proof" name="bank_proof_image" onChange={handleFileChange} file={files.bank_proof_image} />
                     </div>
                   </div>
                 </div>
-              </div>
+              </section>
+
+              {/* 4. Emergency & Address */}
+              <section className="pt-10 border-t border-slate-100">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                   <div className="space-y-8">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
+                          <PhoneCall size={18} />
+                        </div>
+                        <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Emergency Contact</h3>
+                      </div>
+                      <div className="space-y-4">
+                        <InputField label="Contact Name" name="emergency_contact_name" icon={<User size={18}/>} value={formData.emergency_contact_name} onChange={handleInputChange} required />
+                        <InputField label="Contact Number" name="emergency_contact_phone" icon={<Smartphone size={18}/>} value={formData.emergency_contact_phone} onChange={handleInputChange} required />
+                        <InputField label="Relationship" name="emergency_contact_relationship" icon={<Heart size={18}/>} value={formData.emergency_contact_relationship} onChange={handleInputChange} required />
+                      </div>
+                   </div>
+
+                   <div className="space-y-8">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
+                          <MapPin size={18} />
+                        </div>
+                        <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest">Location</h3>
+                      </div>
+                      <div className="space-y-4">
+                        <InputField label="City" name="city" icon={<Building size={18}/>} value={formData.city} onChange={handleInputChange} required />
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Full Address</label>
+                          <textarea name="address" value={formData.address} onChange={handleInputChange} required className="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-brand-navy outline-none focus:border-brand-purple" />
+                        </div>
+                      </div>
+                   </div>
+                 </div>
+              </section>
             </div>
 
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-slate-100">
@@ -308,5 +348,6 @@ const FileUpload = ({ label, onChange, name, file }) => (
     </div>
   </div>
 );
+
 
 export default BecomeRider;

@@ -7,15 +7,11 @@ import CustomerRoutes from './routes/CustomerRoutes';
 import VendorRoutes from './routes/VendorRoutes';
 import SuperAdminRoutes from './routes/SuperAdminRoutes';
 import RiderRoutes from './routes/RiderRoutes';
-import DeliveryLogin from './pages/delivery/DeliveryLogin';
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Delivery Login (Rider) */}
-        <Route path="/delivery/login" element={<DeliveryLogin />} />
-
         {/* Vendor routes */}
         <Route path="/vendor/*" element={<VendorRoutes />} />
 

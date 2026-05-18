@@ -30,7 +30,7 @@ const RiderRoutes = () => {
   );
 
   if (!user || !isRider) {
-    return <Navigate to="/delivery/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (

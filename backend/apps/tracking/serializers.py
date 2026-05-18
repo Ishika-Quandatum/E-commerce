@@ -158,11 +158,14 @@ class RiderProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiderProfile
         fields = [
-            'id', 'user', 'rider_name', 'address', 'city', 'vehicle_type', 'vehicle_number',
-            'license_number', 'license_image', 'id_proof_image', 'profile_photo',
-            'bank_account_number', 'ifsc_code', 'emergency_contact', 'verification_status',
-            'is_active', 'rejection_reason', 'availability_status', 'rating',
-            'total_distance', 'join_date', 'assigned_orders_count', 'wallet', 'last_activity'
+            'id', 'user', 'rider_name', 'address', 'city', 'date_of_birth', 'gender',
+            'vehicle_type', 'vehicle_number', 'rc_number', 'license_number',
+            'insurance_number', 'insurance_valid_till', 'vehicle_image',
+            'license_image', 'id_proof_image', 'profile_photo', 'bank_proof_image',
+            'account_holder_name', 'bank_account_number', 'ifsc_code', 'bank_name',
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+            'verification_status', 'is_active', 'rejection_reason', 'availability_status', 
+            'rating', 'total_distance', 'join_date', 'assigned_orders_count', 'wallet', 'last_activity'
         ]
     
     def get_assigned_orders_count(self, obj):
@@ -171,6 +174,29 @@ class RiderProfileSerializer(serializers.ModelSerializer):
     def get_last_activity(self, obj):
         shipment = obj.assigned_shipments.order_by('-updated_at').first()
         return shipment.updated_at if shipment else getattr(obj, 'join_date', None)
+
+    def update(self, instance, validated_data):
+        # Handle User model fields if they are passed in the request.data
+        # Note: These aren't in validated_data because they are not fields of RiderProfile
+        request = self.context.get('request')
+        if request and request.data:
+            user = instance.user
+            changed = False
+            
+            if 'phone' in request.data:
+                user.phone = request.data['phone']
+                changed = True
+                
+            if 'rider_name' in request.data:
+                name_parts = request.data['rider_name'].split(' ', 1)
+                user.first_name = name_parts[0]
+                user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+                changed = True
+                
+            if changed:
+                user.save()
+                
+        return super().update(instance, validated_data)
 
 class AdminRiderSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(write_only=True)
@@ -381,9 +407,12 @@ class PublicRiderRegistrationSerializer(serializers.ModelSerializer):
         model = RiderProfile
         fields = [
             'full_name', 'email', 'phone', 'password', 'confirm_password',
-            'address', 'city', 'vehicle_type', 'vehicle_number', 'license_number',
-            'license_image', 'id_proof_image', 'profile_photo',
-            'bank_account_number', 'ifsc_code', 'emergency_contact'
+            'address', 'city', 'date_of_birth', 'gender',
+            'vehicle_type', 'vehicle_number', 'rc_number', 'license_number',
+            'insurance_number', 'insurance_valid_till', 'vehicle_image',
+            'license_image', 'id_proof_image', 'profile_photo', 'bank_proof_image',
+            'bank_account_number', 'ifsc_code', 'account_holder_name', 'bank_name',
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship'
         ]
 
     def validate(self, data):

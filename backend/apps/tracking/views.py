@@ -531,6 +531,26 @@ class RiderViewSet(viewsets.ModelViewSet):
         rider.save()
         return Response({'status': 'Verification status updated', 'new_status': rider.verification_status})
 
+    @action(detail=False, methods=['get', 'patch'])
+    def my_profile(self, request):
+        try:
+            rider_profile = request.user.rider_profile
+        except RiderProfile.DoesNotExist:
+            return Response({'error': 'Rider profile not found for this user.'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+        
+        if request.method == 'GET':
+            serializer = self.get_serializer(rider_profile, context={'request': request})
+            return Response(serializer.data)
+        
+        elif request.method == 'PATCH':
+            serializer = self.get_serializer(rider_profile, data=request.data, partial=True, context={'request': request})
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=400)
+
     @action(detail=False, methods=['get'])
     def admin_rider_stats(self, request):
         if request.user.role not in ['superadmin', 'admin']:

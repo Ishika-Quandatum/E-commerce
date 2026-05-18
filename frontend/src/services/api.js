@@ -183,6 +183,8 @@ export const riderService = {
   updateVerificationStatus: (id, data) => api.patch(`tracking/riders/${id}/update_verification_status/`, data),
   getRiderDashboardStats: () => api.get('tracking/riders/dashboard_stats/'),
   getActiveTask: () => api.get('tracking/shipments/current_active_task/'),
+  getMyProfile: () => api.get('tracking/riders/my_profile/'),
+  updateMyProfile: (data) => api.patch('tracking/riders/my_profile/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getStats: () => api.get('tracking/riders/stats/'),
 };
 
