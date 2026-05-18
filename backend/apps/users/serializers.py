@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import User, UserAddress
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
+from django.db.models import Q
 
 from apps.payments.models import CustomerWallet
 
@@ -68,13 +69,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         username = attrs.get('username')
         password = attrs.get('password')
 
-        # Logic: If it looks like an email, find the user
-        if '@' in username:
-            try:
-                user_obj = User.objects.get(email=username)
-                username = user_obj.username
-            except (User.DoesNotExist, User.MultipleObjectsReturned):
-                pass 
+        # Logic: Try to find user by username or email (case-insensitive)
+        user_obj = User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).first()
+        if user_obj:
+            username = user_obj.username
 
         user = authenticate(username=username, password=password)
 

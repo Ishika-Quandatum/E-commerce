@@ -142,12 +142,18 @@ const Home = () => {
         <div className="flex flex-wrap justify-center sm:justify-start gap-8 sm:gap-12 lg:gap-16">
           {categories.slice(0, 8).map((cat) => (
             <Link key={cat.id} to={`/products?category=${cat.slug || cat.id}`} className="group flex flex-col items-center w-[80px] sm:w-[100px] transition-all hover:-translate-y-1">
-              <div className="w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] rounded-full overflow-hidden shadow-sm border border-slate-100 group-hover:border-brand-purple group-hover:shadow-lg transition-all duration-300 bg-white mb-3">
-                <img
-                  src={cat.image || `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=60&w=400`}
-                  alt={cat.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
+              <div className="w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] rounded-full overflow-hidden shadow-sm border border-slate-100 group-hover:border-brand-purple group-hover:shadow-lg transition-all duration-300 bg-white mb-3 flex items-center justify-center">
+                {cat.image ? (
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all duration-300">
+                    <LayoutGrid size={40} />
+                  </div>
+                )}
               </div>
               <h3 className="text-center text-xs sm:text-sm font-semibold text-brand-navy group-hover:text-brand-purple transition-colors leading-tight line-clamp-2">{cat.name}</h3>
             </Link>
