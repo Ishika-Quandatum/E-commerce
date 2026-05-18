@@ -500,6 +500,21 @@ class RiderViewSet(viewsets.ModelViewSet):
         pending = self.queryset.filter(verification_status='Pending')
         return Response(self.serializer_class(pending, many=True, context={'request': request}).data)
 
+    @action(detail=False, methods=['get'])
+    def request_stats(self, request):
+        if request.user.role not in ['superadmin', 'admin']:
+            return Response({'error': 'Unauthorized'}, status=403)
+        
+        pending = self.queryset.filter(verification_status='Pending').count()
+        approved = self.queryset.filter(verification_status='Approved').count()
+        rejected = self.queryset.filter(verification_status='Rejected').count()
+        
+        return Response({
+            'total_pending': pending,
+            'total_approved': approved,
+            'total_rejected': rejected
+        })
+
     @action(detail=True, methods=['patch'])
     def update_verification_status(self, request, pk=None):
         if request.user.role not in ['superadmin', 'admin']:
@@ -511,6 +526,9 @@ class RiderViewSet(viewsets.ModelViewSet):
         
         if new_status not in ['Approved', 'Rejected', 'Suspended', 'Pending Verification']:
             return Response({'error': 'Invalid status'}, status=400)
+            
+        if rider.verification_status == 'Rejected' and new_status == 'Approved':
+            return Response({'error': 'A rejected rider application cannot be approved.'}, status=400)
         
         rider.verification_status = new_status
         if new_status == 'Approved':

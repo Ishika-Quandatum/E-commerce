@@ -59,6 +59,7 @@ class RiderProfile(models.Model):
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=5.0)
     total_distance = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     join_date = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"Rider: {self.user.get_full_name() or self.user.username} ({self.verification_status})"

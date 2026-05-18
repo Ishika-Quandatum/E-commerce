@@ -29,6 +29,7 @@ const RiderProfile = () => {
         vehicle_type: "",
         vehicle_number: "",
         rc_number: "",
+        license_number: "",
         insurance_number: "",
         insurance_valid_till: "",
         account_holder_name: "",
@@ -79,6 +80,7 @@ const RiderProfile = () => {
                 vehicle_type: res.data.vehicle_type || "",
                 vehicle_number: res.data.vehicle_number || "",
                 rc_number: res.data.rc_number || "",
+                license_number: res.data.license_number || "",
                 insurance_number: res.data.insurance_number || "",
                 insurance_valid_till: res.data.insurance_valid_till || "",
                 account_holder_name: res.data.account_holder_name || "",
@@ -482,6 +484,25 @@ const RiderProfile = () => {
                                     <EditInputField label="Full Name" name="rider_name" value={editFormData.rider_name} onChange={handleEditChange} icon={<User size={14}/>} />
                                     <EditInputField label="Email" name="email" value={editFormData.email} onChange={handleEditChange} icon={<Mail size={14}/>} readOnly />
                                     <EditInputField label="Phone" name="phone" value={editFormData.phone} onChange={handleEditChange} icon={<Smartphone size={14}/>} />
+                                    <EditInputField label="Date of Birth" name="date_of_birth" type="date" value={editFormData.date_of_birth} onChange={handleEditChange} icon={<Calendar size={14}/>} />
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gender</label>
+                                        <div className="relative group">
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-purple transition-colors">
+                                                <User size={14} />
+                                            </div>
+                                            <select 
+                                                name="gender" 
+                                                value={editFormData.gender} 
+                                                onChange={handleEditChange}
+                                                className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl pl-11 pr-4 text-[12px] font-bold text-slate-900 outline-none focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/5 transition-all"
+                                            >
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <EditInputField label="City" name="city" value={editFormData.city} onChange={handleEditChange} icon={<MapPin size={14}/>} />
                                     <div className="col-span-full">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5 block">Full Address</label>
@@ -500,16 +521,21 @@ const RiderProfile = () => {
                                     <EditInputField label="Vehicle Type" name="vehicle_type" value={editFormData.vehicle_type} onChange={handleEditChange} icon={<Truck size={14}/>} />
                                     <EditInputField label="Vehicle Number" name="vehicle_number" value={editFormData.vehicle_number} onChange={handleEditChange} icon={<Hash size={14}/>} />
                                     <EditInputField label="RC Number" name="rc_number" value={editFormData.rc_number} onChange={handleEditChange} icon={<FileCheck size={14}/>} />
+                                    <EditInputField label="License Number" name="license_number" value={editFormData.license_number} onChange={handleEditChange} icon={<FileCheck size={14}/>} />
                                     <EditInputField label="Insurance No" name="insurance_number" value={editFormData.insurance_number} onChange={handleEditChange} icon={<Shield size={14}/>} />
+                                    <EditInputField label="Insurance Valid Till" name="insurance_valid_till" type="date" value={editFormData.insurance_valid_till} onChange={handleEditChange} icon={<Calendar size={14}/>} />
 
                                     {/* Bank Details */}
                                     <div className="col-span-full border-b border-slate-50 pb-2 mt-4 mb-2">
                                         <h4 className="text-[10px] font-black text-brand-purple uppercase tracking-[0.2em]">Banking & Emergency</h4>
                                     </div>
                                     <EditInputField label="Account Holder" name="account_holder_name" value={editFormData.account_holder_name} onChange={handleEditChange} icon={<User size={14}/>} />
+                                    <EditInputField label="Account Number" name="bank_account_number" value={editFormData.bank_account_number} onChange={handleEditChange} icon={<CreditCard size={14}/>} />
                                     <EditInputField label="Bank Name" name="bank_name" value={editFormData.bank_name} onChange={handleEditChange} icon={<Landmark size={14}/>} />
                                     <EditInputField label="IFSC Code" name="ifsc_code" value={editFormData.ifsc_code} onChange={handleEditChange} icon={<Hash size={14}/>} />
-                                    <EditInputField label="Emergency Contact" name="emergency_contact_name" value={editFormData.emergency_contact_name} onChange={handleEditChange} icon={<Phone size={14}/>} />
+                                    <EditInputField label="Emergency Contact" name="emergency_contact_name" value={editFormData.emergency_contact_name} onChange={handleEditChange} icon={<User size={14}/>} />
+                                    <EditInputField label="Emergency Phone" name="emergency_contact_phone" value={editFormData.emergency_contact_phone} onChange={handleEditChange} icon={<Phone size={14}/>} />
+                                    <EditInputField label="Emergency Relationship" name="emergency_contact_relationship" value={editFormData.emergency_contact_relationship} onChange={handleEditChange} icon={<User size={14}/>} />
                                 </div>
 
                                 <div className="mt-12 flex justify-end gap-4 pb-4">

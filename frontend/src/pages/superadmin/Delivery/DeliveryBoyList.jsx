@@ -68,6 +68,8 @@ const DeliveryBoyList = () => {
 
     useEffect(() => {
         fetchData();
+        window.addEventListener('rider-onboarded', fetchData);
+        return () => window.removeEventListener('rider-onboarded', fetchData);
     }, []);
 
     const handleEdit = (rider) => {
@@ -107,12 +109,6 @@ const DeliveryBoyList = () => {
                    <h1 className="text-4xl font-medium text-slate-900 tracking-tight italic uppercase">Fleet <span className="text-indigo-600 not-italic uppercase tracking-normal">Management</span></h1>
                    <p className="text-slate-400 font-normal mt-2 max-w-xl">Monitor your delivery partners, track fleet availability, and onboard new personnel in real-time.</p>
                 </div>
-                <button 
-                  onClick={() => setShowAddModal(true)}
-                  className="flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-medium text-sm uppercase tracking-widest shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
-                >
-                   <Plus size={18} /> Add Delivery Boy
-                </button>
             </div>
 
             {actionError && (
@@ -290,11 +286,7 @@ const DeliveryBoyList = () => {
                 </div>
             </div>
 
-            <AddDeliveryBoyModal 
-               isOpen={showAddModal} 
-               onClose={() => setShowAddModal(false)}
-               onSuccess={fetchData}
-            />
+
 
             <EditDeliveryBoyModal 
                 isOpen={showEditModal}

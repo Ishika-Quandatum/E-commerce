@@ -181,6 +181,7 @@ export const riderService = {
   // Rider Onboarding
   register: (formData) => api.post('tracking/riders/register/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getPendingRequests: () => api.get('tracking/riders/pending_requests/'),
+  getRequestStats: () => api.get('tracking/riders/request_stats/'),
   updateVerificationStatus: (id, data) => api.patch(`tracking/riders/${id}/update_verification_status/`, data),
   getRiderDashboardStats: () => api.get('tracking/riders/dashboard_stats/'),
   getActiveTask: () => api.get('tracking/shipments/current_active_task/'),
