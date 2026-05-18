@@ -18,7 +18,8 @@ import {
   Wallet,
   X,
   Check,
-  ChevronRight
+  ChevronRight,
+  Bike
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { payrollService } from "../../../services/api";
@@ -28,6 +29,7 @@ const PayrollSettings = () => {
   const [bonusRules, setBonusRules] = useState([]);
   const [penaltyRules, setPenaltyRules] = useState([]);
   const [config, setConfig] = useState({ petrol_km_limit: 5, petrol_rate_per_km: 3 });
+  const [vehiclePaySettings, setVehiclePaySettings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -36,26 +38,32 @@ const PayrollSettings = () => {
   const [newPenalty, setNewPenalty] = useState({ penalty_name: "", deduction_amount: "" });
   const [showAddBonus, setShowAddBonus] = useState(false);
   const [newBonus, setNewBonus] = useState({ min_deliveries: "", bonus_amount: "" });
+  const [showAddVehicle, setShowAddVehicle] = useState(false);
+  const [newVehicle, setNewVehicle] = useState({ vehicle_type: "", base_pay: "", extra_per_km: "", night_bonus: "" });
 
   // Edit States
   const [editingBonusId, setEditingBonusId] = useState(null);
   const [editBonusData, setEditBonusData] = useState({});
   const [editingPenaltyId, setEditingPenaltyId] = useState(null);
   const [editPenaltyData, setEditPenaltyData] = useState({});
+  const [editingVehicleId, setEditingVehicleId] = useState(null);
+  const [editVehicleData, setEditVehicleData] = useState({});
 
   const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [bonusRes, penaltyRes, configRes] = await Promise.all([
+      const [bonusRes, penaltyRes, configRes, vehicleRes] = await Promise.all([
         payrollService.getBonusRules(),
         payrollService.getPenaltyRules(),
-        payrollService.getConfig()
+        payrollService.getConfig(),
+        payrollService.getVehiclePaySettings()
       ]);
       setBonusRules(bonusRes.data);
       setPenaltyRules(penaltyRes.data);
       setConfig(configRes.data);
+      setVehiclePaySettings(vehicleRes.data);
     } catch (err) {
       console.error("Failed to fetch payroll data", err);
     } finally {
@@ -183,6 +191,56 @@ const PayrollSettings = () => {
     }
   };
 
+  const handleAddVehicle = async () => {
+    try {
+      if (!newVehicle.vehicle_type || !newVehicle.base_pay) {
+        alert("Please fill vehicle type and base pay");
+        return;
+      }
+      const data = {
+        vehicle_type: newVehicle.vehicle_type,
+        base_pay: parseFloat(newVehicle.base_pay) || 0,
+        is_active: true
+      };
+      await payrollService.createVehiclePaySetting(data);
+      setNewVehicle({ vehicle_type: "", base_pay: "" });
+      setShowAddVehicle(false);
+      fetchData();
+    } catch (err) {
+      alert(`Failed to add vehicle pay setting: ${JSON.stringify(err.response?.data || err.message)}`);
+    }
+  };
+
+  const handleStartEditVehicle = (setting) => {
+    setEditingVehicleId(setting.id);
+    setEditVehicleData({ ...setting });
+  };
+
+  const handleSaveEditVehicle = async () => {
+    try {
+      const data = {
+        vehicle_type: editVehicleData.vehicle_type,
+        base_pay: parseFloat(editVehicleData.base_pay) || 0,
+        is_active: editVehicleData.is_active
+      };
+      await payrollService.updateVehiclePaySetting(editingVehicleId, data);
+      setEditingVehicleId(null);
+      fetchData();
+    } catch (err) {
+      alert("Failed to update vehicle pay setting");
+    }
+  };
+
+  const handleDeleteVehicle = async (id) => {
+    if (!window.confirm("Delete this vehicle pay setting?")) return;
+    try {
+      await payrollService.deleteVehiclePaySetting(id);
+      fetchData();
+    } catch (err) {
+      alert("Failed to delete vehicle pay setting");
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50/50">
@@ -217,10 +275,126 @@ const PayrollSettings = () => {
       <div className="px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           
-          {/* 1. DELIVERY BONUS SETTINGS */}
+          {/* 1. PER DELIVERY PAY SETTINGS */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full lg:col-span-2">
+            <div className="p-6 border-b border-slate-100">
+              <h2 className="text-[13px] font-bold text-brand-purple uppercase tracking-wider">1. PER DELIVERY PAY SETTINGS</h2>
+              <p className="text-[11px] text-slate-400 mt-1">Set base pay for each delivery based on vehicle type.</p>
+            </div>
+            
+            <div className="p-4">
+              <div className="overflow-hidden rounded-lg border border-slate-100">
+                <table className="w-full text-left text-[12px]">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
+                      <th className="px-4 py-3">Vehicle Type</th>
+                      <th className="px-4 py-3">Base Pay (₹)</th>
+                      <th className="px-4 py-3 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {vehiclePaySettings.map((setting) => (
+                      <tr key={setting.id} className="hover:bg-slate-50/50 transition-all">
+                        <td className="px-4 py-3 font-semibold text-slate-700">
+                          <div className="flex items-center gap-2">
+                            <Bike size={16} className="text-slate-400" />
+                            {editingVehicleId === setting.id ? (
+                              <input 
+                                type="text"
+                                value={editVehicleData.vehicle_type}
+                                onChange={(e) => setEditVehicleData({...editVehicleData, vehicle_type: e.target.value})}
+                                className="bg-white border border-slate-200 rounded px-2 py-1 outline-none focus:border-brand-purple text-xs font-semibold"
+                              />
+                            ) : setting.vehicle_type}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-slate-700">
+                          {editingVehicleId === setting.id ? (
+                            <input 
+                              type="number"
+                              value={editVehicleData.base_pay}
+                              onChange={(e) => setEditVehicleData({...editVehicleData, base_pay: e.target.value})}
+                              className="w-24 bg-white border border-slate-200 rounded px-2 py-1 outline-none focus:border-brand-purple text-xs font-semibold"
+                            />
+                          ) : `₹${setting.base_pay}`}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1">
+                            {editingVehicleId === setting.id ? (
+                              <>
+                                <button onClick={handleSaveEditVehicle} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded transition-all"><Check size={14} /></button>
+                                <button onClick={() => setEditingVehicleId(null)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition-all"><X size={14} /></button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => handleStartEditVehicle(setting)} className="p-1.5 text-brand-purple hover:bg-brand-purple/5 border border-transparent hover:border-brand-purple/20 rounded transition-all"><Pencil size={14} /></button>
+                                <button onClick={() => handleDeleteVehicle(setting.id)} className="p-1.5 text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded transition-all"><Trash2 size={14} /></button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {showAddVehicle && (
+                <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3 animate-in slide-in-from-top-2 duration-300">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vehicle Type</label>
+                      <input 
+                        type="text"
+                        value={newVehicle.vehicle_type}
+                        onChange={(e) => setNewVehicle({...newVehicle, vehicle_type: e.target.value})}
+                        className="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-[12px] focus:border-brand-purple outline-none"
+                        placeholder="e.g. Scooter"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base Pay (₹)</label>
+                      <input 
+                        type="number"
+                        value={newVehicle.base_pay}
+                        onChange={(e) => setNewVehicle({...newVehicle, base_pay: e.target.value})}
+                        className="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-[12px] focus:border-brand-purple outline-none"
+                        placeholder="30"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setShowAddVehicle(false)}
+                      className="flex-1 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-md font-bold text-[11px] hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleAddVehicle}
+                      className="flex-1 py-1.5 bg-brand-purple text-white rounded-md font-bold text-[11px] hover:bg-brand-purple/90"
+                    >
+                      Save Rule
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {!showAddVehicle && (
+                <button 
+                  onClick={() => setShowAddVehicle(true)}
+                  className="w-full mt-4 flex items-center justify-center gap-2 py-2 bg-white border border-brand-purple text-brand-purple rounded-lg font-bold text-[12px] hover:bg-brand-purple hover:text-white transition-all"
+                >
+                  <Plus size={14} /> Add Vehicle Type
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* 2. DELIVERY BONUS SETTINGS */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full">
             <div className="p-6 border-b border-slate-100">
-              <h2 className="text-[13px] font-bold text-brand-purple uppercase tracking-wider">1. DELIVERY BONUS SETTINGS</h2>
+              <h2 className="text-[13px] font-bold text-brand-purple uppercase tracking-wider">2. DELIVERY BONUS SETTINGS</h2>
               <p className="text-[11px] text-slate-400 mt-1">Set bonus amount based on rider completed deliveries.</p>
             </div>
             
@@ -339,10 +513,10 @@ const PayrollSettings = () => {
             </div>
           </div>
 
-          {/* 2. PETROL ALLOWANCE SETTINGS */}
+          {/* 3. PETROL ALLOWANCE SETTINGS */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full">
             <div className="p-6 border-b border-slate-100">
-              <h2 className="text-[13px] font-bold text-brand-purple uppercase tracking-wider">2. PETROL ALLOWANCE SETTINGS</h2>
+              <h2 className="text-[13px] font-bold text-brand-purple uppercase tracking-wider">3. PETROL ALLOWANCE SETTINGS</h2>
               <p className="text-[11px] text-slate-400 mt-1">Configure petrol allowance based on distance.</p>
             </div>
             
@@ -386,10 +560,10 @@ const PayrollSettings = () => {
             </div>
           </div>
 
-          {/* 3. PENALTY SETTINGS */}
+          {/* 4. PENALTY SETTINGS */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full lg:col-span-2">
             <div className="p-6 border-b border-slate-100">
-              <h2 className="text-[13px] font-bold text-brand-purple uppercase tracking-wider">3. PENALTY SETTINGS</h2>
+              <h2 className="text-[13px] font-bold text-brand-purple uppercase tracking-wider">4. PENALTY SETTINGS</h2>
               <p className="text-[11px] text-slate-400 mt-1">Set deduction rules for different penalty conditions.</p>
             </div>
             
@@ -508,6 +682,54 @@ const PayrollSettings = () => {
                   <Plus size={14} /> Add Penalty Rule
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* SALARY FORMULA 🚀 */}
+          <div className="bg-slate-950 text-white rounded-2xl border border-slate-800 shadow-xl overflow-hidden h-full lg:col-span-2 p-8 relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+              <Calculator size={180} className="text-indigo-400" />
+            </div>
+            
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🚀</span>
+                <div>
+                  <h3 className="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">SALARY FORMULA</h3>
+                  <p className="text-xs text-slate-400 uppercase tracking-widest mt-0.5">Auto Salary Calculation Engine</p>
+                </div>
+              </div>
+              
+              <div className="border-t border-slate-800/80 pt-6">
+                <div className="bg-slate-900/80 rounded-xl p-6 border border-slate-800/50 max-w-2xl font-mono text-base md:text-lg leading-relaxed tracking-wide shadow-inner text-indigo-200">
+                  <div className="text-emerald-400 font-bold mb-1">Total Salary =</div>
+                  <div className="pl-6 space-y-1">
+                    <div>( <span className="text-white font-bold">Per Delivery Pay</span> × <span className="text-amber-400 font-bold">Completed Orders</span> )</div>
+                    <div className="text-emerald-400 font-bold">+ <span className="text-white">Incentives</span></div>
+                    <div className="text-emerald-400 font-bold">+ <span className="text-white">Petrol Allowance</span></div>
+                    <div className="text-rose-400 font-bold">- <span className="text-white">Penalties</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs pt-4">
+                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/40 space-y-1">
+                  <div className="text-slate-400 font-bold uppercase tracking-wider">Per Delivery Pay</div>
+                  <p className="text-slate-300 font-normal leading-relaxed">Dynamically fetched from the active <strong>Vehicle Type Settings</strong> above.</p>
+                </div>
+                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/40 space-y-1">
+                  <div className="text-slate-400 font-bold uppercase tracking-wider">Incentives</div>
+                  <p className="text-slate-300 font-normal leading-relaxed">Milestone bonuses calculated based on completed order tiers.</p>
+                </div>
+                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/40 space-y-1">
+                  <div className="text-slate-400 font-bold uppercase tracking-wider">Petrol Allowance</div>
+                  <p className="text-slate-300 font-normal leading-relaxed">Based on the petrol km limit and the allowance rate per km settings.</p>
+                </div>
+                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/40 space-y-1">
+                  <div className="text-slate-400 font-bold uppercase tracking-wider">Penalties</div>
+                  <p className="text-slate-300 font-normal leading-relaxed">Deductions based on late deliveries or wrong item delivery counts.</p>
+                </div>
+              </div>
             </div>
           </div>
 

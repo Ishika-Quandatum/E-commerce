@@ -11,6 +11,7 @@ import ActiveDelivery from "../pages/rider/ActiveDelivery";
 import RiderProfile from "../pages/rider/RiderProfile";
 import RiderPickups from "../pages/rider/RiderPickups";
 import LiveTracking from "../pages/rider/LiveTracking";
+import SalaryRules from "../pages/rider/SalaryRules";
 
 // Stub components for remaining pages
 const Placeholder = ({ title }) => (
@@ -42,6 +43,7 @@ const RiderRoutes = () => {
         <Route path="attendance" element={<Attendance />} />
         <Route path="wallet" element={<RiderWallet />} />
         <Route path="earnings" element={<RiderEarnings />} />
+        <Route path="salary-rules" element={<SalaryRules />} />
         <Route path="tracking" element={<LiveTracking />} />
         <Route path="notifications" element={<Placeholder title="Notifications" />} />
         <Route path="profile" element={<RiderProfile />} />

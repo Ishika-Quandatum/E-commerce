@@ -188,6 +188,7 @@ export const riderService = {
   getMyProfile: () => api.get('tracking/riders/my_profile/'),
   updateMyProfile: (data) => api.patch('tracking/riders/my_profile/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getStats: () => api.get('tracking/riders/stats/'),
+  getSalaryRules: () => api.get('payroll/wallets/salary_rules/'),
 };
 
 export const platformService = {
@@ -240,6 +241,11 @@ export const payrollService = {
   
   getSettlements: (params) => api.get('payroll/settlements/', { params }),
   getWallets: (params) => api.get('payroll/wallets/', { params }),
+
+  getVehiclePaySettings: () => api.get('payroll/vehicle-pay-settings/'),
+  createVehiclePaySetting: (data) => api.post('payroll/vehicle-pay-settings/', data),
+  updateVehiclePaySetting: (id, data) => api.patch(`payroll/vehicle-pay-settings/${id}/`, data),
+  deleteVehiclePaySetting: (id) => api.delete(`payroll/vehicle-pay-settings/${id}/`),
 };
 
 export default api;

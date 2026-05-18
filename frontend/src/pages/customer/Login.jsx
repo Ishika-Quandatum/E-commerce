@@ -80,7 +80,7 @@ const Login = () => {
     }
 
     } catch (err) {
-    setError('Invalid username/email or password');
+    setError(err.response?.data?.detail || 'Invalid username/email or password');
   } finally {
     setLoading(false);
   }

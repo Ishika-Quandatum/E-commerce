@@ -103,3 +103,19 @@ class RiderWallet(models.Model):
 
     def __str__(self):
         return f"Payroll Wallet: {self.rider.user.username}"
+
+
+class VehicleTypePaySetting(models.Model):
+    """Base pay and allowance settings for riders based on vehicle type."""
+    vehicle_type = models.CharField(max_length=50, unique=True, help_text="e.g. Bike, Scooter, Bicycle")
+    base_pay = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['vehicle_type']
+
+    def __str__(self):
+        return f"{self.vehicle_type}: Base ₹{self.base_pay}"
+

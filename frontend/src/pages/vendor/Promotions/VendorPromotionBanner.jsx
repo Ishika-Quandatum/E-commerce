@@ -73,11 +73,10 @@ const VendorPromotionBanner = () => {
     setSubmitting(true);
     const data = new FormData();
     Object.keys(formData).forEach(key => {
-      if (key === 'banner_image' && formData[key]) {
-        if (typeof formData[key] === 'string') return;
-        data.append(key, formData[key]);
-      } else if (key === 'banner_image' && !formData[key]) {
-        data.append(key, '');
+      if (key === 'banner_image') {
+        if (formData[key] && typeof formData[key] !== 'string') {
+          data.append(key, formData[key]);
+        }
       } else if (formData[key] !== null) {
         data.append(key, formData[key]);
       }

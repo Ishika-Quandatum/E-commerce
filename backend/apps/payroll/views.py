@@ -10,12 +10,13 @@ import uuid
 
 from .models import (
     RiderPayrollRule, RiderSettlement, RiderPaymentLog, RiderWallet,
-    DeliveryBonusRule, PenaltyRule, PayrollConfiguration
+    DeliveryBonusRule, PenaltyRule, PayrollConfiguration, VehicleTypePaySetting
 )
 from .serializers import (
     RiderPayrollRuleSerializer, RiderSettlementSerializer, 
     RiderPaymentLogSerializer, RiderWalletSerializer,
-    DeliveryBonusRuleSerializer, PenaltyRuleSerializer, PayrollConfigurationSerializer
+    DeliveryBonusRuleSerializer, PenaltyRuleSerializer, PayrollConfigurationSerializer,
+    VehicleTypePaySettingSerializer
 )
 from apps.tracking.models import RiderProfile, Shipment
 
@@ -64,12 +65,21 @@ class RiderPayrollViewSet(viewsets.ViewSet):
         
         deliveries_count = delivered_shipments.count()
         
-        # Base earnings from SalaryConfiguration if exists, else default 25
-        base_per_delivery = 25
-        if hasattr(rider, 'salary_config'):
+        # Base earnings based on rider's vehicle type if settings exist, else default/legacy fallback
+        base_per_delivery = Decimal('25.00')
+        if rider.vehicle_type:
+            vehicle_pay_setting = VehicleTypePaySetting.objects.filter(
+                vehicle_type__iexact=rider.vehicle_type,
+                is_active=True
+            ).first()
+            if vehicle_pay_setting:
+                base_per_delivery = vehicle_pay_setting.base_pay
+            elif hasattr(rider, 'salary_config') and rider.salary_config.per_delivery_commission > 0:
+                base_per_delivery = rider.salary_config.per_delivery_commission
+        elif hasattr(rider, 'salary_config') and rider.salary_config.per_delivery_commission > 0:
             base_per_delivery = rider.salary_config.per_delivery_commission
         
-        delivery_earnings = Decimal(str(deliveries_count * base_per_delivery))
+        delivery_earnings = Decimal(str(deliveries_count)) * Decimal(str(base_per_delivery))
         
         # Calculate incentive based on milestone from DeliveryBonusRule
         incentive = Decimal('0.00')
@@ -223,3 +233,86 @@ class RiderWalletViewSet(viewsets.ReadOnlyModelViewSet):
         if user.role == 'rider':
             return self.queryset.filter(rider__user=user)
         return self.queryset
+
+    @action(detail=False, methods=['get'])
+    def salary_rules(self, request):
+        if request.user.role != 'rider':
+            return Response({'error': 'Unauthorized'}, status=403)
+            
+        rider = request.user.rider_profile
+        today = timezone.now().date()
+        start_of_today = timezone.datetime.combine(today, datetime.time.min).replace(tzinfo=timezone.utc)
+        
+        # 1. Fetch Rules
+        vehicle_rules = VehicleTypePaySetting.objects.filter(is_active=True).values('vehicle_type', 'base_pay')
+        bonus_rules = DeliveryBonusRule.objects.filter(is_active=True).order_by('min_deliveries').values('min_deliveries', 'bonus_amount')
+        penalty_rules = PenaltyRule.objects.filter(is_active=True).values('penalty_name', 'deduction_amount')
+        config = PayrollConfiguration.get_config()
+        
+        # 2. Fetch Stats
+        deliveries_today = Shipment.objects.filter(
+            rider=rider,
+            status='Delivered',
+            delivered_at__gte=start_of_today
+        ).count()
+        
+        # Determine Base Pay
+        rider_base_pay = Decimal('25.00') # Default
+        if rider.vehicle_type:
+            vs = VehicleTypePaySetting.objects.filter(vehicle_type__iexact=rider.vehicle_type, is_active=True).first()
+            if vs:
+                rider_base_pay = vs.base_pay
+        
+        # Determine Bonus
+        incentive = Decimal('0.00')
+        applicable_bonus = DeliveryBonusRule.objects.filter(
+            min_deliveries__lte=deliveries_today, 
+            is_active=True
+        ).order_by('-min_deliveries').first()
+        if applicable_bonus:
+            incentive = applicable_bonus.bonus_amount
+            
+        # Earnings Today (Base + Incentive - mock penalties)
+        earnings_today = (Decimal(deliveries_today) * rider_base_pay) + incentive
+        
+        # Wallet Pending
+        wallet = RiderWallet.objects.filter(rider=rider).first()
+        pending_settlement = wallet.pending_payout if wallet else Decimal('0.00')
+        
+        return Response({
+            'rules': {
+                'vehicle_pay': list(vehicle_rules),
+                'bonus_slabs': list(bonus_rules),
+                'penalties': list(penalty_rules),
+                'config': {
+                    'petrol_km_limit': config.petrol_km_limit,
+                    'petrol_rate_per_km': float(config.petrol_rate_per_km)
+                },
+                'rider_base_pay': float(rider_base_pay)
+            },
+            'stats': {
+                'deliveries_today': deliveries_today,
+                'earnings_today': float(earnings_today),
+                'pending_settlement': float(pending_settlement)
+            }
+        })
+
+
+class VehicleTypePaySettingViewSet(viewsets.ModelViewSet):
+    queryset = VehicleTypePaySetting.objects.all()
+    serializer_class = VehicleTypePaySettingSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def list(self, request, *args, **kwargs):
+        # Pre-populate default vehicle pay configurations if database is empty
+        if not VehicleTypePaySetting.objects.exists():
+            default_settings = [
+                {'vehicle_type': 'Bike', 'base_pay': Decimal('30.00')},
+                {'vehicle_type': 'Scooter', 'base_pay': Decimal('28.00')},
+                {'vehicle_type': 'Bicycle', 'base_pay': Decimal('20.00')},
+            ]
+            for setting in default_settings:
+                VehicleTypePaySetting.objects.create(**setting)
+        
+        return super().list(request, *args, **kwargs)
+

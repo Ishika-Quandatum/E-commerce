@@ -5,21 +5,15 @@ import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, Bell, Search, UserCircle, LogOut, User, ChevronDown, Shield, Package } from "lucide-react";
 import clsx from "clsx";
-import AddDeliveryBoyModal from "./Delivery/AddDeliveryBoyModal";
 
 const SuperAdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isAddRiderOpen, setIsAddRiderOpen] = useState(false);
+
+
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
-  React.useEffect(() => {
-    const handleOpenModal = () => setIsAddRiderOpen(true);
-    window.addEventListener('open-add-delivery-boy-modal', handleOpenModal);
-    return () => window.removeEventListener('open-add-delivery-boy-modal', handleOpenModal);
-  }, []);
 
   const handleLogout = () => {
     logout();
@@ -154,11 +148,6 @@ const SuperAdminLayout = () => {
         </main>
       </div>
 
-      <AddDeliveryBoyModal 
-        isOpen={isAddRiderOpen} 
-        onClose={() => setIsAddRiderOpen(false)} 
-        onSuccess={() => window.dispatchEvent(new Event('rider-onboarded'))} 
-      />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     RiderPayrollRule, RiderSettlement, RiderPaymentLog, RiderWallet,
-    DeliveryBonusRule, PenaltyRule, PayrollConfiguration
+    DeliveryBonusRule, PenaltyRule, PayrollConfiguration, VehicleTypePaySetting
 )
 from apps.users.serializers import UserSerializer
 
@@ -45,3 +45,11 @@ class RiderWalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiderWallet
         fields = '__all__'
+
+
+class VehicleTypePaySettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VehicleTypePaySetting
+        fields = ['id', 'vehicle_type', 'base_pay', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+

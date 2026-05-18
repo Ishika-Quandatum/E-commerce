@@ -62,7 +62,6 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
       icon: Bike,
       subItems: [
         { name: "Active Riders", path: "/admin/delivery-boys" },
-        { name: "Add Delivery Boy", onClick: () => window.dispatchEvent(new Event('open-add-delivery-boy-modal')) },
         { name: "Rider Requests", path: "/admin/delivery-requests" },
       ]
     },
@@ -135,33 +134,22 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
                 </Link>
                 {item.subItems && (isActive || location.pathname.startsWith(item.path)) && (
                   <div className="ml-9 space-y-1 pt-1 animate-in slide-in-from-top-1 duration-300">
-                     {item.subItems.map((sub) => {
-                       const isSubActive = sub.path && location.pathname === sub.path;
-                       return sub.onClick ? (
-                         <button
-                           key={sub.name}
-                           onClick={() => {
-                             sub.onClick();
-                             setIsOpen(false);
-                           }}
-                           className="w-full text-left block px-4 py-2 text-[13px] font-normal rounded-xl transition-all text-brand-navy/50 hover:text-brand-purple hover:bg-brand-purple/5"
-                         >
-                           {sub.name}
-                         </button>
-                       ) : (
-                         <Link
-                           key={sub.name}
-                           to={sub.path}
-                           onClick={() => setIsOpen(false)}
-                           className={clsx(
-                             "block px-4 py-2 text-[13px] font-normal rounded-xl transition-all",
-                             isSubActive ? "text-brand-purple bg-brand-purple/10" : "text-brand-navy/50 hover:text-brand-purple"
-                           )}
-                         >
-                           {sub.name}
-                         </Link>
-                       );
-                     })}
+                    {item.subItems.map((sub) => {
+                      const isSubActive = location.pathname === sub.path;
+                      return (
+                        <Link
+                          key={sub.name}
+                          to={sub.path}
+                          onClick={() => setIsOpen(false)}
+                          className={clsx(
+                            "block px-4 py-2 text-[13px] font-normal rounded-xl transition-all",
+                            isSubActive ? "text-brand-purple bg-brand-purple/10" : "text-brand-navy/50 hover:text-brand-purple"
+                          )}
+                        >
+                          {sub.name}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>

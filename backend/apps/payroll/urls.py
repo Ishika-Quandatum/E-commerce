@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     PayrollRuleViewSet, RiderPayrollViewSet, 
     RiderSettlementViewSet, RiderWalletViewSet,
-    DeliveryBonusRuleViewSet, PenaltyRuleViewSet, PayrollConfigurationViewSet
+    DeliveryBonusRuleViewSet, PenaltyRuleViewSet, PayrollConfigurationViewSet,
+    VehicleTypePaySettingViewSet
 )
 
 router = DefaultRouter()
@@ -11,6 +12,7 @@ router.register(r'rules', PayrollRuleViewSet)
 router.register(r'bonus-rules', DeliveryBonusRuleViewSet)
 router.register(r'penalty-rules', PenaltyRuleViewSet)
 router.register(r'config', PayrollConfigurationViewSet, basename='payroll-config')
+router.register(r'vehicle-pay-settings', VehicleTypePaySettingViewSet)
 router.register(r'settlements', RiderSettlementViewSet)
 router.register(r'wallets', RiderWalletViewSet)
 router.register(r'manage', RiderPayrollViewSet, basename='payroll-manage')

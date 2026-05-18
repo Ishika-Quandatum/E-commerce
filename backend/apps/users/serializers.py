@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User, UserAddress
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
 from django.db.models import Q
 
@@ -73,13 +74,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user_obj = User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).first()
         if user_obj:
             username = user_obj.username
+            if not user_obj.is_active:
+                if user_obj.check_password(password):
+                    raise AuthenticationFailed('User account is disabled.', 'account_disabled')
+                else:
+                    raise AuthenticationFailed('No active account found with the given credentials', 'no_active_account')
 
         user = authenticate(username=username, password=password)
 
         if user is not None:
-            if not user.is_active:
-                raise serializers.ValidationError('User account is disabled.')
-            
             # SimpleJWT logic expects 'self.user' to be set
             refresh = self.get_token(user)
 
@@ -89,4 +92,4 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
             return data
         
-        raise serializers.ValidationError('No active account found with the given credentials')
+        raise AuthenticationFailed('No active account found with the given credentials', 'no_active_account')

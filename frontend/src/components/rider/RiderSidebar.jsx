@@ -13,6 +13,7 @@ import {
   LogOut,
   Truck,
   RotateCcw,
+  ClipboardList,
   X 
 } from "lucide-react";
 import clsx from "clsx";
@@ -31,6 +32,7 @@ const RiderSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Live Tracking", path: "/rider/tracking", icon: MapPin },
     { name: "Wallet / COD", path: "/rider/wallet", icon: Wallet },
     { name: "Salary / Earnings", path: "/rider/earnings", icon: DollarSign },
+    { name: "Salary Rules", path: "/rider/salary-rules", icon: ClipboardList },
     { name: "Attendance", path: "/rider/attendance", icon: Clock },
     { name: "Profile", path: "/rider/profile", icon: UserCircle },
   ];
