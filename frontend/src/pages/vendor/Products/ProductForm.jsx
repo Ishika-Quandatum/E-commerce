@@ -26,7 +26,7 @@ import { clsx } from "clsx";
 import { useNavigate } from "react-router-dom";
 import { usePlatform } from "../../../context/PlatformContext";
 
-const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
+const ProductForm = ({ initialData = {}, onSubmit, loading = false, activeView }) => {
   const { settings } = usePlatform();
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -412,8 +412,8 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
     <div className="max-w-5xl mx-auto mb-12 space-y-10">
       
       {/* BULK UPLOAD SECTION (Only visible when creating new) */}
-      {!initialData.id && (
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-indigo-100/30 overflow-hidden">
+      {!initialData.id && (activeView === "excel" || !activeView) && (
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-indigo-100/30 overflow-hidden animate-in fade-in duration-300">
           <div className="p-8 border-b border-indigo-50 bg-gradient-to-r from-indigo-50/50 to-white flex items-center justify-between">
              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
@@ -514,7 +514,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
       )}
 
       {/* VISUAL SEPARATOR */}
-      {!initialData.id && (
+      {!initialData.id && !activeView && (
         <div className="flex items-center gap-4 py-4">
            <div className="h-px bg-slate-200 flex-1"></div>
            <div className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">OR ENTER MANUALLY</div>
@@ -523,15 +523,9 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
       )}
 
       {/* SINGLE ENTRY FORM */}
-      <div className="opacity-100">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-              {initialData.id ? 'Refine Single Product' : 'Create New Offering'}
-            </h2>
-            <p className="text-slate-500 text-sm font-medium">Capture the details of an individual stock item.</p>
-          </div>
-        </div>
+      {(initialData.id || activeView === "manual" || !activeView) && (
+        <div className="opacity-100 animate-in fade-in duration-300">
+
 
         {error && uploadStatus !== 'error' && (
           <div className="bg-rose-50 border border-rose-100 text-rose-700 p-4 rounded-2xl mb-8 flex items-center gap-3 animate-shake">
@@ -848,6 +842,87 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
 
               </div>
 
+              {/* Payment Methods - Horizontal */}
+              {(settings?.payment_razorpay || settings?.payment_paypal || settings?.payment_cod || settings?.payment_wallet) && (
+                <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-6">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center">
+                      <CreditCard size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm">Payment Methods</h3>
+                      <p className="text-slate-400 text-[10px]">Enable/disable payment options for this product</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {settings?.payment_razorpay && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, allow_razorpay: !formData.allow_razorpay})}
+                        className={clsx(
+                          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all",
+                          formData.allow_razorpay
+                            ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                            : "bg-slate-50 border-slate-200 text-slate-400"
+                        )}
+                      >
+                        <div className={clsx("w-2 h-2 rounded-full", formData.allow_razorpay ? "bg-indigo-500" : "bg-slate-300")} />
+                        <CreditCard size={13} />
+                        Razorpay
+                      </button>
+                    )}
+                    {settings?.payment_paypal && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, allow_paypal: !formData.allow_paypal})}
+                        className={clsx(
+                          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all",
+                          formData.allow_paypal
+                            ? "bg-blue-50 border-blue-200 text-blue-700"
+                            : "bg-slate-50 border-slate-200 text-slate-400"
+                        )}
+                      >
+                        <div className={clsx("w-2 h-2 rounded-full", formData.allow_paypal ? "bg-blue-500" : "bg-slate-300")} />
+                        <CreditCard size={13} />
+                        PayPal
+                      </button>
+                    )}
+                    {settings?.payment_cod && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, allow_cod: !formData.allow_cod})}
+                        className={clsx(
+                          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all",
+                          formData.allow_cod
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                            : "bg-slate-50 border-slate-200 text-slate-400"
+                        )}
+                      >
+                        <div className={clsx("w-2 h-2 rounded-full", formData.allow_cod ? "bg-emerald-500" : "bg-slate-300")} />
+                        <Banknote size={13} />
+                        Cash on Delivery
+                      </button>
+                    )}
+                    {settings?.payment_wallet && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, allow_wallet: !formData.allow_wallet})}
+                        className={clsx(
+                          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all",
+                          formData.allow_wallet
+                            ? "bg-amber-50 border-amber-200 text-amber-700"
+                            : "bg-slate-50 border-slate-200 text-slate-400"
+                        )}
+                      >
+                        <div className={clsx("w-2 h-2 rounded-full", formData.allow_wallet ? "bg-amber-500" : "bg-slate-300")} />
+                        <Wallet size={13} />
+                        Wallet
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
             </div>
 
             {/* RIGHT COLUMN: Inventory & Media */}
@@ -1104,131 +1179,6 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
                 </div>
               </div>
 
-              {/* Payment Configuration */}
-              {(settings?.payment_razorpay || settings?.payment_paypal || settings?.payment_cod || settings?.payment_wallet) && (
-                <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-8 space-y-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center">
-                      <CreditCard size={20} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-lg">Payment Methods</h3>
-                      <p className="text-slate-500 text-xs">Enable/disable specific payment options for this product</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {settings?.payment_razorpay && (
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                            <CreditCard size={16} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">Razorpay</p>
-                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Accept cards & UPI payments</p>
-                          </div>
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => setFormData({...formData, allow_razorpay: !formData.allow_razorpay})}
-                          className={clsx(
-                            "w-12 h-6 rounded-full relative transition-all duration-300",
-                            formData.allow_razorpay ? "bg-indigo-600 shadow-lg shadow-indigo-200" : "bg-slate-200"
-                          )}
-                        >
-                          <div className={clsx(
-                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
-                            formData.allow_razorpay ? "left-7" : "left-1"
-                          )} />
-                        </button>
-                      </div>
-                    )}
-
-                    {settings?.payment_paypal && (
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                            <CreditCard size={16} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">PayPal</p>
-                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">International wallet payments</p>
-                          </div>
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => setFormData({...formData, allow_paypal: !formData.allow_paypal})}
-                          className={clsx(
-                            "w-12 h-6 rounded-full relative transition-all duration-300",
-                            formData.allow_paypal ? "bg-blue-600 shadow-lg shadow-blue-200" : "bg-slate-200"
-                          )}
-                        >
-                          <div className={clsx(
-                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
-                            formData.allow_paypal ? "left-7" : "left-1"
-                          )} />
-                        </button>
-                      </div>
-                    )}
-
-                    {settings?.payment_cod && (
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                            <Banknote size={16} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">Cash on Delivery</p>
-                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Pay at time of delivery</p>
-                          </div>
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => setFormData({...formData, allow_cod: !formData.allow_cod})}
-                          className={clsx(
-                            "w-12 h-6 rounded-full relative transition-all duration-300",
-                            formData.allow_cod ? "bg-emerald-600 shadow-lg shadow-emerald-200" : "bg-slate-200"
-                          )}
-                        >
-                          <div className={clsx(
-                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
-                            formData.allow_cod ? "left-7" : "left-1"
-                          )} />
-                        </button>
-                      </div>
-                    )}
-
-                    {settings?.payment_wallet && (
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                            <Wallet size={16} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">Wallet</p>
-                            <p className="text-[10px] text-slate-500 font-medium italic leading-none mt-1">Deduct from customer wallet</p>
-                          </div>
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => setFormData({...formData, allow_wallet: !formData.allow_wallet})}
-                          className={clsx(
-                            "w-12 h-6 rounded-full relative transition-all duration-300",
-                            formData.allow_wallet ? "bg-amber-600 shadow-lg shadow-amber-200" : "bg-slate-200"
-                          )}
-                        >
-                          <div className={clsx(
-                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-md",
-                            formData.allow_wallet ? "left-7" : "left-1"
-                          )} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
             </div>
           </div>
 
@@ -1267,6 +1217,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false }) => {
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 };

@@ -176,19 +176,13 @@ const ProductList = () => {
         </div>
         <div className="flex items-center gap-3">
            <button 
-             onClick={handleExport}
-             className="inline-flex items-center gap-2 justify-center rounded-xl border-2 border-green-600 bg-green-50 text-green-700 px-5 py-2.5 text-xs font-black uppercase tracking-widest shadow-sm hover:bg-green-100 transition-all active:scale-95"
-           >
-             <Download size={16} />
-             Export Excel
-           </button>
-           <button 
              onClick={() => navigate("/vendor/products/add")}
              className="inline-flex items-center gap-2 justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
            >
              <Plus size={18} />
              Add Product
            </button>
+
         </div>
       </div>
 
