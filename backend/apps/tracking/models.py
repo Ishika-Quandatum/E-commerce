@@ -94,6 +94,10 @@ class Shipment(models.Model):
     start_delivery_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
 
+    # Vendor → Customer route metrics (stored when order is assigned)
+    distance_km = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    estimated_minutes = models.IntegerField(null=True, blank=True)
+
     failed_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -52,41 +52,73 @@ class ShipmentViewSet(viewsets.ModelViewSet):
     def accept_shipment(self, request, pk=None):
         """Atomic logic for a rider to claim an unassigned shipment."""
         from django.db import transaction
-        
+
         if request.user.role != 'rider':
             return Response({'error': 'Only riders can accept shipments.'}, status=403)
-            
+
         rider_profile = request.user.rider_profile
-        
+
         try:
             with transaction.atomic():
                 # Lock the shipment record to prevent race conditions
                 shipment = Shipment.objects.select_for_update().get(pk=pk)
-                
+
                 if shipment.rider is not None:
                     return Response({'error': 'This shipment has already been claimed by another rider.'}, status=400)
-                
+
                 if shipment.status != 'Dispatch Queue':
                     return Response({'error': 'This shipment is no longer available in the queue.'}, status=400)
 
+                # ── Calculate & store vendor→customer distance on assignment ──
+                try:
+                    import math
+                    vendor = shipment.order.vendor
+                    order  = shipment.order
+                    if (vendor and vendor.location_lat and vendor.location_lng
+                            and order.latitude and order.longitude):
+                        def _hav(lat1, lon1, lat2, lon2):
+                            R = 6371
+                            p1, p2 = math.radians(lat1), math.radians(lat2)
+                            dp = math.radians(lat2 - lat1)
+                            dl = math.radians(lon2 - lon1)
+                            a = math.sin(dp / 2)**2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2)**2
+                            return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+                        dist_km = round(_hav(
+                            vendor.location_lat, vendor.location_lng,
+                            order.latitude, order.longitude
+                        ), 2)
+                        # Rough ETA: assume avg speed 20 km/h in city
+                        est_minutes = max(5, round((dist_km / 20) * 60))
+                        shipment.distance_km     = dist_km
+                        shipment.estimated_minutes = est_minutes
+                except Exception as dist_err:
+                    print(f"[WARN] Distance calc failed on accept: {dist_err}")
+
                 # Assign and update
-                shipment.rider = rider_profile
+                shipment.rider  = rider_profile
                 shipment.status = 'Assigned'
                 shipment.save()
-                
+
                 # Sync Order
-                shipment.order.status = 'Accepted' 
+                shipment.order.status = 'Accepted'
                 shipment.order.save()
 
                 TrackingHistory.objects.create(
-                    shipment=shipment, 
-                    status='Assigned', 
+                    shipment=shipment,
+                    status='Assigned',
                     description=f'Claimed by rider {request.user.username}'
                 )
-                
-                return Response({'status': 'claimed', 'message': 'You have successfully accepted this task.'})
+
+                return Response({
+                    'status': 'claimed',
+                    'message': 'You have successfully accepted this task.',
+                    'distance_km': float(shipment.distance_km) if shipment.distance_km else None,
+                    'estimated_minutes': shipment.estimated_minutes,
+                })
         except Shipment.DoesNotExist:
             return Response({'error': 'Shipment not found.'}, status=404)
+
 
     @action(detail=True, methods=['patch'])
     def update_dispatch_status(self, request, pk=None):
