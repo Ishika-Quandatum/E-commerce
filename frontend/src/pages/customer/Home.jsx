@@ -26,7 +26,7 @@ const Home = () => {
   useEffect(() => {
     const fetchInitial = async () => {
       try {
-        const catRes = await productService.getCategories();
+        const catRes = await productService.getCategories({ top_level: 'true' });
         // Handle both paginated and non-paginated responses
         const categoryData = Array.isArray(catRes.data) ? catRes.data : (catRes.data.results || []);
         setCategories(categoryData);
