@@ -1194,12 +1194,6 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false, activeView }
             
             <div className="flex items-center gap-4">
               <button
-                type="button"
-                className="px-6 py-2.5 rounded-xl font-bold text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-all text-sm"
-              >
-                Save as Draft
-              </button>
-              <button
                 type="submit"
                 disabled={loading || uploadStatus === 'uploading'}
                 className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/20 active:scale-95 transition-all disabled:opacity-50 min-w-[160px]"
