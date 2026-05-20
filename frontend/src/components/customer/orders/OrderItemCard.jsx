@@ -50,7 +50,7 @@ const OrderItemCard = React.memo(({ item, order, isDelivered, onOpenReview, onOp
 
       {/* Product row — click to navigate to product page */}
       <div
-        onClick={() => navigate(`/products/${item.product?.id}`)}
+        onClick={() => navigate(`/customer/orders/${order.id}`)}
         className="flex items-center gap-4 p-4 hover:bg-slate-50/20 transition-colors cursor-pointer"
       >
         {/* Rounded thumbnail */}

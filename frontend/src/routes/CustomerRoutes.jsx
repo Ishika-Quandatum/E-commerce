@@ -10,6 +10,7 @@ import Register from '../pages/customer/Register'
 import Profile from '../pages/customer/Profile'
 import VendorSignup from '../pages/customer/VendorSignup'
 import OrderTracking from '../pages/customer/Tracking/OrderTracking'
+import OrderDetails from '../pages/customer/orders/OrderDetails'
 import AboutUs from '../pages/customer/AboutUs'
 import ContactUs from '../pages/customer/ContactUs'
 import NewArrivals from '../pages/customer/NewArrivals'
@@ -38,6 +39,7 @@ const CustomerRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/customer/orders/:orderId" element={<OrderDetails />} />
         <Route path="/become-seller" element={<VendorSignup />} />
         <Route path="/become-rider" element={<BecomeRider />} />
         <Route path="/tracking/:id" element={<OrderTracking />} />

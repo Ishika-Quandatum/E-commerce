@@ -46,15 +46,6 @@ const OrderCard = React.memo(({ order, onOpenReturn, onOpenReview }) => {
         </div>
 
         <div className="flex items-center gap-4 ml-auto">
-          {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
-            <button
-              onClick={() => navigate(`/tracking/${order.shipment_id || order.id}`)}
-              className="flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-full text-xs font-bold hover:shadow-lg hover:shadow-indigo-200 transition-all cursor-pointer"
-            >
-              <MapPin size={12} />
-              Track Order
-            </button>
-          )}
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Total Price</p>
             <p className="text-base font-black text-indigo-600">₹{order.total_price}</p>
