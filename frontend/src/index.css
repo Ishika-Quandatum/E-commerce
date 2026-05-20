@@ -71,3 +71,15 @@ body {
   }
 }
 
+/* Global Pointer Cursor for all interactive elements */
+a, 
+button, 
+select, 
+input[type="submit"], 
+input[type="button"], 
+input[type="reset"], 
+[role="button"], 
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
