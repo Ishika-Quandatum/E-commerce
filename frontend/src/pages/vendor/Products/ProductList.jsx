@@ -102,11 +102,11 @@ const ProductList = () => {
 
   const handleExport = async () => {
     try {
-      const res = await adminService.bulkExportProducts();
+      const res = await adminService.bulkExportProducts(selectedProducts);
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "Vendor_Products_Export.xlsx");
+      link.setAttribute("download", selectedProducts.length > 0 ? "Selected_Vendor_Products.xlsx" : "Vendor_Products_Export.xlsx");
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);

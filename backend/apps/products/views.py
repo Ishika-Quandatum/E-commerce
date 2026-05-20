@@ -399,6 +399,11 @@ class ProductViewSet(viewsets.ModelViewSet):
             products = Product.objects.filter(vendor=vendor)
         else:
             products = Product.objects.all()
+            
+        ids_param = request.query_params.get('ids')
+        if ids_param:
+            ids = [int(i.strip()) for i in ids_param.split(',') if i.strip().isdigit()]
+            products = products.filter(id__in=ids)
         
         data = []
         for p in products:

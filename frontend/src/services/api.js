@@ -83,7 +83,10 @@ export const adminService = {
   updateProduct: (id, data) => api.patch(`products/${id}/`, data),
   deleteProduct: (id) => api.delete(`products/${id}/`),
   bulkUploadProducts: (formData) => api.post('products/bulk_upload/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  bulkExportProducts: () => api.get('products/bulk_export/', { responseType: 'blob' }),
+  bulkExportProducts: (ids) => {
+    const params = ids && ids.length > 0 ? { ids: ids.join(',') } : {};
+    return api.get('products/bulk_export/', { params, responseType: 'blob' });
+  },
   getCategories: (params) => api.get('categories/', { params }),
   createCategory: (data) => api.post('categories/', data),
   updateCategory: (id, data) => api.patch(`categories/${id}/`, data),
