@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { adminService } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Tags, Image as ImageIcon, Search, Filter, MoreHorizontal } from "lucide-react";
+import { Plus, Edit2, Trash2, Tags, Image as ImageIcon, Search, Filter, MoreHorizontal, ChevronDown } from "lucide-react";
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,8 +94,9 @@ const CategoryList = () => {
                   </td>
                 </tr>
               ) : categories.length > 0 ? (
-                categories.map((c) => (
-                  <tr key={c.id} className="group hover:bg-slate-50/50 transition-colors">
+                categories.filter(c => !c.parent).map((c) => (
+                  <React.Fragment key={c.id}>
+                  <tr className="group hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-5">
                       <div className="h-16 w-16 rounded-[1.25rem] bg-slate-100 border border-slate-200 overflow-hidden shadow-inner group-hover:scale-110 transition-transform duration-500">
                         {c.image ? (
@@ -107,7 +109,19 @@ const CategoryList = () => {
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                      <span className="text-lg font-normal text-slate-900 group-hover:text-indigo-600 transition-colors">{c.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-normal text-slate-900 group-hover:text-indigo-600 transition-colors">{c.name}</span>
+                        {c.children && c.children.length > 0 && (
+                            <button 
+                              onClick={() => setOpenDropdown(openDropdown === c.id ? null : c.id)}
+                              className="px-2 py-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-1.5"
+                              title="View Subcategories"
+                            >
+                              <span className="text-[10px] font-bold">Sub-categories ({c.children.length})</span>
+                              <ChevronDown size={14} className={`transition-transform ${openDropdown === c.id ? "rotate-180" : ""}`} />
+                            </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium">
@@ -134,6 +148,31 @@ const CategoryList = () => {
                       </div>
                     </td>
                   </tr>
+                  {openDropdown === c.id && c.children && c.children.length > 0 && (
+                    <tr>
+                      <td colSpan="4" className="p-0 border-b border-slate-50 bg-slate-50/50">
+                        <div className="px-24 py-4 animate-in slide-in-from-top-2">
+                           <div className="flex flex-col gap-2 max-w-xl">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Subcategories</p>
+                             {c.children.map(sub => (
+                               <div key={sub.id} className="flex items-center justify-between px-5 py-3 bg-white rounded-xl border border-slate-100 shadow-sm group/item">
+                                 <span className="text-sm font-medium text-slate-700">{sub.name}</span>
+                                 <div className="flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                    <button onClick={() => { navigate(`/admin/categories/edit/${sub.id}`); setOpenDropdown(null); }} className="p-2 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50">
+                                       <Edit2 size={14} />
+                                    </button>
+                                    <button onClick={() => { handleDelete(sub.id); setOpenDropdown(null); }} className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                                       <Trash2 size={14} />
+                                    </button>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 ))
               ) : (
                 <tr>
