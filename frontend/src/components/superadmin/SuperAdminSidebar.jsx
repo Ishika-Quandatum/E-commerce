@@ -86,7 +86,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center justify-between px-8 py-8">
+        <div className="flex items-center justify-between px-8 pt-8 pb-6">
           <h2 className="text-2xl font-medium tracking-tighter text-brand-navy uppercase italic">
             {platformName} <span className="text-brand-purple not-italic uppercase tracking-normal ml-1">Admin</span>
           </h2>
@@ -99,8 +99,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
 
-        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          <div className="text-[11px] font-medium text-brand-text-gray uppercase tracking-widest px-4 mb-4">Main Navigation</div>
+        <nav className="flex-1 px-4 pt-2 pb-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
             const Icon = item.icon;
