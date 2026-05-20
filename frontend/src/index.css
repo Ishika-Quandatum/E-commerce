@@ -83,3 +83,103 @@ input[type="reset"],
   cursor: pointer !important;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   ADMIN & VENDOR DASHBOARDS LOOK & FEEL OPTIMIZATION
+   - Normalizes heading styles, weights, and removes italics
+   - Moderates excessive border radii and paddings
+   - Controls spacing and reduces padding globally inside dashboard containers
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Force-normalize dashboard text weights */
+main.flex-1 .font-black, 
+main.flex-1 .font-extrabold {
+  font-weight: 700 !important;
+}
+
+main.flex-1 .font-bold {
+  font-weight: 600 !important;
+}
+
+/* Uniform dashboard heading style */
+main.flex-1 h1,
+main.flex-1 .text-2xl,
+main.flex-1 .text-3xl,
+main.flex-1 .text-4xl,
+main.flex-1 .text-5xl,
+main.flex-1 .text-6xl {
+  font-size: 1.5rem !important; /* Uniform 24px sizing */
+  font-weight: 700 !important;   /* Clean bold */
+  font-style: normal !important;  /* Remove italics */
+  letter-spacing: -0.025em !important;
+  color: #0f172a !important;     /* Slate 900 */
+  text-transform: none !important;
+}
+
+/* Uniform dashboard subheading style */
+main.flex-1 h1 + p,
+main.flex-1 .text-slate-500,
+main.flex-1 .text-gray-500 {
+  font-size: 0.875rem !important; /* text-sm */
+  font-weight: 500 !important;
+  font-style: normal !important;
+  color: #64748b !important;     /* Slate 500 */
+  margin-top: 4px !important;
+}
+
+/* Spacing and Padding Moderation */
+main.flex-1 {
+  padding: 1.25rem !important; /* 20px outer margin instead of 32px */
+}
+
+/* Reduce card/panel excessive paddings to a clean, balanced spacing */
+main.flex-1 .p-8,
+main.flex-1 .p-10,
+main.flex-1 .p-12,
+main.flex-1 .p-20,
+main.flex-1 .p-24,
+main.flex-1 .p-32 {
+  padding: 1.25rem !important; /* 20px padding instead of 32px-128px */
+}
+
+main.flex-1 .py-5,
+main.flex-1 .py-6,
+main.flex-1 .py-8,
+main.flex-1 .py-10,
+main.flex-1 .py-12,
+main.flex-1 .py-16,
+main.flex-1 .py-20,
+main.flex-1 .py-24 {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+main.flex-1 .px-6,
+main.flex-1 .px-8,
+main.flex-1 .px-10 {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+}
+
+/* Moderate dynamic spaces/gaps */
+main.flex-1 .space-y-10,
+main.flex-1 .space-y-8,
+main.flex-1 .space-y-6 {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+main.flex-1 .gap-20,
+main.flex-1 .gap-12,
+main.flex-1 .gap-8,
+main.flex-1 .gap-6 {
+  gap: 1rem !important;
+}
+
+/* Normalize excessive card corner roundness */
+main.flex-1 .rounded-\[2\.5rem\],
+main.flex-1 .rounded-\[3rem\],
+main.flex-1 .rounded-\[3\.5rem\],
+main.flex-1 .rounded-\[4rem\] {
+  border-radius: 1rem !important; /* Clean modern 16px rounding */
+}
+
