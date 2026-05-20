@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import CustomerRoutes from './routes/CustomerRoutes';
 import VendorRoutes from './routes/VendorRoutes';
 import SuperAdminRoutes from './routes/SuperAdminRoutes';
@@ -11,6 +12,7 @@ import RiderRoutes from './routes/RiderRoutes';
 const App = () => {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Vendor routes */}
         <Route path="/vendor/*" element={<VendorRoutes />} />

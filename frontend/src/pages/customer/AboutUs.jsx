@@ -276,7 +276,7 @@ const AboutUs = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
             <div className="space-y-8">
               <span className="text-brand-purple-light font-black text-sm uppercase tracking-[0.3em]">Vendor Program</span>
-              <h2 className="text-4xl md:text-6xl font-black leading-tight uppercase italic tracking-tighter">Grow With <span className="text-brand-purple not-italic tracking-normal">Rainbow Store</span></h2>
+              <h2 className="text-4xl md:text-6xl font-black leading-tight uppercase italic tracking-tighter">Grow With <span className="text-brand-purple not-italic tracking-normal">{platformName}</span></h2>
               <p className="text-lg text-white/70 font-medium leading-relaxed max-w-lg">
                 We help businesses grow online by giving vendors tools to manage:
               </p>
