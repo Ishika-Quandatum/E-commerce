@@ -14,7 +14,8 @@ import {
   ExternalLink,
   Phone,
   MapPin,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -23,7 +24,7 @@ const VendorManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState(''); // '' means All
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState(window.innerWidth < 1024 ? 'grid' : 'list');
 
   useEffect(() => {
     fetchVendors();
@@ -72,15 +73,14 @@ const VendorManagement = () => {
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Vendor Management</h1>
           <p className="text-slate-500 font-medium mt-1">Review and manage vendor applications and status.</p>
         </div>
-        
-        <div className="flex items-center gap-4">
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
+            {/* Desktop Tabs */}
+            <div className="hidden sm:flex bg-slate-100 p-1.5 rounded-2xl w-full sm:w-auto">
                 {filterTabs.map((tab) => (
                     <button
                     key={tab.label}
@@ -97,7 +97,23 @@ const VendorManagement = () => {
                 ))}
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl">
+            {/* Mobile Dropdown */}
+            <div className="sm:hidden w-full relative">
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full bg-slate-100 text-slate-700 font-bold uppercase tracking-widest text-xs px-4 py-3.5 rounded-2xl appearance-none outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all border border-slate-100 cursor-pointer"
+                >
+                    {filterTabs.map(tab => (
+                        <option key={tab.label} value={tab.value}>{tab.label}</option>
+                    ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <ChevronDown size={16} />
+                </div>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl">
                 <button 
                     onClick={() => setViewMode("list")}
                     className={clsx(
@@ -216,7 +232,8 @@ const VendorManagement = () => {
             </div>
         ) : (
             <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
-                <table className="w-full border-collapse">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse min-w-[800px]">
                     <thead>
                         <tr className="bg-slate-50/50 text-left">
                             <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Store Details</th>
@@ -286,6 +303,7 @@ const VendorManagement = () => {
                         ))}
                     </tbody>
                 </table>
+              </div>
             </div>
         )
       )}

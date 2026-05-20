@@ -208,6 +208,11 @@ class VendorViewSet(viewsets.ModelViewSet):
             # If user is admin, let them see all for management
             if user.is_authenticated and (user.role in ['superadmin', 'admin'] or user.is_staff):
                 queryset = Vendor.objects.all()
+
+            # Apply status filter if provided
+            status_filter = self.request.query_params.get('status')
+            if status_filter:
+                queryset = queryset.filter(status=status_filter)
             
             return queryset
 
