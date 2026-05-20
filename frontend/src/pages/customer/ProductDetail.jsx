@@ -5,6 +5,7 @@ import { productService, reviewService, vendorService } from '../../services/api
 import { useCart } from '../../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import WriteReviewModal from '../../components/customer/WriteReviewModal';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -20,10 +21,6 @@ const ProductDetail = () => {
   const [activeImage, setActiveImage] = useState(0);
 
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', images: [] });
-  const [submitError, setSubmitError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreviews, setImagePreviews] = useState([]);
   const [selectedSize, setSelectedSize] = useState(null);
 
   useEffect(() => {
@@ -99,60 +96,7 @@ SKU: ${product.sku || 'N/A'}
 
   if (!product) return <div className="min-h-screen flex items-center justify-center bg-slate-50 font-bold text-rose-500 uppercase tracking-widest text-xs">Product Not Found</div>;
 
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitError('');
-    setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append('product', product.id);
-      formData.append('rating', reviewForm.rating);
-      formData.append('comment', reviewForm.comment);
-      
-      if (reviewForm.images.length > 0) {
-        reviewForm.images.forEach(img => {
-          formData.append('images', img);
-        });
-      }
 
-      await reviewService.createReview(formData);
-      setShowReviewModal(false);
-      setReviewForm({ rating: 5, comment: '', images: [] });
-      setImagePreviews([]);
-      
-      const res = await productService.getProductDetail(id);
-      setProduct(res.data);
-      alert("Review submitted successfully!");
-    } catch (err) {
-      setSubmitError(err.response?.data?.error || 'Failed to submit review');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length + reviewForm.images.length > 5) {
-      alert("Maximum 5 images allowed");
-      return;
-    }
-    const newImages = [...reviewForm.images, ...files];
-    setReviewForm({ ...reviewForm, images: newImages });
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setImagePreviews([...imagePreviews, ...newPreviews]);
-  };
-
-  const removeImage = (index) => {
-    const newImages = reviewForm.images.filter((_, i) => i !== index);
-    const newPreviews = imagePreviews.filter((_, i) => i !== index);
-    setReviewForm({ ...reviewForm, images: newImages });
-    setImagePreviews(newPreviews);
-  };
-
-  const getRatingLabel = (rating) => {
-    const labels = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Excellent' };
-    return labels[rating] || '';
-  };
 
   const handleHelpful = async (reviewId) => {
     try {
@@ -581,120 +525,20 @@ SKU: ${product.sku || 'N/A'}
       </div>
 
       {/* Write Review Modal */}
-      <AnimatePresence>
-        {showReviewModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
-            >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
-                <h3 className="text-lg font-bold text-slate-900">Write a Review</h3>
-                <button 
-                  onClick={() => setShowReviewModal(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 bg-white rounded-full hover:bg-slate-100 transition-all"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="overflow-y-auto p-8 custom-scrollbar">
-                <form onSubmit={handleReviewSubmit}>
-                  {product.can_review && (
-                    <div className="mb-8 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-2xl flex items-center gap-3">
-                      <ShieldCheck size={20} className="shrink-0 text-emerald-500" />
-                      <span>{product.eligibility_message}</span>
-                    </div>
-                  )}
-
-                  {submitError && (
-                    <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm font-medium rounded-xl flex items-start gap-3">
-                      <AlertCircle size={18} className="shrink-0 mt-0.5" />
-                      <span>{submitError}</span>
-                    </div>
-                  )}
-                  
-                  <div className="mb-8 flex flex-col items-center">
-                    <p className="text-sm font-bold text-slate-800 mb-4">Your Rating</p>
-                    <div className="flex items-center gap-3">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setReviewForm({...reviewForm, rating: star})}
-                          className="transition-all hover:scale-110 active:scale-95"
-                        >
-                          <Star 
-                            size={42} 
-                            fill={star <= reviewForm.rating ? "#fbbf24" : "none"} 
-                            strokeWidth={1.5}
-                            className={star <= reviewForm.rating ? "text-amber-400" : "text-slate-200"} 
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <span className="mt-4 text-sm font-black text-slate-400 uppercase tracking-tighter">
-                       {getRatingLabel(reviewForm.rating)}
-                    </span>
-                  </div>
-
-                  <div className="mb-6">
-                    <label className="block text-sm font-bold text-slate-800 mb-2">Your Review</label>
-                    <textarea
-                      required
-                      rows="4"
-                      value={reviewForm.comment}
-                      onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
-                      placeholder="Share your experience with this product..."
-                      className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[1.25rem] focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 outline-none transition-all text-sm resize-none font-medium placeholder:text-slate-300"
-                    ></textarea>
-                    <div className="text-[10px] text-right mt-2 text-slate-400 font-bold">{reviewForm.comment.length}/1000</div>
-                  </div>
-
-                  <div className="mb-8">
-                    <label className="block text-sm font-bold text-slate-800 mb-3">Add Photos <span className="text-slate-400 font-medium">(optional)</span></label>
-                    <div className="flex flex-wrap gap-3">
-                      {imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative w-20 h-20 group">
-                          <img src={preview} className="w-full h-full object-cover rounded-xl border-2 border-slate-100" />
-                          <button 
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg scale-0 group-hover:scale-100 transition-all"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
-                      {reviewForm.images.length < 5 && (
-                        <label className="w-20 h-20 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-all text-slate-400 hover:text-primary-600">
-                          <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageChange} />
-                          <Plus size={24} />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-[1.25rem] font-bold uppercase tracking-widest text-sm transition-all shadow-xl shadow-primary-500/20 active:scale-95 disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Review'}
-                  </button>
-                </form>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <WriteReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        product={product}
+        initialRating={5}
+        onSuccess={async () => {
+          try {
+            const res = await productService.getProductDetail(id);
+            setProduct(res.data);
+          } catch (err) {
+            console.error("Error refreshing product detail", err);
+          }
+        }}
+      />
     </div>
   );
 };
