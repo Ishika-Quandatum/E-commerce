@@ -42,7 +42,7 @@ const OrderItemCard = React.memo(({ item, order, isDelivered, onOpenReview, onOp
     : order.status;
 
   return (
-    <div className="flex flex-col rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-white">
+    <div className="flex flex-col rounded-xl overflow-hidden border border-slate-100 shadow-sm bg-white">
       {/* Rate & Review stars — only for delivered orders */}
       {isDelivered && (
         <ReviewStars product={item.product} onOpenReview={onOpenReview} />

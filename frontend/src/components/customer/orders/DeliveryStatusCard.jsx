@@ -1,31 +1,21 @@
 import React from 'react';
-import { CheckCircle2, Clock, XCircle, ChevronRight, Info, Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Clock, XCircle, Info, Check } from 'lucide-react';
 
 const DeliveryStatusCard = React.memo(({ order }) => {
-  const navigate = useNavigate();
-
   const isDelivered = order.status === 'Delivered';
   const isCancelled = order.status === 'Cancelled';
 
-  // Calculate return policy deadline (10 days after creation)
-  const orderDate = new Date(order.created_at);
-  const returnDeadline = new Date(orderDate.getTime() + 10 * 24 * 60 * 60 * 1000);
+  // Return policy: 7 days from delivery date (order.updated_at — matches backend get_can_return)
+  const deliveryDate = new Date(order.updated_at);
+  const returnDeadline = new Date(deliveryDate.getTime() + 7 * 24 * 60 * 60 * 1000);
   const isReturnEnded = new Date() > returnDeadline;
-  
-  const formattedDeliveryDate = orderDate.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-  
-  const formattedDeadline = returnDeadline.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
 
-  // Simple progress timeline mapping
+  const formattedDeliveryDate = deliveryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const formattedDeadline = returnDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  // Timeline stages
   const timelineStages = ['Placed', 'Packed', 'Shipped', 'Delivered'];
-  
+
   const getStatusIndex = (status) => {
     switch (status) {
       case 'Pending':
@@ -47,112 +37,89 @@ const DeliveryStatusCard = React.memo(({ order }) => {
 
   const currentIndex = getStatusIndex(order.status);
 
-  // Status-based configuration
+  // Status config
   let statusText = `${order.status}, ${formattedDeliveryDate}`;
-  let statusIcon = <Clock className="text-amber-500 w-7 h-7 shrink-0" />;
-  let badgeColor = 'text-amber-600';
-  let badgeBg = 'bg-amber-50 border-amber-100';
+  let statusIcon = <Clock className="text-amber-500 w-6 h-6 shrink-0" />;
+  let badgeColor = 'text-amber-700 bg-amber-50 border-amber-200';
 
   if (isDelivered) {
     statusText = `Delivered on ${formattedDeliveryDate}`;
-    statusIcon = <CheckCircle2 className="text-emerald-500 w-7 h-7 fill-emerald-50 shrink-0" />;
-    badgeColor = 'text-emerald-700';
-    badgeBg = 'bg-emerald-50 border-emerald-100';
+    statusIcon = <CheckCircle2 className="text-emerald-500 w-6 h-6 fill-emerald-50 shrink-0" />;
+    badgeColor = 'text-emerald-700 bg-emerald-50 border-emerald-200';
   } else if (isCancelled) {
     statusText = `Cancelled on ${formattedDeliveryDate}`;
-    statusIcon = <XCircle className="text-rose-500 w-7 h-7 fill-rose-50 shrink-0" />;
-    badgeColor = 'text-rose-700';
-    badgeBg = 'bg-rose-50 border-rose-100';
+    statusIcon = <XCircle className="text-rose-500 w-6 h-6 fill-rose-50 shrink-0" />;
+    badgeColor = 'text-rose-700 bg-rose-50 border-rose-200';
   }
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 md:p-8 space-y-6 md:space-y-8">
-      {/* Status & Icon Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-2">
-          <span className={`inline-flex items-center px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border ${badgeColor} ${badgeBg}`}>
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-5">
+      {/* Status Header */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1.5">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border ${badgeColor}`}>
             {order.status}
           </span>
-          <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-none">
+          <h2 className="text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight">
             {statusText}
           </h2>
         </div>
-        <div className="flex items-center gap-3">
-          {statusIcon}
-        </div>
+        {statusIcon}
       </div>
 
-      {/* Progress Timeline (Hidden for Cancelled orders) */}
+      {/* Progress Timeline — hidden for Cancelled */}
       {!isCancelled && (
-        <div className="py-2">
-          <div className="relative flex items-center justify-between">
-            {/* Background Line */}
-            <div className="absolute left-6 right-6 h-[3px] bg-slate-100 top-1/2 -translate-y-1/2 z-0" />
-            
-            {/* Active Line Fill */}
-            <div className="absolute left-6 right-6 h-[3px] top-1/2 -translate-y-1/2 z-0">
-              <div 
-                className="h-full bg-emerald-500 transition-all duration-700 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
-                style={{ width: `${(currentIndex / (timelineStages.length - 1)) * 100}%` }}
-              />
-            </div>
+        <div className="relative flex items-center justify-between pt-1 pb-2">
+          {/* Track background */}
+          <div className="absolute left-5 right-5 h-[2px] bg-slate-100 top-[22px] z-0" />
+          {/* Active fill */}
+          <div className="absolute left-5 right-5 top-[22px] h-[2px] z-0">
+            <div
+              className="h-full bg-emerald-500 transition-all duration-700"
+              style={{ width: `${(currentIndex / (timelineStages.length - 1)) * 100}%` }}
+            />
+          </div>
 
-            {/* Stages */}
-            {timelineStages.map((stage, idx) => {
-              const isPast = idx < currentIndex;
-              const isCurrent = idx === currentIndex;
-              const isFuture = idx > currentIndex;
+          {timelineStages.map((stage, idx) => {
+            const isPast = idx < currentIndex;
+            const isCurrent = idx === currentIndex;
 
-              return (
-                <div key={stage} className="flex flex-col items-center relative z-10 w-16 sm:w-20">
-                  <div 
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      isPast 
-                        ? 'bg-emerald-500 border border-emerald-500 text-white shadow-md' 
-                        : isCurrent 
-                        ? 'bg-white border-[3px] border-emerald-500 text-emerald-600 shadow-lg scale-110' 
-                        : 'bg-white border-2 border-slate-200 text-slate-400'
-                    }`}
-                  >
-                    {isPast ? <Check size={16} strokeWidth={3} /> : <span className="text-xs font-black">{idx + 1}</span>}
-                  </div>
-                  <span className={`text-[10px] sm:text-xs mt-3 font-extrabold uppercase tracking-tight text-center ${
-                    isPast || isCurrent ? 'text-slate-800' : 'text-slate-400'
-                  }`}>
-                    {stage}
-                  </span>
+            return (
+              <div key={stage} className="flex flex-col items-center z-10 w-14 sm:w-16">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isPast
+                    ? 'bg-emerald-500 text-white shadow-sm'
+                    : isCurrent
+                    ? 'bg-white border-[3px] border-emerald-500 text-emerald-600 shadow-md scale-110'
+                    : 'bg-white border-2 border-slate-200 text-slate-400'
+                }`}>
+                  {isPast
+                    ? <Check size={14} strokeWidth={3} />
+                    : <span className="text-[11px] font-black">{idx + 1}</span>
+                  }
                 </div>
-              );
-            })}
-          </div>
+                <span className={`text-[9px] sm:text-[10px] mt-2 font-extrabold uppercase tracking-tight text-center ${
+                  isPast || isCurrent ? 'text-slate-800' : 'text-slate-400'
+                }`}>
+                  {stage}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Return policy details */}
+      {/* Return eligibility — only for delivered orders */}
       {isDelivered && (
-        <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-2xl p-4">
-          <Info size={18} className="text-slate-400 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Return Eligibility</h4>
-            <p className="text-xs text-slate-500 font-medium">
-              {isReturnEnded 
-                ? `Return policy for this order expired on ${formattedDeadline}.` 
-                : `Items are eligible for refund/exchange until ${formattedDeadline}.`
-              }
-            </p>
-          </div>
+        <div className="flex items-start gap-2.5 bg-slate-50 border border-slate-100 rounded-xl p-3.5">
+          <Info size={15} className="text-slate-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            {isReturnEnded
+              ? `Return policy for this order expired on ${formattedDeadline}.`
+              : `Items eligible for return/exchange until ${formattedDeadline}.`
+            }
+          </p>
         </div>
-      )}
-
-      {/* CTA Tracking Button */}
-      {!isCancelled && (
-        <button
-          onClick={() => navigate(`/tracking/${order.shipment_id || order.id}`)}
-          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-6 rounded-2xl text-sm font-black transition-all active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-indigo-100 cursor-pointer"
-        >
-          <span>See Live Map &amp; Tracking Updates</span>
-          <ChevronRight size={16} />
-        </button>
       )}
     </div>
   );

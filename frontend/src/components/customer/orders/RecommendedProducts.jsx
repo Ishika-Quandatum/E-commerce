@@ -48,7 +48,7 @@ const RecommendedProducts = React.memo(() => {
         <div className="h-6 w-48 bg-slate-200 rounded-lg" />
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="aspect-[4/5] bg-slate-100 rounded-3xl" />
+            <div key={i} className="aspect-[4/5] bg-slate-100 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -67,11 +67,11 @@ const RecommendedProducts = React.memo(() => {
         <div
           key={product.id}
           onClick={() => navigate(`/products/${product.id}`)}
-          className="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 cursor-pointer group flex flex-col justify-between"
+          className="bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300 cursor-pointer group flex flex-col justify-between"
         >
           <div>
             {/* Aspect Locked Thumbnail */}
-            <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-slate-50 relative mb-4">
+            <div className="aspect-[4/5] w-full rounded-xl overflow-hidden bg-slate-50 relative mb-3">
               <img
                 src={getProductImage(product)}
                 alt={product.name}
@@ -81,7 +81,7 @@ const RecommendedProducts = React.memo(() => {
             </div>
 
             {/* Offer Tag */}
-            <div className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider inline-block mb-3 border border-emerald-100">
+            <div className="bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider inline-block mb-2.5 border border-emerald-100">
               {getOfferText(product.id || idx)}
             </div>
 

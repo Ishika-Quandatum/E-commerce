@@ -22,7 +22,7 @@ const OrderCard = React.memo(({ order, onOpenReturn, onOpenReview }) => {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+      className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
       {/* ── Order header ── */}
       <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
@@ -56,7 +56,7 @@ const OrderCard = React.memo(({ order, onOpenReturn, onOpenReview }) => {
       {/* ── Order body ── */}
       <div className="p-6 space-y-4">
         {/* Shipping address */}
-        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
+        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/50">
           <div className="flex items-center gap-2 mb-2 text-slate-800">
             <MapPin size={14} className="text-slate-500" />
             <span className="text-xs font-bold uppercase tracking-wider">Shipping Address</span>
