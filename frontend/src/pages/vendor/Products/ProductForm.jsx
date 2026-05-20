@@ -650,7 +650,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading = false, activeView }
                           onChange={handleChange}
                         >
                           <option value="">Select Category</option>
-                          {categories.map(c => (
+                          {categories.filter(c => !c.parent).map(c => (
                             <option key={c.id} value={c.id}>{c.name}</option>
                           ))}
                         </select>
