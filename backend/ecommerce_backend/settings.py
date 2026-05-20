@@ -151,3 +151,8 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
 CORS_ALLOW_HEADERS = ['*']
 CORS_ALLOW_METHODS = ['*']
+
+# SMTP Settings
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='sarasneha97@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='ggtm evum zops hsoc')
+

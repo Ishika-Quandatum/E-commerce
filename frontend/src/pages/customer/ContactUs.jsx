@@ -1,10 +1,58 @@
-import React, { useEffect } from 'react';
-import { Mail, Phone, MapPin, Send, MessageSquare, Clock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Mail, Phone, MapPin, Send, MessageSquare, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePlatform } from '../../context/PlatformContext';
+import { platformService } from '../../services/api';
 
 const ContactUs = () => {
   const { platformName, settings } = usePlatform();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: 'General Inquiry',
+    message: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      setStatusMsg({ type: 'error', text: 'All fields are required.' });
+      return;
+    }
+
+    setLoading(true);
+    setStatusMsg({ type: '', text: '' });
+
+    try {
+      const response = await platformService.sendContactMessage(formData);
+      setStatusMsg({ type: 'success', text: response.data.success || 'Your message has been sent successfully!' });
+      setFormData({
+        name: '',
+        email: '',
+        subject: 'General Inquiry',
+        message: ''
+      });
+    } catch (err) {
+      console.error(err);
+      setStatusMsg({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to send your message. Please try again later.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -83,35 +131,81 @@ const ContactUs = () => {
                 <p className="text-brand-text-gray font-medium">Fill out the form below and we'll get back to you shortly.</p>
               </div>
 
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-navy/60 px-2">Full Name</label>
-                    <input type="text" placeholder="John Doe" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none" />
+                    <input 
+                      type="text" 
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="John Doe" 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none" 
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-navy/60 px-2">Email Address</label>
-                    <input type="email" placeholder="john@example.com" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none" />
+                    <input 
+                      type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="john@example.com" 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none" 
+                      required
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-navy/60 px-2">Subject</label>
-                  <select className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none">
-                    <option>General Inquiry</option>
-                    <option>Order Support</option>
-                    <option>Vendor Partnership</option>
-                    <option>Technical Issue</option>
+                  <select 
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none"
+                  >
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Order Support">Order Support</option>
+                    <option value="Vendor Partnership">Vendor Partnership</option>
+                    <option value="Technical Issue">Technical Issue</option>
                   </select>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-navy/60 px-2">Your Message</label>
-                  <textarea rows="5" placeholder="How can we help you?" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none resize-none"></textarea>
+                  <textarea 
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    rows="5" 
+                    placeholder="How can we help you?" 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium outline-none resize-none"
+                    required
+                  ></textarea>
                 </div>
 
-                <button className="w-full bg-brand-purple text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:scale-[1.02] transition-all shadow-xl shadow-brand-purple/20 flex items-center justify-center gap-2 active:scale-95">
-                  Send Message <Send size={18} />
+                {statusMsg.text && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-2xl mb-6 flex items-center gap-3 font-semibold ${
+                      statusMsg.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                    }`}
+                  >
+                    {statusMsg.type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
+                    <span>{statusMsg.text}</span>
+                  </motion.div>
+                )}
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full bg-brand-purple text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:scale-[1.02] transition-all shadow-xl shadow-brand-purple/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                >
+                  {loading ? 'Sending Message...' : 'Send Message'} <Send size={18} />
                 </button>
               </form>
             </motion.div>

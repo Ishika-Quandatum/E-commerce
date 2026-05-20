@@ -195,6 +195,7 @@ export const platformService = {
   getSettings: () => api.get('core/settings/'),
   updateSettings: (data) => api.patch('core/settings/update_settings/', data),
   getPlatformStats: () => api.get('core/settings/platform_stats/'),
+  sendContactMessage: (data) => api.post('core/settings/contact/', data),
 };
 
 export const returnService = {
