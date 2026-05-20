@@ -387,26 +387,26 @@ const ProductList = () => {
 
       {/* BULK ACTIONS BANNER */}
       {selectedProducts.length > 0 && (
-         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md rounded-full shadow-2xl px-8 py-5 text-white flex items-center gap-8 z-40 border border-slate-700 animate-in slide-in-from-bottom flex-col sm:flex-row">
+         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md rounded-full shadow-2xl px-6 py-3 text-white flex items-center gap-8 z-40 border border-slate-700 animate-in slide-in-from-bottom flex-col sm:flex-row">
             <div className="flex items-center gap-3">
                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
                   <ListChecks size={20} />
                </div>
-               <span className="font-black text-sm italic tracking-tight">{selectedProducts.length} Items Selected</span>
+               <span className="font-black text-sm tracking-tight">{selectedProducts.length} Items Selected</span>
             </div>
             
             <div className="flex items-center gap-4">
                <button 
                  onClick={handleExport}
-                 className="text-[10px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-2xl transition-all active:scale-95"
+                 className="text-[10px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-6 py-2.5 rounded-full transition-all active:scale-95"
                >
                   Export Selection
                </button>
                <button 
                  onClick={handleBulkDelete}
-                 className="text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white px-6 py-2.5 rounded-2xl transition-all active:scale-95 border border-rose-500/20"
+                 className="text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white px-6 py-2.5 rounded-full transition-all active:scale-95 border border-rose-500/20"
                >
-                  Bulk Purge
+                  DELETE
                </button>
             </div>
          </div>
