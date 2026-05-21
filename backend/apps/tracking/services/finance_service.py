@@ -13,9 +13,18 @@ class FinanceService:
     @staticmethod
     def process_delivery_earnings(shipment, p_method):
         wallet, _ = RiderWallet.objects.get_or_create(rider=shipment.rider)
-        config, _ = SalaryConfiguration.objects.get_or_create(rider=shipment.rider)
         
-        delivery_earning = config.per_delivery_commission or Decimal('0.00')
+        # Calculate base pay based on vehicle type from VehicleTypePaySetting (Single source of truth)
+        rider = shipment.rider
+        delivery_earning = Decimal('0.00')
+        if rider and rider.vehicle_type:
+            from apps.payroll.models import VehicleTypePaySetting
+            vehicle_pay_setting = VehicleTypePaySetting.objects.filter(
+                vehicle_type__iexact=rider.vehicle_type,
+                is_active=True
+            ).first()
+            if vehicle_pay_setting:
+                delivery_earning = vehicle_pay_setting.base_pay
         
         wallet.total_earned += delivery_earning
         wallet.current_balance += delivery_earning

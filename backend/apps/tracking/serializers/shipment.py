@@ -94,12 +94,15 @@ class ShipmentSerializer(serializers.ModelSerializer):
                 request = self.context.get('request')
                 rider = getattr(request.user, 'rider_profile', None) if request and hasattr(request, 'user') else None
 
-            base_pay = 30.0
-            if rider:
-                from apps.tracking.models import SalaryConfiguration
-                config, _ = SalaryConfiguration.objects.get_or_create(rider=rider)
-                bp = float(config.per_delivery_commission or 0)
-                base_pay = bp if bp > 0 else 30.0
+            base_pay = 0.0
+            if rider and rider.vehicle_type:
+                from apps.payroll.models import VehicleTypePaySetting
+                vs = VehicleTypePaySetting.objects.filter(
+                    vehicle_type__iexact=rider.vehicle_type,
+                    is_active=True
+                ).first()
+                if vs:
+                    base_pay = float(vs.base_pay)
 
             distance_km = self._vendor_to_customer_km(obj)
             petrol_rate = 10.0
@@ -123,8 +126,8 @@ class ShipmentSerializer(serializers.ModelSerializer):
             }
         except Exception:
             return {
-                'total': 40.0,
-                'base_pay': 30.0,
+                'total': 0.0,
+                'base_pay': 0.0,
                 'distance_km': 0.0,
                 'distance_allowance': 0.0,
                 'petrol_rate': 10.0,

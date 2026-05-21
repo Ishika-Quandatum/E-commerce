@@ -65,8 +65,8 @@ class RiderPayrollViewSet(viewsets.ViewSet):
         
         deliveries_count = delivered_shipments.count()
         
-        # Base earnings based on rider's vehicle type if settings exist, else default/legacy fallback
-        base_per_delivery = Decimal('25.00')
+        # Base earnings based on rider's vehicle type if settings exist (single source of truth)
+        base_per_delivery = Decimal('0.00')
         if rider.vehicle_type:
             vehicle_pay_setting = VehicleTypePaySetting.objects.filter(
                 vehicle_type__iexact=rider.vehicle_type,
@@ -74,10 +74,6 @@ class RiderPayrollViewSet(viewsets.ViewSet):
             ).first()
             if vehicle_pay_setting:
                 base_per_delivery = vehicle_pay_setting.base_pay
-            elif hasattr(rider, 'salary_config') and rider.salary_config.per_delivery_commission > 0:
-                base_per_delivery = rider.salary_config.per_delivery_commission
-        elif hasattr(rider, 'salary_config') and rider.salary_config.per_delivery_commission > 0:
-            base_per_delivery = rider.salary_config.per_delivery_commission
         
         delivery_earnings = Decimal(str(deliveries_count)) * Decimal(str(base_per_delivery))
         
@@ -257,7 +253,7 @@ class RiderWalletViewSet(viewsets.ReadOnlyModelViewSet):
         ).count()
         
         # Determine Base Pay
-        rider_base_pay = Decimal('25.00') # Default
+        rider_base_pay = Decimal('0.00') # Default
         if rider.vehicle_type:
             vs = VehicleTypePaySetting.objects.filter(vehicle_type__iexact=rider.vehicle_type, is_active=True).first()
             if vs:
