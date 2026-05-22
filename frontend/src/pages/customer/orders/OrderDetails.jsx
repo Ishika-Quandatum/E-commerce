@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Copy, Check, AlertCircle, MapPin, Phone, CreditCard,
-  ShoppingBag, Receipt, User, Bike, MessageSquare, X, Send,
+  ShoppingBag, Receipt, MessageSquare, X, Send,
 } from 'lucide-react';
-import api, { trackingService } from '../../../services/api';
+import api from '../../../services/api';
 import OrderDetailsHeader from '../../../components/customer/orders/OrderDetailsHeader';
-import DeliveryStatusCard from '../../../components/customer/orders/DeliveryStatusCard';
+import LogisticsTimeline from '../../../components/customer/orders/LogisticsTimeline';
 import RecommendedProducts from '../../../components/customer/orders/RecommendedProducts';
 
 // ─── Chat Modal ───────────────────────────────────────────────────────────────
@@ -108,83 +108,13 @@ const RiderChatModal = ({ rider, onClose }) => {
   );
 };
 
-// ─── Rider Contact Card ────────────────────────────────────────────────────────
-const RiderContactCard = ({ rider, onChat }) => {
-  const riderName = rider?.rider_name || rider?.user?.first_name || null;
-  const riderPhone = rider?.user?.phone || null;
-  const vehicleType = rider?.vehicle_type || null;
-  const initial = riderName ? riderName.charAt(0).toUpperCase() : null;
 
-  return (
-    <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-      {/* Section title */}
-      <div className="flex items-center gap-2.5 border-b border-slate-50 pb-3.5">
-        <Bike size={17} className="text-slate-700" />
-        <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Delivery Partner</h3>
-      </div>
-
-      {riderName ? (
-        <>
-          {/* Rider identity */}
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-full bg-indigo-100 text-indigo-700 font-black text-base flex items-center justify-center shrink-0">
-              {initial}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-black text-slate-900 truncate">{riderName}</p>
-              {vehicleType && (
-                <p className="text-[11px] text-slate-500 font-bold capitalize">{vehicleType} · Delivery Rider</p>
-              )}
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {riderPhone ? (
-              <a
-                href={`tel:${riderPhone}`}
-                className="flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl py-2.5 text-xs font-black transition-colors"
-              >
-                <Phone size={14} />
-                Call Rider
-              </a>
-            ) : (
-              <div className="flex items-center justify-center gap-2 bg-slate-50 text-slate-400 border border-slate-200 rounded-xl py-2.5 text-xs font-black cursor-not-allowed">
-                <Phone size={14} />
-                Call Rider
-              </div>
-            )}
-            <button
-              onClick={onChat}
-              className="flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl py-2.5 text-xs font-black transition-colors cursor-pointer"
-            >
-              <MessageSquare size={14} />
-              Chat
-            </button>
-          </div>
-        </>
-      ) : (
-        /* Unassigned / loading state */
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-11 h-11 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-            <User size={18} className="text-slate-400" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-700">Awaiting Assignment</p>
-            <p className="text-[11px] text-slate-400 font-medium">A rider will be assigned shortly</p>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-};
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 const OrderDetails = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
-  const [rider, setRider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -199,17 +129,6 @@ const OrderDetails = () => {
         const data = res.data;
         setOrder(data);
         setError(null);
-
-        // Fetch rider info if a shipment exists — non-blocking
-        const shipmentId = data.shipment_id;
-        if (shipmentId) {
-          try {
-            const trackRes = await trackingService.getTrackingDetails(shipmentId);
-            setRider(trackRes.data?.rider || null);
-          } catch {
-            // Rider info unavailable — show unassigned state
-          }
-        }
       } catch (err) {
         setError(err.response?.data?.error || err.response?.data?.detail || 'Failed to load order details.');
       } finally {
@@ -346,8 +265,12 @@ const OrderDetails = () => {
               </div>
             </section>
 
-            {/* Delivery status + progress timeline */}
-            <DeliveryStatusCard order={order} />
+            {/* Logistics Timeline — Flipkart/Amazon style */}
+            <LogisticsTimeline
+              shipmentId={order.shipment_id}
+              order={order}
+              onChatOpen={() => setChatOpen(true)}
+            />
           </div>
 
           {/* ── RIGHT COLUMN (4 cols) ── */}
@@ -448,10 +371,7 @@ const OrderDetails = () => {
               </div>
             </section>
 
-            {/* Rider Contact — only when order is not cancelled */}
-            {!isCancelled && (
-              <RiderContactCard rider={rider} onChat={() => setChatOpen(true)} />
-            )}
+
 
           </div>
         </div>

@@ -204,6 +204,156 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         
         return Response({'status': 'Location updated'})
 
+    @action(detail=True, methods=['get'], url_path='customer-timeline')
+    def customer_timeline(self, request, pk=None):
+        """Returns a Flipkart-style grouped logistics timeline for the customer order page."""
+        try:
+            shipment = self.get_object()
+            history = shipment.history.all().order_by('timestamp')
+            order = shipment.order
+
+            def fmt(dt):
+                """Format: Fri, 13th Mar '26 - 9:39pm"""
+                if not dt:
+                    return None
+                day = dt.day
+                suffix = 'th' if 11 <= day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+                hour_12 = dt.hour % 12 or 12
+                ampm = 'am' if dt.hour < 12 else 'pm'
+                minute = dt.strftime('%M')
+                date_part = dt.strftime(f"%a, {day}{suffix} %b '%y")
+                return f"{date_part} - {hour_12}:{minute}{ampm}"
+
+            def fmt_date(dt):
+                """Format: Fri, 13th Mar '26"""
+                if not dt:
+                    return None
+                day = dt.day
+                suffix = 'th' if 11 <= day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+                return dt.strftime(f"%a, {day}{suffix} %b '%y")
+
+            # ── Map internal statuses → customer section ────────────────────────
+            SECTION_MAP = {
+                'Dispatch Queue':    'ORDER_CONFIRMED',
+                'Assigned':          'ORDER_CONFIRMED',
+                'Arrived at Vendor': 'ORDER_CONFIRMED',
+                'Start Pickup':      'ORDER_CONFIRMED',
+                'Picked Up':         'SHIPPED',
+                'Start Delivery':    'SHIPPED',
+                'In Transit':        'SHIPPED',
+                'Out for Delivery':  'OUT_FOR_DELIVERY',
+                'Reached':           'OUT_FOR_DELIVERY',
+                'Delivered':         'DELIVERED',
+            }
+
+            CUSTOMER_MESSAGES = {
+                'Dispatch Queue':    'Seller has processed your order.',
+                'Assigned':          'A delivery partner has been assigned to your order.',
+                'Arrived at Vendor': 'Delivery partner has arrived at the pickup location.',
+                'Start Pickup':      'Delivery partner is heading to pick up your parcel.',
+                'Picked Up':         'Your parcel has been picked up by the delivery partner.',
+                'Start Delivery':    'Your item is now in transit.',
+                'In Transit':        'Your item has been received at a hub nearest to you.',
+                'Out for Delivery':  'Your order is out for delivery.',
+                'Reached':           'Your item is out for delivery.',
+                'Delivered':         'Your item has been delivered.',
+            }
+
+            # ── Determine current section ───────────────────────────────────────
+            current_shipment_status = shipment.status
+            reached_sections = set()
+            events_by_section = {'ORDER_CONFIRMED': [], 'SHIPPED': [], 'OUT_FOR_DELIVERY': [], 'DELIVERED': []}
+
+            # Always add order placed event
+            events_by_section['ORDER_CONFIRMED'].append({
+                'message': 'Your order has been placed.',
+                'timestamp': fmt(order.created_at),
+                'raw_ts': order.created_at.isoformat() if order.created_at else None,
+            })
+            reached_sections.add('ORDER_CONFIRMED')
+
+            for entry in history:
+                section = SECTION_MAP.get(entry.status)
+                if not section:
+                    continue
+                reached_sections.add(section)
+                events_by_section[section].append({
+                    'message': CUSTOMER_MESSAGES.get(entry.status, entry.description or entry.status),
+                    'timestamp': fmt(entry.timestamp),
+                    'raw_ts': entry.timestamp.isoformat() if entry.timestamp else None,
+                })
+
+            # ── Section date labels ─────────────────────────────────────────────
+            def first_ts_in_section(section_key):
+                for entry in history:
+                    if SECTION_MAP.get(entry.status) == section_key:
+                        return fmt_date(entry.timestamp)
+                return None
+
+            # ── Is out-for-delivery reached? (controls rider visibility) ────────
+            is_out_for_delivery = current_shipment_status in ['Out for Delivery', 'Reached', 'Delivered']
+
+            # ── Rider info (masked unless out for delivery) ─────────────────────
+            rider_info = None
+            if shipment.rider:
+                if is_out_for_delivery:
+                    full_phone = shipment.rider.user.phone or ''
+                    # Mask: show first 2 and last 2 digits only
+                    masked = full_phone[:2] + '****' + full_phone[-2:] if len(full_phone) >= 4 else full_phone
+                    rider_info = {
+                        'name': shipment.rider.user.get_full_name() or shipment.rider.user.username,
+                        'vehicle': shipment.rider.vehicle_type,
+                        'phone_masked': masked,
+                        'phone_raw': full_phone,   # used for tel: link backend-side
+                    }
+                else:
+                    rider_info = {'name': None, 'vehicle': None, 'phone_masked': None, 'phone_raw': None}
+
+            # ── Build response ─────────────────────────────────────────────────
+            sections = [
+                {
+                    'key': 'ORDER_CONFIRMED',
+                    'label': 'Order Confirmed',
+                    'date': fmt_date(order.created_at),
+                    'active': 'ORDER_CONFIRMED' in reached_sections,
+                    'events': events_by_section['ORDER_CONFIRMED'],
+                },
+                {
+                    'key': 'SHIPPED',
+                    'label': 'Shipped',
+                    'date': first_ts_in_section('SHIPPED'),
+                    'tracking_number': str(shipment.tracking_number),
+                    'courier': 'Our Delivery Partner',
+                    'active': 'SHIPPED' in reached_sections,
+                    'events': events_by_section['SHIPPED'],
+                },
+                {
+                    'key': 'OUT_FOR_DELIVERY',
+                    'label': 'Out For Delivery',
+                    'date': first_ts_in_section('OUT_FOR_DELIVERY'),
+                    'active': 'OUT_FOR_DELIVERY' in reached_sections,
+                    'events': events_by_section['OUT_FOR_DELIVERY'],
+                },
+                {
+                    'key': 'DELIVERED',
+                    'label': 'Delivered',
+                    'date': fmt_date(shipment.delivered_at),
+                    'active': 'DELIVERED' in reached_sections,
+                    'events': events_by_section['DELIVERED'],
+                },
+            ]
+
+            return Response({
+                'shipment_id': shipment.id,
+                'current_status': current_shipment_status,
+                'is_out_for_delivery': is_out_for_delivery,
+                'rider': rider_info,
+                'sections': sections,
+            })
+        except Exception as e:
+            import traceback
+            return Response({'error': str(e), 'trace': traceback.format_exc()}, status=500)
+
     @action(detail=True, methods=['get'], url_path='track')
     def track(self, request, pk=None):
         try:
@@ -514,7 +664,15 @@ class RiderViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role != 'rider':
             return Response({'error': 'Unauthorized'}, status=403)
-        tasks = Shipment.objects.filter(rider__user=user, status__in=['Assigned', 'Start Pickup', 'Picked Up', 'Start Delivery', 'In Transit', 'Reached', 'Delivered'])
+        tasks = Shipment.objects.filter(
+            rider__user=user,
+            status__in=[
+                'Assigned', 'Arrived at Vendor',
+                'Start Pickup', 'Picked Up',
+                'Out for Delivery', 'Start Delivery', 'In Transit', 'Reached',
+                'Delivered'
+            ]
+        )
         return Response(ShipmentSerializer(tasks, many=True, context={'request': request}).data)
 
     def destroy(self, request, *args, **kwargs):

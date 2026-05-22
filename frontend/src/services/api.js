@@ -121,6 +121,7 @@ export const trackingService = {
   getGlobalTrackingSummary: () => api.get('tracking/shipments/tracking_summary/'),
   getTrackingDetails: (shipmentId) => api.get(`tracking/shipments/${shipmentId}/track/`),
   updateRiderLocation: (shipmentId, data) => api.post(`tracking/shipments/${shipmentId}/rider-location/`, data),
+  getCustomerTimeline: (shipmentId) => api.get(`tracking/shipments/${shipmentId}/customer-timeline/`),
 };
 
 export const paymentService = {

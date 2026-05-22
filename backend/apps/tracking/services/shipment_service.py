@@ -75,40 +75,55 @@ class ShipmentService:
     @staticmethod
     def update_dispatch_status(shipment, new_status):
         valid_statuses = [
-            'Dispatch Queue', 'Assigned', 'Start Pickup', 'Picked Up', 
-            'Start Delivery', 'In Transit', 'Reached', 'Delivered',
-            'Rejected', 'Failed', 'Returned'
+            'Dispatch Queue', 'Assigned',
+            'Arrived at Vendor',                     # NEW: rider arrived at shop
+            'Start Pickup', 'Picked Up',
+            'Out for Delivery',                       # NEW: rider heading to customer
+            'Start Delivery', 'In Transit', 'Reached',
+            'Delivered', 'Rejected', 'Failed', 'Returned'
         ]
-        
+
         if new_status not in valid_statuses:
             raise ValidationError(f'Invalid status transition: {new_status}')
-            
+
         shipment.status = new_status
         now = timezone.now()
-        
+
         if new_status == 'Assigned' and not shipment.assigned_at:
             shipment.assigned_at = now
         elif new_status == 'Picked Up' and not shipment.picked_up_at:
             shipment.picked_up_at = now
-        elif new_status == 'Start Delivery' and not shipment.start_delivery_at:
+        elif new_status in ('Start Delivery', 'Out for Delivery') and not shipment.start_delivery_at:
             shipment.start_delivery_at = now
         elif new_status == 'Delivered' and not shipment.delivered_at:
             shipment.delivered_at = now
-            
+
         shipment.save()
 
-        # Sync Order Status
-        if new_status in ['Picked Up', 'Start Delivery', 'In Transit']:
+        # ── Sync Order Status ──────────────────────────────────────────────
+        if new_status in ['Picked Up', 'Start Delivery', 'In Transit', 'Out for Delivery']:
             shipment.order.status = 'Shipped'
             shipment.order.save()
+        elif new_status == 'Arrived at Vendor':
+            # Keep order status as Accepted (already set during assignment)
+            pass
         elif new_status == 'Delivered':
             shipment.order.status = 'Delivered'
             shipment.order.save()
 
+        # ── Customer-friendly TrackingHistory descriptions ─────────────────
+        HISTORY_DESCRIPTIONS = {
+            'Arrived at Vendor':  'Delivery partner has arrived at the pickup location.',
+            'Picked Up':          'Your parcel has been picked up by the delivery partner.',
+            'Out for Delivery':   'Your order is out for delivery.',
+            'Delivered':          'Your order has been delivered successfully.',
+        }
+        description = HISTORY_DESCRIPTIONS.get(new_status, f'Shipment status updated to {new_status}')
+
         TrackingHistory.objects.create(
-            shipment=shipment, 
-            status=new_status, 
-            description=f'Shipment status updated to {new_status}'
+            shipment=shipment,
+            status=new_status,
+            description=description
         )
         return {'status': 'updated', 'new_status': shipment.status}
 
