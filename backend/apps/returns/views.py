@@ -283,7 +283,8 @@ class ReturnRequestViewSet(viewsets.ModelViewSet):
         print(f"DEBUG: Sending Email to {return_request.customer.email}: Your refund of ₹{return_request.refund_amount} has been processed successfully.")
         print(f"DEBUG: Sending SMS to {return_request.customer.phone}: Your refund of ₹{return_request.refund_amount} has been processed successfully.")
 
-class ReturnPolicyViewSet(viewsets.ReadOnlyModelViewSet):
+class ReturnPolicyViewSet(viewsets.ModelViewSet):
     queryset = ReturnPolicy.objects.all()
     serializer_class = ReturnPolicySerializer
     permission_classes = [permissions.AllowAny]
+

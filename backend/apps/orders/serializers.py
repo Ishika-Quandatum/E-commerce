@@ -12,10 +12,17 @@ class OrderItemSerializer(serializers.ModelSerializer):
     can_return = serializers.SerializerMethodField()
     refund_details = serializers.SerializerMethodField()
     subtotal = serializers.ReadOnlyField()
+    return_window_days = serializers.SerializerMethodField()
+    is_returnable = serializers.SerializerMethodField()
+    return_deadline = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'price', 'size', 'subtotal', 'return_status', 'has_active_return', 'can_return', 'refund_details']
+        fields = [
+            'id', 'product', 'product_id', 'quantity', 'price', 'size', 'subtotal', 
+            'return_status', 'has_active_return', 'can_return', 'refund_details',
+            'return_window_days', 'is_returnable', 'return_deadline'
+        ]
     def get_product(self, obj):
         request = self.context.get('request')
         return ProductListSerializer(obj.product, context={'request': request}).data
@@ -32,6 +39,48 @@ class OrderItemSerializer(serializers.ModelSerializer):
         from apps.returns.models import ReturnItem
         return ReturnItem.objects.filter(order_item=obj).exclude(return_request__status='Cancelled').exists()
 
+    def get_resolved_policy(self, obj):
+        if not hasattr(obj, '_resolved_policy'):
+            from apps.returns.models import ReturnPolicy
+            product = obj.product
+            policy = None
+            
+            # 1. Try Subcategory policy
+            if product.subcategory:
+                policy = ReturnPolicy.objects.filter(category=product.subcategory).first()
+                
+            # 2. Try Category policy if no subcategory policy
+            if not policy and product.category:
+                policy = ReturnPolicy.objects.filter(category=product.category).first()
+                
+            # 3. Try global policy
+            if not policy:
+                policy = ReturnPolicy.objects.filter(category__isnull=True).first()
+                
+            obj._resolved_policy = policy
+        return obj._resolved_policy
+
+    def get_return_window_days(self, obj):
+        policy = self.get_resolved_policy(obj)
+        if policy:
+            return policy.return_window_days
+        return 7 # Default fallback
+
+    def get_is_returnable(self, obj):
+        policy = self.get_resolved_policy(obj)
+        if policy:
+            return policy.is_returnable
+        return True # Default fallback
+
+    def get_return_deadline(self, obj):
+        if obj.order.status != 'Delivered' or not obj.order.updated_at:
+            return None
+        if not self.get_is_returnable(obj):
+            return None
+        window = self.get_return_window_days(obj)
+        from datetime import timedelta
+        return obj.order.updated_at + timedelta(days=window)
+
     def get_can_return(self, obj):
         if obj.order.status != 'Delivered':
             return False
@@ -40,10 +89,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
         if self.get_has_active_return(obj):
             return False
 
-        # Check return window (7 days by default)
+        # Check return eligibility
+        if not self.get_is_returnable(obj):
+            return False
+            
+        # Check return window
         from django.utils import timezone
-        from datetime import timedelta
-        if obj.order.updated_at < timezone.now() - timedelta(days=7):
+        deadline = self.get_return_deadline(obj)
+        if not deadline or deadline < timezone.now():
             return False
             
         return True
@@ -60,6 +113,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
                 'transaction_id': req.refund_transaction_id
             }
         return None
+
 
 
 class OrderSerializer(serializers.ModelSerializer):

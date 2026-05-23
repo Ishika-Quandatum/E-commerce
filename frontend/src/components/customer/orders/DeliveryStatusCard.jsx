@@ -5,13 +5,33 @@ const DeliveryStatusCard = React.memo(({ order }) => {
   const isDelivered = order.status === 'Delivered';
   const isCancelled = order.status === 'Cancelled';
 
-  // Return policy: 7 days from delivery date (order.updated_at — matches backend get_can_return)
   const deliveryDate = new Date(order.updated_at);
-  const returnDeadline = new Date(deliveryDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const isReturnEnded = new Date() > returnDeadline;
-
   const formattedDeliveryDate = deliveryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  const formattedDeadline = returnDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  // Dynamic Return Window Sync
+  const items = order.items || [];
+  const returnableItems = items.filter(item => item.is_returnable && item.return_deadline);
+  const isAllNonReturnable = items.length > 0 && returnableItems.length === 0;
+
+  let formattedDeadline = "";
+  let isReturnEnded = false;
+
+  if (isAllNonReturnable) {
+    // Non-returnable category/subcategory
+    isReturnEnded = true;
+  } else if (returnableItems.length > 0) {
+    // Resolve minimum return deadline among all returnable items in this order
+    const deadlines = returnableItems.map(item => new Date(item.return_deadline));
+    const minDeadline = new Date(Math.min(...deadlines));
+    isReturnEnded = new Date() > minDeadline;
+    formattedDeadline = minDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } else {
+    // Fallback if items list is empty or not loaded yet
+    const fallbackDeadline = new Date(deliveryDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    isReturnEnded = new Date() > fallbackDeadline;
+    formattedDeadline = fallbackDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
 
   // Timeline stages
   const timelineStages = ['Placed', 'Packed', 'Shipped', 'Delivered'];
@@ -114,10 +134,13 @@ const DeliveryStatusCard = React.memo(({ order }) => {
         <div className="flex items-start gap-2.5 bg-slate-50 border border-slate-100 rounded-xl p-3.5">
           <Info size={15} className="text-slate-400 shrink-0 mt-0.5" />
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            {isReturnEnded
-              ? `Return policy for this order expired on ${formattedDeadline}.`
-              : `Items eligible for return/exchange until ${formattedDeadline}.`
-            }
+            {isAllNonReturnable ? (
+              <span className="font-extrabold text-rose-600">Non-returnable item</span>
+            ) : isReturnEnded ? (
+              `Return policy for this order expired on ${formattedDeadline}.`
+            ) : (
+              `Items eligible for return/exchange until ${formattedDeadline}.`
+            )}
           </p>
         </div>
       )}

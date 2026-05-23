@@ -83,9 +83,31 @@ const LogisticsTimeline = ({ shipmentId, order, rider: riderProp, onChatOpen }) 
   const isDelivered = order?.status === 'Delivered';
   const isCancelled = order?.status === 'Cancelled';
   const deliveryDate  = new Date(order?.updated_at);
-  const returnDeadline = new Date(deliveryDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const isReturnEnded = new Date() > returnDeadline;
-  const fmtDeadline   = returnDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  // Dynamic Return Window Sync
+  const items = order?.items || [];
+  const returnableItems = items.filter(item => item.is_returnable && item.return_deadline);
+  const isAllNonReturnable = items.length > 0 && returnableItems.length === 0;
+
+  let fmtDeadline = "";
+  let isReturnEnded = false;
+
+  if (isAllNonReturnable) {
+    // Non-returnable category/subcategory
+    isReturnEnded = true;
+  } else if (returnableItems.length > 0) {
+    // Resolve minimum return deadline among all returnable items in this order
+    const deadlines = returnableItems.map(item => new Date(item.return_deadline));
+    const minDeadline = new Date(Math.min(...deadlines));
+    isReturnEnded = new Date() > minDeadline;
+    fmtDeadline = minDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } else {
+    // Fallback if items list is empty or not loaded yet
+    const fallbackDeadline = new Date(deliveryDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    isReturnEnded = new Date() > fallbackDeadline;
+    fmtDeadline = fallbackDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
 
   // ── Rider from timeline response (preferred) or prop fallback ────────────
   const riderData = timeline?.rider || null;
@@ -271,9 +293,13 @@ const LogisticsTimeline = ({ shipmentId, order, rider: riderProp, onChatOpen }) 
         <div className="mx-5 mb-5 flex items-start gap-2.5 bg-slate-50 border border-slate-100 rounded-xl p-3.5">
           <Info size={14} className="text-slate-400 shrink-0 mt-0.5" />
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            {isReturnEnded
-              ? `Return policy for this order expired on ${fmtDeadline}.`
-              : `Items eligible for return/exchange until ${fmtDeadline}.`}
+            {isAllNonReturnable ? (
+              <span className="font-extrabold text-rose-600">Non-returnable item</span>
+            ) : isReturnEnded ? (
+              `Return policy for this order expired on ${fmtDeadline}.`
+            ) : (
+              `Items eligible for return/exchange until ${fmtDeadline}.`
+            )}
           </p>
         </div>
       )}
