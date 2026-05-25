@@ -275,14 +275,16 @@ const LogisticsTimeline = ({ shipmentId, order, rider: riderProp, onChatOpen }) 
                 <Phone size={15} />
               </a>
             )}
-            {onChatOpen && (
-              <button
-                onClick={onChatOpen}
+            {riderData.phone_raw && (
+              <a
+                href={`https://wa.me/${riderData.phone_raw.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-colors cursor-pointer"
-                title="Chat with delivery partner"
+                title="Chat with delivery partner on WhatsApp"
               >
                 <MessageSquare size={15} />
-              </button>
+              </a>
             )}
           </div>
         </div>
