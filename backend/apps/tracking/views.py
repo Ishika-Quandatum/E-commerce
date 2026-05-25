@@ -464,7 +464,7 @@ class RiderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def pending_requests(self, request):
-        if request.user.role not in ['superadmin', 'admin']:
+        if request.user.role not in ['superadmin', 'admin'] and not request.user.is_staff:
             return Response({'error': 'Unauthorized'}, status=403)
         
         pending = self.queryset.filter(verification_status='Pending')
@@ -478,7 +478,7 @@ class RiderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def request_stats(self, request):
-        if request.user.role not in ['superadmin', 'admin']:
+        if request.user.role not in ['superadmin', 'admin'] and not request.user.is_staff:
             return Response({'error': 'Unauthorized'}, status=403)
         
         pending = self.queryset.filter(verification_status='Pending').count()
@@ -493,7 +493,7 @@ class RiderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'])
     def update_verification_status(self, request, pk=None):
-        if request.user.role not in ['superadmin', 'admin']:
+        if request.user.role not in ['superadmin', 'admin'] and not request.user.is_staff:
             return Response({'error': 'Unauthorized'}, status=403)
         
         rider = self.get_object()
