@@ -15,7 +15,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['id', 'user', 'user_name', 'user_avatar', 'order', 'product', 'rating', 'comment', 'images', 'is_approved', 'helpful_votes', 'created_at']
-        read_only_fields = ['user', 'is_approved', 'helpful_votes', 'created_at']
+        read_only_fields = ['user', 'helpful_votes', 'created_at']
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        if request and request.user.role not in ['admin', 'superadmin']:
+            validated_data.pop('is_approved', None)
+        return super().update(instance, validated_data)
 
     def get_user_avatar(self, obj):
         request = self.context.get('request')
