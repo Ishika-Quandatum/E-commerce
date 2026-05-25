@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, Plus, Minus, Heart, Edit3, X, ThumbsUp, AlertCircle, ChevronRight, Tag, Banknote, ChevronsRight, Store } from 'lucide-react';
 import { productService, reviewService, vendorService } from '../../services/api';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import WriteReviewModal from '../../components/customer/WriteReviewModal';
@@ -12,6 +13,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { addToCart } = useCart();
+  const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [vendor, setVendor] = useState(null);
@@ -140,7 +142,7 @@ SKU: ${product.sku || 'N/A'}
           fontWeight: 'bold'
         }
       });
-      navigate("/login");
+      navigate("/login", { state: { from: location.pathname } });
       return;
     }
 
@@ -164,9 +166,33 @@ SKU: ${product.sku || 'N/A'}
 
   const handleBuyNow = async () => {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert("Please select a size first");
+      toast.error("Please select a size first", {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      });
       return;
     }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("Please login to continue", {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      });
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+
     navigate('/checkout', { state: { directCheckoutItem: { product, quantity, size: selectedSize } } });
   };
 

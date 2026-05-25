@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import { authService, cartService } from '../../services/api';
@@ -13,6 +13,8 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || null;
 
   const addPendingProduct = async () => {
     const pendingProduct = localStorage.getItem("pending_cart_product");
@@ -76,7 +78,8 @@ const Login = () => {
     } else if (user?.role === "rider") {
       navigate("/rider", { replace: true });
     } else {
-      navigate("/", { replace: true });
+      // Redirect back to the page they came from (e.g. product page), or home
+      navigate(from || "/", { replace: true });
     }
 
     } catch (err) {
