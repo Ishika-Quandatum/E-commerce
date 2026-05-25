@@ -14,7 +14,6 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from || null;
 
   const addPendingProduct = async () => {
     const pendingProduct = localStorage.getItem("pending_cart_product");
@@ -79,7 +78,9 @@ const Login = () => {
       navigate("/rider", { replace: true });
     } else {
       // Redirect back to the page they came from (e.g. product page), or home
-      navigate(from || "/", { replace: true });
+      const redirectTo = sessionStorage.getItem("redirect_after_login");
+      sessionStorage.removeItem("redirect_after_login");
+      navigate(redirectTo || "/", { replace: true });
     }
 
     } catch (err) {

@@ -142,7 +142,8 @@ SKU: ${product.sku || 'N/A'}
           fontWeight: 'bold'
         }
       });
-      navigate("/login", { state: { from: location.pathname } });
+      sessionStorage.setItem("redirect_after_login", location.pathname);
+      navigate("/login");
       return;
     }
 
@@ -189,7 +190,8 @@ SKU: ${product.sku || 'N/A'}
           fontWeight: 'bold'
         }
       });
-      navigate("/login", { state: { from: location.pathname } });
+      sessionStorage.setItem("redirect_after_login", location.pathname);
+      navigate("/login");
       return;
     }
 
