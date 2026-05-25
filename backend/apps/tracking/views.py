@@ -216,6 +216,8 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                 """Format: Fri, 13th Mar '26 - 9:39pm"""
                 if not dt:
                     return None
+                from django.utils.timezone import localtime
+                dt = localtime(dt)
                 day = dt.day
                 suffix = 'th' if 11 <= day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
                 hour_12 = dt.hour % 12 or 12
@@ -228,6 +230,8 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                 """Format: Fri, 13th Mar '26"""
                 if not dt:
                     return None
+                from django.utils.timezone import localtime
+                dt = localtime(dt)
                 day = dt.day
                 suffix = 'th' if 11 <= day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
                 return dt.strftime(f"%a, {day}{suffix} %b '%y")
