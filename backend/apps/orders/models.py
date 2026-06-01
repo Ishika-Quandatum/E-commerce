@@ -47,6 +47,9 @@ class Order(models.Model):
     def create_vendor_payout(self):
         from apps.payments.models import VendorPayout
         import uuid
+        from django.utils import timezone
+        from django.apps import apps
+        from datetime import timedelta
         
         if not self.vendor:
             return
@@ -64,8 +67,42 @@ class Order(models.Model):
         final_amount = product_amount - commission_amount
         transaction_id = f"PAY-{uuid.uuid4().hex[:8].upper()}"
 
-        from django.utils import timezone
-        due_date = timezone.now() + timezone.timedelta(days=7) # Default 7 days payout cycle
+        delivered_date = timezone.now()
+        max_days = 7  # default fallback if no policies exist
+        
+        ReturnPolicy = apps.get_model('returns', 'ReturnPolicy')
+        
+        # Iterate over items in the order to calculate return deadline
+        for item in self.items.all():
+            product = item.product
+            days = None
+            
+            # 1. Try Subcategory policy
+            if product.subcategory:
+                sub_policy = ReturnPolicy.objects.filter(category=product.subcategory).first()
+                if sub_policy:
+                    days = sub_policy.return_window_days if sub_policy.is_returnable else 0
+                    
+            # 2. Try Category policy if no subcategory policy
+            if days is None and product.category:
+                cat_policy = ReturnPolicy.objects.filter(category=product.category).first()
+                if cat_policy:
+                    days = cat_policy.return_window_days if cat_policy.is_returnable else 0
+                    
+            # 3. Try global default policy (category is null)
+            if days is None:
+                global_policy = ReturnPolicy.objects.filter(category=None).first()
+                if global_policy:
+                    days = global_policy.return_window_days if global_policy.is_returnable else 0
+                    
+            # 4. Fallback if no policy at all
+            if days is None:
+                days = 7
+                
+            max_days = max(max_days, days)
+
+        return_eligible_until = delivered_date + timedelta(days=max_days)
+        due_date = return_eligible_until  # Match due date to return eligibility date
 
         VendorPayout.objects.create(
             transaction_id=transaction_id,
@@ -77,14 +114,16 @@ class Order(models.Model):
             commission_amount=commission_amount,
             final_amount=final_amount,
             status='Pending',
+            settlementStatus='RETURN_HOLD',
+            returnEligibleUntil=return_eligible_until,
             due_date=due_date
         )
 
     def hold_vendor_payout(self):
         from apps.payments.models import VendorPayout
         payout = VendorPayout.objects.filter(order=self).first()
-        if payout and payout.status != 'Paid':
-            payout.status = 'Hold'
+        if payout and payout.settlementStatus != 'SETTLED':
+            payout.settlementStatus = 'REFUND_HOLD'
             payout.save()
 
     def __str__(self):

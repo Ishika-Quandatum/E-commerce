@@ -61,12 +61,30 @@ class VendorPayout(models.Model):
         ('Cancelled', 'Cancelled'),
         ('Released', 'Released'),
         ('Failed', 'Failed'),
+        ('Hold', 'Hold'),
+        ('RETURN_HOLD', 'RETURN_HOLD'),
+        ('READY_FOR_PAYOUT', 'READY_FOR_PAYOUT'),
+        ('SETTLED', 'SETTLED'),
+        ('REFUND_HOLD', 'REFUND_HOLD'),
+        ('REFUNDED', 'REFUNDED'),
     )
     METHOD_CHOICES = (
         ('bank_transfer', 'Bank Transfer'),
         ('upi', 'UPI'),
         ('wallet', 'Wallet'),
         ('manual', 'Manual'),
+    )
+    SETTLEMENT_STATUS_CHOICES = (
+        ('RETURN_HOLD', 'RETURN_HOLD'),
+        ('READY_FOR_PAYOUT', 'READY_FOR_PAYOUT'),
+        ('SETTLED', 'SETTLED'),
+        ('REFUND_HOLD', 'REFUND_HOLD'),
+        ('REFUNDED', 'REFUNDED'),
+    )
+    REFUND_STATUS_CHOICES = (
+        ('Pending', 'Pending'),
+        ('Success', 'Success'),
+        ('Failed', 'Failed'),
     )
 
     transaction_id = models.CharField(max_length=255, unique=True)
@@ -84,6 +102,67 @@ class VendorPayout(models.Model):
     reference_number = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Professional settlement & return windows fields
+    returnEligibleUntil = models.DateTimeField(null=True, blank=True)
+    settlementStatus = models.CharField(
+        max_length=20, 
+        choices=SETTLEMENT_STATUS_CHOICES, 
+        default='RETURN_HOLD'
+    )
+    refundStatus = models.CharField(
+        max_length=20, 
+        choices=REFUND_STATUS_CHOICES, 
+        blank=True, 
+        null=True
+    )
+    settlementReleasedAt = models.DateTimeField(null=True, blank=True)
+    returnRequestedAt = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # 1. Update settlementStatus if status was changed from outside
+        if self.status == 'Paid' and self.settlementStatus != 'SETTLED':
+            self.settlementStatus = 'SETTLED'
+            from django.utils import timezone
+            if not self.settlementReleasedAt:
+                self.settlementReleasedAt = timezone.now()
+        elif self.status == 'Refund Hold' and self.settlementStatus != 'REFUND_HOLD':
+            self.settlementStatus = 'REFUND_HOLD'
+            from django.utils import timezone
+            if not self.returnRequestedAt:
+                self.returnRequestedAt = timezone.now()
+        elif self.status == 'Cancelled' and self.settlementStatus != 'REFUNDED':
+            self.settlementStatus = 'REFUNDED'
+            self.refundStatus = 'Success'
+        elif self.status == 'Pending' and self.settlementStatus not in ['RETURN_HOLD', 'READY_FOR_PAYOUT']:
+            from django.utils import timezone
+            if self.returnEligibleUntil and timezone.now() > self.returnEligibleUntil:
+                self.settlementStatus = 'READY_FOR_PAYOUT'
+            else:
+                self.settlementStatus = 'RETURN_HOLD'
+        elif self.status == 'Hold' and self.settlementStatus != 'REFUND_HOLD':
+            self.settlementStatus = 'RETURN_HOLD'
+
+        # 2. Update old status based on settlementStatus
+        if self.settlementStatus == 'RETURN_HOLD':
+            self.status = 'Pending'
+        elif self.settlementStatus == 'READY_FOR_PAYOUT':
+            self.status = 'Pending'
+        elif self.settlementStatus == 'SETTLED':
+            self.status = 'Paid'
+            from django.utils import timezone
+            if not self.settlementReleasedAt:
+                self.settlementReleasedAt = timezone.now()
+        elif self.settlementStatus == 'REFUND_HOLD':
+            self.status = 'Refund Hold'
+            from django.utils import timezone
+            if not self.returnRequestedAt:
+                self.returnRequestedAt = timezone.now()
+        elif self.settlementStatus == 'REFUNDED':
+            self.status = 'Cancelled'
+            self.refundStatus = 'Success'
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Payout #{self.transaction_id} to {self.vendor.shop_name}"

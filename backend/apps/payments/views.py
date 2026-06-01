@@ -166,6 +166,20 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
         else:
             queryset = VendorPayout.objects.none()
 
+        # Real-time Sweep: Auto-unlock expired return holds
+        from django.utils import timezone
+        now = timezone.now()
+        expired_holds = queryset.filter(
+            settlementStatus='RETURN_HOLD',
+            returnEligibleUntil__lt=now
+        )
+        for payout in expired_holds:
+            # Check if any active return requests exist
+            has_return_request = payout.order.return_requests.exclude(status='Cancelled').exists()
+            if not has_return_request:
+                payout.settlementStatus = 'READY_FOR_PAYOUT'
+                payout.save()
+
         # Advanced Filtering
         vendor_id = self.request.query_params.get('vendor_id')
         status_param = self.request.query_params.get('status')
@@ -269,11 +283,21 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
     def mark_as_paid(self, request, pk=None):
         payout = self.get_object()
+        
+        # Security Guard check
+        if payout.settlementStatus in ['RETURN_HOLD', 'REFUND_HOLD', 'REFUNDED']:
+            return Response(
+                {'error': f'Payout release is blocked. Current settlement status is {payout.settlementStatus}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         payout.status = 'Paid'
+        payout.settlementStatus = 'SETTLED'
         payout.method = request.data.get('method', 'bank_transfer')
         payout.reference_number = request.data.get('reference_number', '')
         from django.utils import timezone
         payout.payout_date = timezone.now()
+        payout.settlementReleasedAt = timezone.now()
         payout.save()
         return Response({'status': 'Payout marked as paid', 'payout': VendorPayoutSerializer(payout).data})
 
@@ -297,7 +321,8 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
         method = request.data.get('method', 'bank_transfer')
         reference_number = request.data.get('reference_number', f"BULK-{uuid.uuid4().hex[:8].upper()}")
         
-        payouts = VendorPayout.objects.filter(id__in=payout_ids, status='Pending')
+        # Only allow bulk release of payouts that are in READY_FOR_PAYOUT
+        payouts = VendorPayout.objects.filter(id__in=payout_ids, settlementStatus='READY_FOR_PAYOUT')
         count = payouts.count()
         
         from django.utils import timezone
@@ -305,9 +330,11 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
         
         payouts.update(
             status='Paid',
+            settlementStatus='SETTLED',
             method=method,
             reference_number=reference_number,
-            payout_date=payout_date
+            payout_date=payout_date,
+            settlementReleasedAt=payout_date
         )
         
         return Response({'status': 'Bulk payout completed', 'count': count})

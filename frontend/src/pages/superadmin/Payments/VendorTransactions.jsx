@@ -24,7 +24,8 @@ import {
   ChevronDown,
   Users,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Lock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -151,19 +152,40 @@ const VendorTransactions = () => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Paid': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'Pending': return 'bg-amber-50 text-amber-600 border-amber-100';
-      case 'Hold': return 'bg-rose-50 text-rose-600 border-rose-100';
-      case 'Failed': return 'bg-slate-50 text-slate-500 border-slate-100';
-      default: return 'bg-slate-50 text-slate-500 border-slate-100';
+      case 'SETTLED':
+      case 'Paid': 
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200 font-extrabold';
+      case 'RETURN_HOLD': 
+        return 'bg-rose-50 text-rose-700 border-rose-200 font-extrabold';
+      case 'READY_FOR_PAYOUT': 
+        return 'bg-indigo-50 text-indigo-700 border-indigo-200 font-extrabold animate-pulse';
+      case 'REFUND_HOLD':
+      case 'Hold': 
+      case 'Refund Hold':
+        return 'bg-amber-50 text-amber-700 border-amber-200 font-extrabold';
+      case 'REFUNDED':
+      case 'Cancelled': 
+        return 'bg-slate-100 text-slate-700 border-slate-300 font-extrabold';
+      case 'Failed': 
+        return 'bg-slate-50 text-slate-500 border-slate-100 font-extrabold';
+      default: 
+        return 'bg-slate-50 text-slate-500 border-slate-100 font-extrabold';
     }
   };
 
   const toggleSelectAll = () => {
-    if (selectedPayouts.length === payouts.length) {
-      setSelectedPayouts([]);
+    const payablePayouts = payouts.filter(p => (p.settlementStatus || p.status) === 'READY_FOR_PAYOUT');
+    const allPayableSelected = payablePayouts.length > 0 && payablePayouts.every(p => selectedPayouts.includes(p.id));
+    
+    if (allPayableSelected) {
+      const payableIds = payablePayouts.map(p => p.id);
+      setSelectedPayouts(prev => prev.filter(id => !payableIds.includes(id)));
     } else {
-      setSelectedPayouts(payouts.filter(p => p.status === 'Pending').map(p => p.id));
+      const payableIds = payablePayouts.map(p => p.id);
+      setSelectedPayouts(prev => {
+        const union = new Set([...prev, ...payableIds]);
+        return Array.from(union);
+      });
     }
   };
 
@@ -359,10 +381,10 @@ const VendorTransactions = () => {
                     <td className="px-8 py-6">
                         <input 
                             type="checkbox" 
-                            disabled={p.status !== 'Pending'}
+                            disabled={(p.settlementStatus || p.status) !== 'READY_FOR_PAYOUT'}
                             checked={selectedPayouts.includes(p.id)}
                             onChange={() => toggleSelect(p.id)}
-                            className="w-5 h-5 rounded-lg border-slate-300 text-purple-600 focus:ring-purple-500 disabled:opacity-30"
+                            className="w-5 h-5 rounded-lg border-slate-300 text-purple-600 focus:ring-purple-500 disabled:opacity-30 cursor-pointer"
                         />
                     </td>
                     <td className="px-6 py-6">
@@ -408,10 +430,10 @@ const VendorTransactions = () => {
                               <span className="text-lg font-bold text-purple-700 tracking-tighter italic">₹{parseFloat(p.final_amount).toLocaleString()}</span>
                           </div>
                           <span className={clsx(
-                              "text-[9px] font-bold px-2 py-0.5 rounded-full border w-fit uppercase tracking-wider mt-1",
-                              getStatusStyle(p.status)
+                              "text-[9px] font-black px-2.5 py-0.5 rounded-full border w-fit uppercase tracking-wider mt-1",
+                              getStatusStyle(p.settlementStatus || p.status)
                           )}>
-                              {p.status}
+                              {(p.settlementStatus || p.status).replace('_', ' ')}
                           </span>
                        </div>
                     </td>
@@ -425,6 +447,12 @@ const VendorTransactions = () => {
                                 <Clock size={12} className="text-purple-300" />
                                 Due: {p.due_date ? new Date(p.due_date).toLocaleDateString() : 'N/A'}
                             </div>
+                            {(p.settlementStatus || p.status) === 'RETURN_HOLD' && p.returnEligibleUntil && (
+                                <div className="flex items-center gap-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 mt-1 w-fit animate-pulse">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 shrink-0" />
+                                    Hold until {new Date(p.returnEligibleUntil).toLocaleDateString()} (Return Window Active)
+                                </div>
+                            )}
                         </div>
                     </td>
                     <td className="px-6 py-6 text-right">
@@ -530,6 +558,14 @@ const StatCard = ({ title, value, icon, color, sub, isCurrency = true }) => (
 
 const ActionDropdown = ({ p, onPay, onHold, onApprove, onView }) => {
     const [open, setOpen] = useState(false);
+    
+    const settlementStatus = p.settlementStatus || p.status;
+    const isReturnHold = settlementStatus === 'RETURN_HOLD';
+    const isRefundHold = settlementStatus === 'REFUND_HOLD' || settlementStatus === 'Hold' || settlementStatus === 'Refund Hold';
+    const isRefunded = settlementStatus === 'REFUNDED' || settlementStatus === 'Cancelled';
+    const isReady = settlementStatus === 'READY_FOR_PAYOUT';
+    const isSettled = settlementStatus === 'SETTLED' || settlementStatus === 'Paid';
+
     return (
         <div className="relative">
             <button 
@@ -546,27 +582,50 @@ const ActionDropdown = ({ p, onPay, onHold, onApprove, onView }) => {
                             initial={{ opacity: 0, scale: 0.9, y: -10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                            className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-purple-100 p-2 z-20"
+                            className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-purple-100 p-2 z-20"
                         >
                             <button onClick={() => { setOpen(false); onView(); }} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-600 hover:bg-purple-50 rounded-xl transition-colors">
                                 <ExternalLink size={16} className="text-slate-400" /> View Order Details
                             </button>
                             <div className="h-px bg-purple-50 my-1 mx-2" />
-                            {p.status === 'Pending' && (
-                                <>
-                                    <button onClick={() => { setOpen(false); onPay(); }} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-purple-600 hover:bg-purple-50 rounded-xl transition-colors">
-                                        <CreditCard size={16} /> Release Payout
-                                    </button>
-                                    <button onClick={() => { setOpen(false); onHold(); }} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-50 rounded-xl transition-colors">
-                                        <Pause size={16} /> Place on Hold
-                                    </button>
-                                </>
+                            
+                            {isReady && (
+                                <button onClick={() => { setOpen(false); onPay(); }} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-purple-600 hover:bg-purple-50 rounded-xl transition-colors">
+                                    <CreditCard size={16} /> Release Payout
+                                </button>
                             )}
-                            {p.status === 'Hold' && (
+                            
+                            {isReturnHold && (
+                                <button disabled className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-400 bg-slate-50 cursor-not-allowed rounded-xl opacity-60">
+                                    <Lock size={16} className="text-rose-400" /> Release Payout (Return Hold)
+                                </button>
+                            )}
+
+                            {isRefundHold && (
+                                <button disabled className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-400 bg-slate-50 cursor-not-allowed rounded-xl opacity-60">
+                                    <Lock size={16} className="text-amber-400" /> Release Blocked (Refund Hold)
+                                </button>
+                            )}
+
+                            {isRefunded && (
+                                <button disabled className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-400 bg-slate-50 cursor-not-allowed rounded-xl opacity-60">
+                                    <AlertCircle size={16} className="text-slate-400" /> Settlement Cancelled (Refunded)
+                                </button>
+                            )}
+
+                            {isReady && (
+                                <button onClick={() => { setOpen(false); onHold(); }} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-50 rounded-xl transition-colors">
+                                    <Pause size={16} /> Place on Hold
+                                </button>
+                            )}
+
+                            {isRefundHold && !p.status && (
                                 <button onClick={() => { setOpen(false); onApprove(); }} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">
                                     <Play size={16} /> Approve Release
                                 </button>
                             )}
+
+                            <div className="h-px bg-purple-50 my-1 mx-2" />
                             <button className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">
                                 <FileText size={16} /> Download Statement
                             </button>

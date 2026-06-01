@@ -80,7 +80,12 @@ class ReturnRequestViewSet(viewsets.ModelViewSet):
             
             # Put related VendorPayout on Refund Hold
             from apps.payments.models import VendorPayout
-            VendorPayout.objects.filter(order=order).update(status='Refund Hold')
+            from django.utils import timezone
+            VendorPayout.objects.filter(order=order).update(
+                status='Refund Hold',
+                settlementStatus='REFUND_HOLD',
+                returnRequestedAt=timezone.now()
+            )
             
             # Create ReturnItems
             for item_data in items_data:
@@ -161,15 +166,31 @@ class ReturnRequestViewSet(viewsets.ModelViewSet):
                 return_request.refund_transaction_id = request.data.get('refund_transaction_id', '')
                 return_request.refund_date = timezone.now()
                 self._process_refund(return_request)
+                
+                # Update vendor payout to Refunded / Cancelled
+                from apps.payments.models import VendorPayout
+                VendorPayout.objects.filter(order=return_request.order).update(
+                    status='Cancelled',
+                    settlementStatus='REFUNDED',
+                    refundStatus='Success'
+                )
             elif new_status == 'Refund Approved':
                 # If admin approves refund, settlement for vendor is CANCELLED
                 from apps.payments.models import VendorPayout
-                VendorPayout.objects.filter(order=return_request.order).update(status='Cancelled')
+                VendorPayout.objects.filter(order=return_request.order).update(
+                    status='Cancelled',
+                    settlementStatus='REFUNDED',
+                    refundStatus='Success'
+                )
             elif new_status == 'Refund Rejected':
                 # If admin rejects refund (meaning product was rejected or something else), 
-                # settlement for vendor is RELEASED (so they get paid)
+                # settlement for vendor is RELEASED (so they get paid / READY_FOR_PAYOUT)
                 from apps.payments.models import VendorPayout
-                VendorPayout.objects.filter(order=return_request.order).update(status='Released')
+                VendorPayout.objects.filter(order=return_request.order).update(
+                    status='Pending',
+                    settlementStatus='READY_FOR_PAYOUT',
+                    refundStatus='Failed'
+                )
         
         with transaction.atomic():
             return_request.status = new_status

@@ -149,13 +149,30 @@ const PaymentList = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'paid': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'pending': return 'bg-amber-50 text-amber-600 border-amber-100';
-      case 'refund hold': return 'bg-rose-50 text-rose-600 border-rose-100';
-      case 'cancelled': return 'bg-slate-100 text-slate-400 border-slate-200 line-through';
-      case 'released': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
-      default: return 'bg-slate-50 text-slate-600 border-slate-100';
+    switch (status?.toUpperCase()) {
+      case 'SETTLED':
+      case 'PAID': 
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200 font-extrabold';
+      case 'RETURN_HOLD': 
+        return 'bg-rose-50 text-rose-700 border-rose-200 font-extrabold';
+      case 'READY_FOR_PAYOUT': 
+        return 'bg-indigo-50 text-indigo-700 border-indigo-200 font-extrabold animate-pulse';
+      case 'REFUND_HOLD': 
+      case 'HOLD': 
+      case 'REFUND HOLD':
+        return 'bg-amber-50 text-amber-700 border-amber-200 font-extrabold';
+      case 'REFUNDED': 
+      case 'CANCELLED': 
+        return 'bg-slate-100 text-slate-700 border-slate-300 font-extrabold';
+      default: 
+        switch (status?.toLowerCase()) {
+          case 'paid': return 'bg-emerald-50 text-emerald-700 border-emerald-200 font-extrabold';
+          case 'pending': return 'bg-amber-50 text-amber-600 border-amber-100';
+          case 'refund hold': return 'bg-rose-50 text-rose-600 border-rose-100';
+          case 'cancelled': return 'bg-slate-100 text-slate-400 border-slate-200 line-through';
+          case 'released': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+          default: return 'bg-slate-50 text-slate-600 border-slate-100';
+        }
     }
   };
 
@@ -399,6 +416,11 @@ const PaymentList = () => {
                            <div className="flex flex-col">
                                <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl w-fit">ORD#{p.order_id}</span>
                                <span className="text-[9px] font-bold text-slate-300 mt-1 uppercase tracking-widest">Protocol: {p.method?.replace('_', ' ')}</span>
+                               {(p.settlementStatus || p.status) === 'RETURN_HOLD' && p.returnEligibleUntil && (
+                                   <span className="text-[8px] font-black text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded w-fit mt-1 animate-pulse">
+                                       Return Hold until {new Date(p.returnEligibleUntil).toLocaleDateString()}
+                                   </span>
+                               )}
                            </div>
                         </td>
                         <td className="px-10 py-7 text-right">
@@ -415,12 +437,12 @@ const PaymentList = () => {
                         <td className="px-10 py-7 text-center">
                           <span className={clsx(
                               "inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm transition-all",
-                              getStatusColor(p.status)
+                              getStatusColor(p.settlementStatus || p.status)
                           )}>
-                            {p.status === 'Paid' ? <CheckCircle2 size={12} /> : 
-                             ['Refund Hold', 'Cancelled'].includes(p.status) ? <XCircle size={12} /> : 
-                             p.status === 'Released' ? <RotateCcw size={12} /> : <Clock size={12} />}
-                            {p.status}
+                            {(p.settlementStatus || p.status) === 'SETTLED' || (p.settlementStatus || p.status) === 'Paid' ? <CheckCircle2 size={12} /> : 
+                             ['REFUND_HOLD', 'REFUNDED', 'Refund Hold', 'Cancelled'].includes(p.settlementStatus || p.status) ? <XCircle size={12} /> : 
+                             (p.settlementStatus || p.status) === 'READY_FOR_PAYOUT' ? <RotateCcw size={12} /> : <Clock size={12} />}
+                            {(p.settlementStatus || p.status).replace('_', ' ')}
                           </span>
                         </td>
                         <td className="px-10 py-7 text-right">
@@ -451,15 +473,15 @@ const PaymentList = () => {
                                                 icon={<ShieldCheck size={14} />}
                                               />
                                               <TimelineStep 
-                                                label="Payment Initiated" 
-                                                date={new Date(p.created_at).toLocaleDateString()} 
-                                                active={p.status !== 'Hold'}
+                                                label="Settlement Released" 
+                                                date={p.settlementReleasedAt ? new Date(p.settlementReleasedAt).toLocaleDateString() : 'Awaiting...'} 
+                                                active={(p.settlementStatus || p.status) === 'SETTLED' || (p.settlementStatus || p.status) === 'Paid'}
                                                 icon={<Clock size={14} />}
                                               />
                                               <TimelineStep 
                                                 label="Settlement Paid" 
                                                 date={p.payout_date ? new Date(p.payout_date).toLocaleDateString() : 'Awaiting...'} 
-                                                active={p.status === 'Paid'}
+                                                active={(p.settlementStatus || p.status) === 'SETTLED' || (p.settlementStatus || p.status) === 'Paid'}
                                                 icon={<CheckCircle2 size={14} />}
                                                 isLast={true}
                                               />
