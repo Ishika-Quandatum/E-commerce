@@ -28,22 +28,34 @@ class OrderViewSet(viewsets.ModelViewSet):
         queryset = Order.objects.select_related('user').prefetch_related('items__product')
         
         if user.role in ['superadmin', 'admin'] or user.is_staff:
-            return queryset.all()
-        
-        if user.role == 'vendor':
+            queryset = queryset.all()
+        elif user.role == 'vendor':
             vendor = getattr(user, 'vendor_profile', None)
             if vendor:
                 queryset = queryset.filter(vendor=vendor)
             else:
-                queryset = queryset.none()
-        elif user.role not in ['superadmin', 'admin'] and not user.is_staff:
+                return Order.objects.none()
+        else:
             queryset = queryset.filter(user=user)
 
         status_param = self.request.query_params.get('status')
         if status_param and status_param != 'All':
-            queryset = queryset.filter(status=status_param)
+            if status_param == 'Refunded':
+                queryset = queryset.filter(return_requests__status='Refund Processed')
+            elif status_param == 'Return Requested':
+                queryset = queryset.filter(return_requests__status='Return Requested')
+            elif status_param == 'Return Approved':
+                queryset = queryset.filter(return_requests__status='Approved by Vendor')
+            elif status_param == 'Return In Progress':
+                queryset = queryset.filter(return_requests__status__in=['Pickup Assigned', 'Picked Up from Customer'])
+            elif status_param == 'Return Delivered':
+                queryset = queryset.filter(return_requests__status__in=['Delivered to Vendor', 'Vendor Confirmed Received', 'Inspection Started', 'Refund Approved'])
+            elif status_param == 'Return Rejected':
+                queryset = queryset.filter(return_requests__status='Refund Rejected')
+            else:
+                queryset = queryset.filter(status=status_param)
             
-        return queryset.order_by('-created_at')
+        return queryset.order_by('-created_at').distinct()
 
     def create(self, request, *args, **kwargs):
         from django.db import transaction

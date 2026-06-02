@@ -219,6 +219,8 @@ class ShipmentService:
             return {'status': 'Already delivered'}
 
         shipment.status = 'Delivered'
+        if not shipment.delivered_at:
+            shipment.delivered_at = timezone.now()
         shipment.save()
         
         shipment.order.status = 'Delivered'

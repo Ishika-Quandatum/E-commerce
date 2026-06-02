@@ -9,12 +9,15 @@ import { adminService, riderService, trackingService } from "../../services/api"
 import clsx from "clsx";
 
 /* ── Earnings Breakdown Panel ─────────────────────────────────────────── */
-const EarningsBreakdown = ({ earning }) => {
+const EarningsBreakdown = ({ earning, viewMode }) => {
   if (!earning || typeof earning !== "object") return null;
   const { total=0, base_pay=0, distance_km=0, distance_allowance=0, petrol_rate=10, bonus_incentive=0, penalty_risk=0 } = earning;
   const hasDistance = distance_km > 0;
   return (
-    <div className="mx-6 mb-4 rounded-2xl overflow-hidden border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-emerald-50 shadow-sm">
+    <div className={clsx(
+      "rounded-2xl overflow-hidden border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-emerald-50 shadow-sm transition-all",
+      viewMode === "grid" ? "mx-6 mb-4" : "mx-6 mb-4 lg:mx-0 lg:my-4 lg:ml-4 lg:w-64 xl:w-72 lg:shrink-0"
+    )}>
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600">
         <div className="flex items-center gap-2">
           <IndianRupee size={14} className="text-violet-200" />
@@ -39,11 +42,11 @@ const EarningsBreakdown = ({ earning }) => {
           { label: "Penalty Risk", value: penalty_risk > 0 ? `-₹${penalty_risk.toFixed(0)}` : "₹0", dot: penalty_risk > 0 ? "bg-red-400" : "bg-slate-200", cls: penalty_risk > 0 ? "text-red-600" : "text-slate-400" },
         ].map(({ label, value, dot, cls }) => (
           <div key={label} className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${dot}`} />
-              <span className="text-[11px] font-semibold text-slate-600">{label}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+              <span className="text-[11px] font-semibold text-slate-600 truncate max-w-[120px] xl:max-w-[150px]">{label}</span>
             </div>
-            <span className={`text-[12px] font-black ${cls}`}>{value}</span>
+            <span className={`text-[12px] font-black shrink-0 ${cls}`}>{value}</span>
           </div>
         ))}
         <div className="pt-2 mt-1 border-t border-dashed border-violet-200 flex items-center justify-between">
@@ -62,7 +65,7 @@ const EarningsBreakdown = ({ earning }) => {
 const FinalEarningsBadge = ({ earning }) => {
   const total = typeof earning === "object" ? earning?.total : parseFloat(earning || 0);
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl shrink-0">
       <TrendingUp size={13} className="text-emerald-600" />
       <span className="text-[11px] font-black text-emerald-700">Final: ₹{parseFloat(total || 0).toFixed(0)}</span>
     </div>
@@ -81,25 +84,25 @@ const STATUS_STYLES = {
 };
 
 const StatusBadge = ({ status }) => (
-  <span className={clsx("px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border", STATUS_STYLES[status] || "bg-slate-50 text-slate-600 border-slate-200")}>
+  <span className={clsx("px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shrink-0", STATUS_STYLES[status] || "bg-slate-50 text-slate-600 border-slate-200")}>
     {status}
   </span>
 );
 
 /* ── Action Buttons per workflow state ───────────────────────────────── */
-const ActionButtons = ({ order, activeTab, onAction, loading }) => {
+const ActionButtons = ({ order, activeTab, onAction, loading, viewMode }) => {
   const s = order.status;
 
   // ── NEW TASKS ──────────────────────────────────────────────────────────
   if (activeTab === "New") return (
-    <div className="flex gap-3">
+    <div className={clsx("flex gap-3 w-full", viewMode === "list" && "lg:flex-col lg:gap-2")}>
       <button onClick={() => onAction(order.id, "Rejected")}
-        className="flex-1 bg-white hover:bg-rose-50 text-rose-500 border border-rose-100 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2">
-        <XCircle size={18} /> Decline
+        className="flex-1 bg-white hover:bg-rose-50 text-rose-500 border border-rose-100 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+        <XCircle size={18} className="shrink-0" /> Decline
       </button>
       <button onClick={() => onAction(order.id, "Assigned")} disabled={loading}
-        className="flex-[2] bg-brand-purple text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-purple/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60">
-        <Package size={18} /> Accept Delivery
+        className="flex-[2] bg-brand-purple text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-purple/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 lg:flex-1 whitespace-nowrap">
+        <Package size={18} className="shrink-0" /> Accept Delivery
       </button>
     </div>
   );
@@ -108,14 +111,14 @@ const ActionButtons = ({ order, activeTab, onAction, loading }) => {
   if (activeTab === "Assigned") {
     if (s === "Assigned") return (
       <button onClick={() => onAction(order.id, "Arrived at Vendor")} disabled={loading}
-        className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60">
-        <Store size={18} /> Reached Shop
+        className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 whitespace-nowrap">
+        <Store size={18} className="shrink-0" /> Reached Shop
       </button>
     );
     if (s === "Arrived at Vendor") return (
       <button onClick={() => onAction(order.id, "Picked Up")} disabled={loading}
-        className="w-full bg-purple-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-purple-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60">
-        <ShoppingBag size={18} /> Picked Up Parcel
+        className="w-full bg-purple-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-purple-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 whitespace-nowrap">
+        <ShoppingBag size={18} className="shrink-0" /> Picked Up Parcel
       </button>
     );
   }
@@ -124,22 +127,22 @@ const ActionButtons = ({ order, activeTab, onAction, loading }) => {
   if (activeTab === "In Transit") {
     if (["Picked Up", "In Transit"].includes(s)) return (
       <button onClick={() => onAction(order.id, "Out for Delivery")} disabled={loading}
-        className="w-full bg-brand-purple text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-purple/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60">
-        <Navigation size={18} /> Start Delivery
+        className="w-full bg-brand-purple text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-brand-purple/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 whitespace-nowrap">
+        <Navigation size={18} className="shrink-0" /> Start Delivery
       </button>
     );
     if (s === "Out for Delivery") return (
       <button onClick={() => onAction(order.id, "Delivered")} disabled={loading}
-        className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60">
-        <CheckCircle2 size={18} /> Mark Delivered
+        className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 whitespace-nowrap">
+        <CheckCircle2 size={18} className="shrink-0" /> Mark Delivered
       </button>
     );
   }
 
   // ── COMPLETED ──────────────────────────────────────────────────────────
   if (activeTab === "Delivered") return (
-    <div className="flex items-center justify-center gap-2 py-2 text-emerald-600 font-bold text-sm">
-      <CheckCircle2 size={18} /> Successfully Delivered
+    <div className="flex items-center justify-center gap-2 py-2 text-emerald-600 font-bold text-sm whitespace-nowrap">
+      <CheckCircle2 size={18} className="shrink-0" /> Successfully Delivered
     </div>
   );
 
@@ -147,7 +150,7 @@ const ActionButtons = ({ order, activeTab, onAction, loading }) => {
 };
 
 /* ── Step Progress Indicator (Assigned tab only) ─────────────────────── */
-const AssignedProgress = ({ status }) => {
+const AssignedProgress = ({ status, viewMode }) => {
   const steps = [
     { key: "Assigned",          label: "Assigned" },
     { key: "Arrived at Vendor", label: "Reached Shop" },
@@ -155,7 +158,10 @@ const AssignedProgress = ({ status }) => {
   ];
   const currentIdx = steps.findIndex(s => s.key === status);
   return (
-    <div className="mx-6 mb-4 flex items-center gap-0">
+    <div className={clsx(
+      "flex items-center gap-0 transition-all",
+      viewMode === "grid" ? "mx-6 mb-4" : "mx-6 mb-4 lg:mx-4 lg:mt-4 lg:mb-2"
+    )}>
       {steps.map((step, idx) => (
         <React.Fragment key={step.key}>
           <div className="flex flex-col items-center gap-1 flex-1">
@@ -177,10 +183,13 @@ const AssignedProgress = ({ status }) => {
   );
 };
 
-/* ── Out-for-Delivery indicator banner ───────────────────────────────── */
-const OutForDeliveryBanner = () => (
-  <div className="mx-6 mb-4 flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3">
-    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+/* ── Out-for-delivery indicator banner ───────────────────────────────── */
+const OutForDeliveryBanner = ({ viewMode }) => (
+  <div className={clsx(
+    "flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 transition-all",
+    viewMode === "grid" ? "mx-6 mb-4" : "mx-6 mb-4 lg:mx-4 lg:mt-4 lg:mb-2"
+  )}>
+    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
     <span className="text-xs font-black text-emerald-700">Out for Delivery — Customer can now see your contact</span>
   </div>
 );
@@ -189,12 +198,13 @@ const OutForDeliveryBanner = () => (
 /*  Main MyOrders Component                                                */
 /* ─────────────────────────────────────────────────────────────────────── */
 const MyOrders = () => {
-  const [activeTab, setActiveTab] = useState("Assigned");
-  const [viewMode, setViewMode] = useState("list");
+  const [activeTab, setActiveTab] = useState("New");
+  const [viewMode, setViewMode] = useState("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [completedPage, setCompletedPage] = useState(1);
 
   const tabs = [
     { id: "New",       label: "New Tasks",  icon: <Package size={16} /> },
@@ -222,7 +232,10 @@ const MyOrders = () => {
     return () => clearInterval(interval);
   }, [orders]);
 
-  useEffect(() => { fetchOrders(); }, [activeTab]);
+  useEffect(() => {
+    fetchOrders();
+    setCompletedPage(1);
+  }, [activeTab]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -278,11 +291,21 @@ const MyOrders = () => {
     if (activeTab === "New")       return bySearch.filter(o => ["Dispatch Queue", "Pending"].includes(o.status));
     if (activeTab === "Assigned")  return bySearch.filter(o => ["Assigned", "Arrived at Vendor"].includes(o.status));
     if (activeTab === "In Transit")return bySearch.filter(o => ["Picked Up", "In Transit", "Out for Delivery", "Reached"].includes(o.status));
-    if (activeTab === "Delivered") return bySearch.filter(o => o.status === "Delivered");
+    if (activeTab === "Delivered") {
+      const completed = bySearch.filter(o => o.status === "Delivered");
+      return completed.sort((a, b) => {
+        const dateA = new Date(a.delivered_at || a.updated_at || 0);
+        const dateB = new Date(b.delivered_at || b.updated_at || 0);
+        return dateB - dateA;
+      });
+    }
     return [];
   };
 
   const filteredOrders = filterOrders();
+  const paginatedOrders = activeTab === "Delivered"
+    ? filteredOrders.slice((completedPage - 1) * 5, completedPage * 5)
+    : filteredOrders;
   const getEarningTotal = (e) => !e ? 0 : typeof e === "object" ? e.total || 0 : parseFloat(e) || 0;
 
   return (
@@ -316,7 +339,7 @@ const MyOrders = () => {
           <Search size={20} className="text-slate-300" />
           <input type="text" placeholder="Search by ID or customer..."
             className="bg-transparent border-none outline-none text-sm w-full font-medium"
-            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCompletedPage(1); }} />
         </div>
         <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm self-end md:self-auto">
           {[{ mode: "grid", Icon: LayoutGrid }, { mode: "list", Icon: List }].map(({ mode, Icon }) => (
@@ -339,28 +362,40 @@ const MyOrders = () => {
               <p className="font-bold text-lg text-slate-500">No orders found</p>
               <p className="text-sm">Try adjusting your search or check another tab.</p>
             </div>
-          ) : filteredOrders.map((order) => (
+          ) : paginatedOrders.map((order) => (
             <motion.div key={order.id} layout
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.25 }}
               className={clsx(
-                "bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all flex overflow-hidden group",
-                viewMode === "grid" ? "flex-col" : "flex-col md:flex-row items-stretch"
+                "bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all flex overflow-hidden group min-w-0",
+                viewMode === "grid" ? "flex-col" : "flex-col lg:flex-row items-stretch"
               )}>
 
-              {/* ── Card Header ──────────────────────────────────────────── */}
-              <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                <div className="flex items-center gap-3">
-                  <div className="bg-brand-purple text-white w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shadow-lg shadow-brand-purple/20">ID</div>
-                  <span className="text-sm font-black text-slate-900 tracking-tight">
-                    #{order.tracking_number?.slice(-8).toUpperCase()}
-                  </span>
+              {/* ── Card Header (Sidebar/Left col in list view) ──────────── */}
+              <div className={clsx(
+                "p-6 flex bg-slate-50/50 transition-colors",
+                viewMode === "grid"
+                  ? "flex-row justify-between items-center border-b border-slate-50"
+                  : "flex-row justify-between items-center border-b lg:border-b-0 lg:border-r border-slate-100 w-full lg:w-56 lg:flex-col lg:items-start lg:justify-between lg:gap-4 lg:shrink-0"
+              )}>
+                <div className="flex flex-wrap items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="bg-brand-purple text-white w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shadow-lg shadow-brand-purple/20">ID</div>
+                    <span className="text-sm font-black text-slate-900 tracking-tight">
+                      #{order.tracking_number?.slice(-8).toUpperCase()}
+                    </span>
+                  </div>
+                  {activeTab === "Delivered" && (order.delivered_at || order.updated_at) && (
+                    <span className="text-[11px] font-bold text-slate-400 bg-slate-100/60 px-2 py-0.5 rounded-lg border border-slate-200/40 shrink-0">
+                      {new Date(order.delivered_at || order.updated_at).toLocaleDateString('en-GB')}
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className={clsx("flex items-center gap-3", viewMode === "list" && "lg:flex-col lg:items-start lg:w-full lg:gap-3")}>
                   {activeTab === "Delivered" ? (
                     <FinalEarningsBadge earning={order.estimated_earning} />
                   ) : (
-                    <div className="text-right">
+                    <div className={clsx("text-right", viewMode === "list" && "lg:text-left")}>
                       <div className="text-xs font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
                         {["Assigned","New"].includes(activeTab) ? "Est. Earn" : "Earning"}
                       </div>
@@ -369,104 +404,181 @@ const MyOrders = () => {
                       </div>
                     </div>
                   )}
-                  <div className="w-px h-8 bg-slate-200" />
+                  <div className={clsx("w-px h-8 bg-slate-200", viewMode === "list" && "lg:hidden")} />
                   <StatusBadge status={order.status} />
                 </div>
               </div>
 
               {/* ── Earnings Breakdown (New + Assigned) ──────────────────── */}
               {["New","Assigned"].includes(activeTab) && typeof order.estimated_earning === "object" && (
-                <EarningsBreakdown earning={order.estimated_earning} />
+                <EarningsBreakdown earning={order.estimated_earning} viewMode={viewMode} />
               )}
 
-              {/* ── Assigned step progress ────────────────────────────────── */}
-              {activeTab === "Assigned" && (
-                <AssignedProgress status={order.status} />
-              )}
+              {/* ── Middle Flex Container (Progress, Banner, Addresses, ETA) ── */}
+              <div className={clsx(
+                "flex flex-col flex-1 min-w-0 justify-center",
+                viewMode === "list" && "lg:py-4"
+              )}>
+                {/* ── Assigned step progress ────────────────────────────────── */}
+                {activeTab === "Assigned" && (
+                  <AssignedProgress status={order.status} viewMode={viewMode} />
+                )}
 
-              {/* ── Out-for-delivery banner ───────────────────────────────── */}
-              {order.status === "Out for Delivery" && (
-                <OutForDeliveryBanner />
-              )}
+                {/* ── Out-for-delivery banner ───────────────────────────────── */}
+                {order.status === "Out for Delivery" && (
+                  <OutForDeliveryBanner viewMode={viewMode} />
+                )}
 
-              {/* ── Card Body: Vendor / Customer addresses ───────────────── */}
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 relative flex-1">
-                <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center w-8 h-8">
-                  <ChevronRight size={16} className="text-slate-300" />
-                </div>
-
-                {/* FROM: Vendor */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center"><Package size={16} /></div>
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">FROM: VENDOR</h4>
+                {/* ── Card Body: Vendor / Customer addresses ───────────────── */}
+                <div className={clsx(
+                  "p-6 grid gap-6 relative min-w-0 flex-1 justify-center",
+                  viewMode === "grid"
+                    ? "grid-cols-1 md:grid-cols-2"
+                    : "grid-cols-1 xl:grid-cols-2"
+                )}>
+                  <div className={clsx(
+                    "hidden items-center justify-center w-8 h-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full border border-slate-100 shadow-sm z-10",
+                    viewMode === "grid" ? "md:flex" : "xl:flex"
+                  )}>
+                    <ChevronRight size={16} className="text-slate-300" />
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:border-brand-blue/30 transition-colors">
-                    <h5 className="font-black text-slate-900 mb-1">{order.vendor_info?.shop_name || "Vendor Shop"}</h5>
-                    <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3 leading-relaxed">
-                      {order.vendor_info?.address || "Address not available"}
-                    </p>
+
+                  {/* FROM: Vendor */}
+                  <div className="space-y-3 min-w-0">
                     <div className="flex items-center gap-2">
-                      <a href={`tel:${order.vendor_info?.phone}`} className="bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 flex items-center gap-1.5">
-                        <Phone size={12} /> Call Shop
-                      </a>
-                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${order.vendor_info?.lat},${order.vendor_info?.lng}`}
-                        target="_blank" rel="noreferrer"
-                        className="bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue px-3 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5">
-                        <ExternalLink size={12} /> Maps
-                      </a>
+                      <div className="w-8 h-8 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center shrink-0"><Package size={16} /></div>
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest truncate">FROM: VENDOR</h4>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:border-brand-blue/30 transition-colors">
+                      <h5 className="font-black text-slate-900 mb-1 truncate">{order.vendor_info?.shop_name || "Vendor Shop"}</h5>
+                      <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3 leading-relaxed min-h-[2.5rem]">
+                        {order.vendor_info?.address || "Address not available"}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <a href={`tel:${order.vendor_info?.phone}`} className="bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                          <Phone size={12} /> Call Shop
+                        </a>
+                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${order.vendor_info?.lat},${order.vendor_info?.lng}`}
+                          target="_blank" rel="noreferrer"
+                          className="bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue px-3 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                          <ExternalLink size={12} /> Maps
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TO: Customer */}
+                  <div className="space-y-3 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0"><MapPin size={16} /></div>
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest truncate">TO: CUSTOMER</h4>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:border-emerald-500/30 transition-colors">
+                      <h5 className="font-black text-slate-900 mb-1 truncate">{order.customer_info?.name || "Customer"}</h5>
+                      <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3 leading-relaxed min-h-[2.5rem]">
+                        {order.customer_info?.address || "Address not available"}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <a href={`tel:${order.customer_info?.phone}`} className="bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                          <Phone size={12} /> Call Customer
+                        </a>
+                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${order.customer_info?.lat},${order.customer_info?.lng}`}
+                          target="_blank" rel="noreferrer"
+                          className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 px-3 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                          <ExternalLink size={12} /> Maps
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* TO: Customer */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center"><MapPin size={16} /></div>
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">TO: CUSTOMER</h4>
+                {/* ETA chip */}
+                {activeTab === "Assigned" && order.estimated_minutes && (
+                  <div className={clsx(
+                    "pb-3 flex items-center gap-2",
+                    viewMode === "grid" ? "px-6 -mt-2" : "px-6 lg:px-4 lg:mb-2"
+                  )}>
+                    <Clock size={13} className="text-slate-400" />
+                    <span className="text-[11px] font-bold text-slate-500">
+                      Est. delivery time: <span className="text-slate-700">{order.estimated_minutes} min</span>
+                    </span>
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:border-emerald-500/30 transition-colors">
-                    <h5 className="font-black text-slate-900 mb-1">{order.customer_info?.name || "Customer"}</h5>
-                    <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3 leading-relaxed">
-                      {order.customer_info?.address || "Address not available"}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <a href={`tel:${order.customer_info?.phone}`} className="bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-[10px] font-bold border border-slate-200 flex items-center gap-1.5">
-                        <Phone size={12} /> Call Customer
-                      </a>
-                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${order.customer_info?.lat},${order.customer_info?.lng}`}
-                        target="_blank" rel="noreferrer"
-                        className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 px-3 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5">
-                        <ExternalLink size={12} /> Maps
-                      </a>
-                    </div>
+                )}
+
+                {/* Delivered Date and Time chip */}
+                {activeTab === "Delivered" && (order.delivered_at || order.updated_at) && (
+                  <div className={clsx(
+                    "pb-3 flex items-center gap-2",
+                    viewMode === "grid" ? "px-6 -mt-2" : "px-6 lg:px-4 lg:mb-2"
+                  )}>
+                    <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                    <span className="text-[11px] font-bold text-slate-500">
+                      Delivered on: <span className="text-emerald-600 font-black">{new Date(order.delivered_at || order.updated_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                    </span>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* ETA chip */}
-              {activeTab === "Assigned" && order.estimated_minutes && (
-                <div className="px-6 pb-3 -mt-2 flex items-center gap-2">
-                  <Clock size={13} className="text-slate-400" />
-                  <span className="text-[11px] font-bold text-slate-500">
-                    Est. delivery time: <span className="text-slate-700">{order.estimated_minutes} min</span>
-                  </span>
-                </div>
-              )}
-
-              {/* ── Card Footer: Action Buttons ───────────────────────────── */}
-              <div className="p-6 bg-slate-50/30 border-t border-slate-50">
+              {/* ── Card Footer: Action Buttons (Right sidebar in list view) ── */}
+              <div className={clsx(
+                "p-6 transition-colors flex items-center justify-center shrink-0 min-w-0",
+                viewMode === "grid"
+                  ? "bg-slate-50/30 border-t border-slate-50 w-full"
+                  : "bg-slate-50/30 border-t border-slate-50 lg:border-t-0 lg:border-l lg:w-60 xl:w-64"
+              )}>
                 <ActionButtons
                   order={order}
                   activeTab={activeTab}
                   onAction={handleAction}
                   loading={actionLoading}
+                  viewMode={viewMode}
                 />
               </div>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Pagination Footer for Completed tab */}
+      {activeTab === "Delivered" && filteredOrders.length > 5 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white px-6 py-4 rounded-[24px] border border-slate-100 shadow-sm mt-6 max-w-5xl">
+          <p className="text-xs font-bold text-slate-500">
+            Showing <span className="text-slate-900">{(completedPage - 1) * 5 + 1}</span> to{" "}
+            <span className="text-slate-900">{Math.min(completedPage * 5, filteredOrders.length)}</span> of{" "}
+            <span className="text-slate-900">{filteredOrders.length}</span> completed tasks
+          </p>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCompletedPage(p => Math.max(1, p - 1))}
+              disabled={completedPage === 1}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-100 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent transition-all"
+            >
+              Previous
+            </button>
+            {Array.from({ length: Math.ceil(filteredOrders.length / 5) }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setCompletedPage(p)}
+                className={clsx(
+                  "w-8 h-8 rounded-xl text-xs font-black transition-all flex items-center justify-center",
+                  completedPage === p
+                    ? "bg-brand-purple text-white shadow-md shadow-brand-purple/20"
+                    : "text-slate-500 hover:bg-slate-50"
+                )}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setCompletedPage(p => Math.min(Math.ceil(filteredOrders.length / 5), p + 1))}
+              disabled={completedPage === Math.ceil(filteredOrders.length / 5)}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-100 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

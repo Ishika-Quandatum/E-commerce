@@ -22,6 +22,8 @@ import {
   Calendar,
   IndianRupee,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Users,
   AlertCircle,
   ExternalLink,
@@ -55,7 +57,17 @@ const VendorTransactions = () => {
   const [paymentData, setPaymentData] = useState({ method: "bank_transfer", reference_number: "" });
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+
   const navigate = useNavigate();
+
+  // Reset pagination to first page when any search/filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, vendorFilter, dateRange, amountRange, searchTerm]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -68,13 +80,20 @@ const VendorTransactions = () => {
           end_date: dateRange.end,
           min_amount: amountRange.min,
           max_amount: amountRange.max,
-          search: searchTerm
+          search: searchTerm,
+          page: currentPage
         }),
         paymentService.getVendorPayoutStats(),
         vendorService.getVendors({ status: 'Approved' })
       ]);
 
-      setPayouts(Array.isArray(payoutsRes.data) ? payoutsRes.data : (payoutsRes.data?.results || []));
+      if (payoutsRes.data && payoutsRes.data.results) {
+        setPayouts(payoutsRes.data.results);
+        setTotalItems(payoutsRes.data.count || payoutsRes.data.results.length);
+      } else {
+        setPayouts(Array.isArray(payoutsRes.data) ? payoutsRes.data : []);
+        setTotalItems(Array.isArray(payoutsRes.data) ? payoutsRes.data.length : 0);
+      }
       setStats(statsRes.data);
       setVendors(Array.isArray(vendorsRes.data) ? vendorsRes.data : (vendorsRes.data?.results || []));
     } catch (err) {
@@ -89,7 +108,27 @@ const VendorTransactions = () => {
       fetchData();
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [statusFilter, vendorFilter, dateRange, amountRange, searchTerm]);
+  }, [statusFilter, vendorFilter, dateRange, amountRange, searchTerm, currentPage]);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      let start = Math.max(1, currentPage - 2);
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+      if (end === totalPages) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+      for (let i = start; i <= end; i++) pageNumbers.push(i);
+    }
+    return pageNumbers;
+  };
 
   const handleAction = async (action, id, data = {}) => {
     try {
@@ -347,9 +386,8 @@ const VendorTransactions = () => {
         )}
       </AnimatePresence>
 
-      {/* Main Table Content */}
       <div className="bg-white rounded-[2.5rem] border border-purple-100 shadow-xl shadow-purple-500/5 overflow-hidden mx-4 md:mx-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
@@ -373,7 +411,7 @@ const VendorTransactions = () => {
               {loading ? (
                 [1,2,3,4,5].map(i => <tr key={i} className="animate-pulse bg-slate-50/20"><td colSpan="7" className="h-24" /></tr>)
               ) : payouts.length > 0 ? (
-                payouts.map((p) => (
+                payouts.map((p, index) => (
                   <tr key={p.id} className={clsx(
                       "group transition-all duration-300 hover:bg-purple-50/30",
                       selectedPayouts.includes(p.id) && "bg-purple-50/50"
@@ -441,20 +479,20 @@ const VendorTransactions = () => {
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500">
                                 <Calendar size={12} className="text-slate-300" />
-                                Created: {new Date(p.created_at).toLocaleDateString()}
+                                Created: {new Date(p.created_at).toLocaleDateString('en-GB')}
                             </div>
                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-purple-600">
                                 <Clock size={12} className="text-purple-300" />
-                                Due: {p.due_date ? new Date(p.due_date).toLocaleDateString() : 'N/A'}
+                                Due: {p.due_date ? new Date(p.due_date).toLocaleDateString('en-GB') : 'N/A'}
                             </div>
                             {(p.settlementStatus || p.status) === 'RETURN_HOLD' && p.returnEligibleUntil && (
                                 <div className="flex items-center gap-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 mt-1 w-fit animate-pulse">
                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-600 shrink-0" />
-                                    Hold until {new Date(p.returnEligibleUntil).toLocaleDateString()} (Return Window Active)
+                                    Hold until {new Date(p.returnEligibleUntil).toLocaleDateString('en-GB')} (Return Window Active)
                                 </div>
                             )}
                         </div>
-                    </td>
+                     </td>
                     <td className="px-6 py-6 text-right">
                        <div className="flex items-center justify-end gap-2">
                            <ActionDropdown 
@@ -463,6 +501,7 @@ const VendorTransactions = () => {
                                 onHold={() => handleAction('hold', p.id)}
                                 onApprove={() => handleAction('approve', p.id)}
                                 onView={() => navigate(`/admin/orders/${p.order_id}`)}
+                                alignUp={payouts.length > 3 && index >= payouts.length - 3}
                            />
                        </div>
                     </td>
@@ -484,6 +523,50 @@ const VendorTransactions = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-8 py-6 border-t border-purple-50 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+            <span className="text-xs text-slate-500 font-bold">
+              Showing <span className="font-extrabold text-slate-800">{indexOfFirstItem + 1}</span> to{" "}
+              <span className="font-extrabold text-slate-800">
+                {Math.min(indexOfLastItem, totalItems)}
+              </span>{" "}
+              of <span className="font-extrabold text-slate-800">{totalItems}</span> settlements
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2.5 rounded-xl border border-purple-100 bg-white text-purple-600 transition-all hover:bg-purple-50 disabled:opacity-50 disabled:hover:bg-white active:scale-95 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="flex items-center gap-1.5">
+                {getPageNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-9 h-9 rounded-xl font-bold text-xs transition-all flex items-center justify-center border active:scale-95 ${
+                      currentPage === pageNum
+                        ? "bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-200"
+                        : "bg-white border-purple-100 text-purple-600 hover:bg-purple-50"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2.5 rounded-xl border border-purple-100 bg-white text-purple-600 transition-all hover:bg-purple-50 disabled:opacity-50 disabled:hover:bg-white active:scale-95 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bulk Action Bar */}
@@ -556,7 +639,7 @@ const StatCard = ({ title, value, icon, color, sub, isCurrency = true }) => (
     </div>
 );
 
-const ActionDropdown = ({ p, onPay, onHold, onApprove, onView }) => {
+const ActionDropdown = ({ p, onPay, onHold, onApprove, onView, alignUp }) => {
     const [open, setOpen] = useState(false);
     
     const settlementStatus = p.settlementStatus || p.status;
@@ -579,10 +662,13 @@ const ActionDropdown = ({ p, onPay, onHold, onApprove, onView }) => {
                     <>
                         <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
                         <motion.div 
-                            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                            initial={{ opacity: 0, scale: 0.9, y: alignUp ? 10 : -10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                            className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-purple-100 p-2 z-20"
+                            exit={{ opacity: 0, scale: 0.9, y: alignUp ? 10 : -10 }}
+                            className={clsx(
+                                "absolute right-0 w-64 bg-white rounded-2xl shadow-2xl border border-purple-100 p-2 z-20",
+                                alignUp ? "bottom-full mb-2" : "top-full mt-2"
+                            )}
                         >
                             <button onClick={() => { setOpen(false); onView(); }} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-600 hover:bg-purple-50 rounded-xl transition-colors">
                                 <ExternalLink size={16} className="text-slate-400" /> View Order Details

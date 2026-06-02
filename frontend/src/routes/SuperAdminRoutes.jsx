@@ -9,6 +9,7 @@ import EditCategory from "../pages/superadmin/Categories/EditCategory";
 import AdminProductList from "../pages/superadmin/Products/AdminProductList";
 import ProductReviews from "../pages/superadmin/Products/ProductReviews";
 import AdminOrderList from "../pages/superadmin/Orders/AdminOrderList";
+import OrderDetails from "../pages/vendor/Orders/OrderDetails";
 import AdminPaymentList from "../pages/superadmin/Payments/AdminPaymentList";
 import CustomerTransactions from "../pages/superadmin/Payments/CustomerTransactions";
 import VendorTransactions from "../pages/superadmin/Payments/VendorTransactions";
@@ -50,6 +51,7 @@ const SuperAdminRoutes = () => {
         <Route path="products" element={<AdminProductList />} />
         <Route path="products/reviews" element={<ProductReviews />} />
         <Route path="orders" element={<AdminOrderList />} />
+        <Route path="orders/:id" element={<OrderDetails />} />
         <Route path="payments" element={<AdminPaymentList />} />
         <Route path="payments/customers" element={<CustomerTransactions />} />
         <Route path="payments/vendors" element={<VendorTransactions />} />

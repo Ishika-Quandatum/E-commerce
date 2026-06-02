@@ -594,16 +594,45 @@ class RiderViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Unauthorized'}, status=403)
         
         rider = user.rider_profile
-        today = timezone.now().date()
+        
+        # Get start and end of today in the active timezone (handles SQLite/Postgres timezone compatibility)
+        from django.utils.timezone import make_aware, localtime
+        import datetime
+        local_today = localtime(timezone.now()).date()
+        start_of_day = make_aware(datetime.datetime.combine(local_today, datetime.time.min))
+        end_of_day = make_aware(datetime.datetime.combine(local_today, datetime.time.max))
         
         today_earnings = RiderSalaryTransaction.objects.filter(
             rider=rider, 
-            created_at__date=today
+            created_at__range=(start_of_day, end_of_day)
         ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
         
-        today_shipments = Shipment.objects.filter(rider=rider, created_at__date=today)
-        completed_today = today_shipments.filter(status='Delivered').count()
-        pending_today = today_shipments.exclude(status__in=['Delivered', 'Cancelled', 'Returned']).count()
+        # 1. New Tasks (status = Dispatch Queue, rider is null)
+        new_tasks = Shipment.objects.filter(status='Dispatch Queue', rider__isnull=True).count()
+        
+        # 2. Assigned Orders (active orders assigned to this logged-in rider that are not yet delivered)
+        assigned_orders = Shipment.objects.filter(
+            rider=rider
+        ).exclude(
+            status__in=['Delivered', 'Cancelled', 'Returned']
+        ).count()
+        
+        # 3. Completed Orders (delivered today by rider)
+        completed_today = Shipment.objects.filter(
+            rider=rider, 
+            status='Delivered'
+        ).filter(
+            Q(delivered_at__range=(start_of_day, end_of_day)) | 
+            Q(delivered_at__isnull=True, updated_at__range=(start_of_day, end_of_day))
+        ).count()
+        
+        # 4. Return Pickups (active return pickup tasks assigned to this rider)
+        from apps.returns.models import ReturnRequest
+        active_returns = ReturnRequest.objects.filter(
+            rider=rider
+        ).exclude(
+            status__in=['Delivered to Vendor', 'Vendor Confirmed Received', 'Inspection Started', 'Refund Approved', 'Refund Processed', 'Cancelled']
+        ).count()
         
         recent_shipments = Shipment.objects.filter(rider=rider).order_by('-updated_at')[:5]
         recent_data = []
@@ -611,15 +640,17 @@ class RiderViewSet(viewsets.ModelViewSet):
             recent_data.append({
                 'id': f'#ORD-{s.order.id}',
                 'name': s.order.user.get_full_name() or s.order.user.username,
-                'time': s.updated_at.strftime('%I:%M %p') if s.updated_at.date() == today else s.updated_at.strftime('%b %d'),
+                'time': s.updated_at.strftime('%I:%M %p') if s.updated_at.date() == local_today else s.updated_at.strftime('%b %d'),
                 'earn': f'₹{s.order.total_price}',
                 'status': s.status
             })
 
         return Response({
             'earnings': float(today_earnings),
+            'new_tasks': new_tasks,
+            'assigned_orders': assigned_orders,
             'completed': completed_today,
-            'pending': pending_today,
+            'return_pickups': active_returns,
             'distance': f"{rider.total_distance} km",
             'rating': float(rider.rating),
             'recent_activities': recent_data,

@@ -105,7 +105,7 @@ const VendorReturnDetail = () => {
                     {returnRequest.status}
                   </span>
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Requested on {new Date(returnRequest.created_at).toLocaleDateString()}
+                    Requested on {new Date(returnRequest.created_at).toLocaleDateString('en-GB')}
                   </span>
                 </div>
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">Return Request #RET-{id.toString().padStart(5, '0')}</h1>
@@ -194,7 +194,9 @@ const VendorReturnDetail = () => {
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Inspected At</p>
-                    <p className="text-sm font-bold text-slate-800">{new Date(returnRequest.inspection_completed_at).toLocaleString()}</p>
+                    <p className="text-sm font-bold text-slate-800">
+                      {new Date(returnRequest.inspection_completed_at).toLocaleDateString('en-GB')}, {new Date(returnRequest.inspection_completed_at).toLocaleTimeString('en-US')}
+                    </p>
                   </div>
                </div>
 

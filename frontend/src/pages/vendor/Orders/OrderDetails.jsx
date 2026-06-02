@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { adminService } from "../../../services/api";
+import { useAuth } from "../../../context/AuthContext";
 import { 
   Package, 
   Truck, 
@@ -20,9 +21,13 @@ import clsx from "clsx";
 const OrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+
+  const isAdmin = user?.role === 'superadmin' || user?.role === 'admin';
+  const backPath = isAdmin ? '/admin/orders' : '/vendor/orders';
 
   useEffect(() => {
     fetchOrder();
@@ -71,7 +76,7 @@ const OrderDetails = () => {
         <div className="max-w-xl mx-auto py-20 text-center space-y-4 bg-white rounded-3xl border border-dashed border-slate-200">
             <Box size={48} className="mx-auto text-slate-100" />
             <h3 className="text-xl font-black text-slate-400">Order not found.</h3>
-            <button onClick={() => navigate('/vendor/orders')} className="text-brand-blue font-black uppercase text-xs tracking-widest hover:underline">Return to Registry</button>
+            <button onClick={() => navigate(backPath)} className="text-brand-blue font-black uppercase text-xs tracking-widest hover:underline">Return to Registry</button>
         </div>
     );
   }
@@ -107,7 +112,7 @@ const OrderDetails = () => {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-6">
             <button
-                onClick={() => navigate('/vendor/orders')}
+                onClick={() => navigate(backPath)}
                 className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shadow-sm active:scale-95"
             >
                 <ChevronLeft size={20} className="text-slate-600" />
@@ -167,7 +172,7 @@ const OrderDetails = () => {
 
              {['Dispatch Queue', 'Shipped', 'Delivered'].includes(order.status) && (
                  <button 
-                    onClick={() => navigate('/vendor/dispatch')}
+                    onClick={() => navigate(isAdmin ? '/admin/tracking' : '/vendor/dispatch')}
                     className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 hover:scale-105 transition-all"
                  >
                     <Truck size={16} /> Track Fulfillment
@@ -328,7 +333,7 @@ const OrderDetails = () => {
                    </div>
                </div>
                <button 
-                onClick={() => navigate('/vendor/dispatch')}
+                onClick={() => navigate(isAdmin ? '/admin/tracking' : '/vendor/dispatch')}
                 className="w-full mt-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                >
                    Open Tracking Terminal <ArrowRight size={14} />

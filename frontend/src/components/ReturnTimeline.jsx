@@ -65,7 +65,7 @@ const ReturnTimeline = ({ history = [], currentStatus }) => {
                 </p>
                 {entry && (
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    {new Date(entry.timestamp).toLocaleDateString()}
+                    {new Date(entry.timestamp).toLocaleDateString('en-GB')}
                   </p>
                 )}
               </div>
