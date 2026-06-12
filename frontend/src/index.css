@@ -115,6 +115,11 @@ main.flex-1 .text-6xl {
   text-transform: none !important;
 }
 
+/* Allow text-white color utility to override the uniform heading style */
+main.flex-1 .text-white {
+  color: #ffffff !important;
+}
+
 /* Uniform dashboard subheading style */
 main.flex-1 h1 + p,
 main.flex-1 .text-slate-500,

@@ -56,7 +56,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
         { name: "Settlements", path: "/admin/payments/settlements" },
       ]
     },
-    { name: "Returns", path: "/admin/returns", icon: RotateCcw },
+    { name: "Return & Refund", path: "/admin/returns", icon: RotateCcw },
     { name: "Delivery Boys", 
       path: "/admin/delivery-boys", 
       icon: Bike,

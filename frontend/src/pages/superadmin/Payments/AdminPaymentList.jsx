@@ -105,7 +105,7 @@ const AdminPaymentList = () => {
                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
                     <CreditCard size={24} />
                  </div>
-                 <h3 className="text-2xl font-medium italic uppercase tracking-tighter underline decoration-indigo-500 decoration-4 underline-offset-8">Customer Transactions</h3>
+                 <h3 className="text-2xl text-white font-medium italic uppercase tracking-tighter underline decoration-indigo-500 decoration-4 underline-offset-8">Customer Transactions</h3>
                  <p className="text-slate-400 font-medium max-w-sm">Detailed logs of all order payments, transaction IDs, and settlement methods.</p>
                  <div className="pt-4 font-medium text-xs text-indigo-400 uppercase tracking-widest flex items-center gap-2">
                     View Ledger <ArrowUpRight size={16} />
