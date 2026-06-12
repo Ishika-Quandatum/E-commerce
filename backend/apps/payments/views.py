@@ -169,9 +169,11 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
         # Real-time Sweep: Auto-unlock expired return holds
         from django.utils import timezone
         now = timezone.now()
+        from django.db.models import Q
         expired_holds = queryset.filter(
-            settlementStatus='RETURN_HOLD',
-            returnEligibleUntil__lt=now
+            settlementStatus='RETURN_HOLD'
+        ).filter(
+            Q(returnEligibleUntil__lt=now) | Q(returnEligibleUntil__isnull=True, due_date__lt=now)
         )
         for payout in expired_holds:
             # Check if any active return requests exist
@@ -198,15 +200,34 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
             
         # Date Range vs Month/Year filtering
         if start_date:
-            queryset = queryset.filter(created_at__date__gte=start_date)
+            queryset = queryset.filter(created_at__gte=f"{start_date} 00:00:00")
         if end_date:
-            queryset = queryset.filter(created_at__date__lte=end_date)
+            queryset = queryset.filter(created_at__lte=f"{end_date} 23:59:59.999999")
             
         if not start_date and not end_date:
-            if month:
-                queryset = queryset.filter(created_at__month=month)
-            if year:
-                queryset = queryset.filter(created_at__year=year)
+            if month or year:
+                from django.utils import timezone
+                now = timezone.now()
+                
+                def safe_int(val, default):
+                    try:
+                        return int(val) if val else default
+                    except ValueError:
+                        return default
+                        
+                m = safe_int(month, None)
+                y = safe_int(year, now.year)
+                
+                if m:
+                    import calendar
+                    first_day = f"{y:04d}-{m:02d}-01 00:00:00"
+                    last_day_num = calendar.monthrange(y, m)[1]
+                    last_day = f"{y:04d}-{m:02d}-{last_day_num:02d} 23:59:59.999999"
+                    queryset = queryset.filter(created_at__range=[first_day, last_day])
+                else:
+                    first_day = f"{y:04d}-01-01 00:00:00"
+                    last_day = f"{y:04d}-12-31 23:59:59.999999"
+                    queryset = queryset.filter(created_at__range=[first_day, last_day])
                 
         if min_amount:
             queryset = queryset.filter(final_amount__gte=min_amount)
@@ -237,8 +258,15 @@ class VendorPayoutViewSet(viewsets.ModelViewSet):
         import calendar
         
         now = timezone.now()
-        month = int(request.query_params.get('month', now.month))
-        year = int(request.query_params.get('year', now.year))
+        
+        def safe_int(val, default):
+            try:
+                return int(val) if val else default
+            except ValueError:
+                return default
+
+        month = safe_int(request.query_params.get('month'), now.month)
+        year = safe_int(request.query_params.get('year'), now.year)
         
         first_day = now.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
         last_day_num = calendar.monthrange(year, month)[1]

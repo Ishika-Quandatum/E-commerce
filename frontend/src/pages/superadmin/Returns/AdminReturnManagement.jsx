@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { returnService } from '../../../services/api';
-import { Search, Filter, RotateCcw, Eye, CheckCircle2, XCircle, ShieldAlert, BarChart3, TrendingDown, Users, Package } from 'lucide-react';
+import { Search, Filter, RotateCcw, Eye, CheckCircle2, XCircle, ShieldAlert, BarChart3, TrendingDown, Users, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const AdminReturnManagement = () => {
@@ -21,6 +21,7 @@ const AdminReturnManagement = () => {
     account: '',
     transactionId: ''
   });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchReturns = async () => {
     setLoading(true);
@@ -47,8 +48,32 @@ const AdminReturnManagement = () => {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchReturns();
-  }, [filterStatus]);
+  }, [filterStatus, searchTerm]);
+
+  const itemsPerPage = 10;
+  const totalItems = returns.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const paginatedReturns = returns.slice(indexOfFirstItem, indexOfLastItem);
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      let start = Math.max(1, currentPage - 2);
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+      if (end === totalPages) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+      for (let i = start; i <= end; i++) pageNumbers.push(i);
+    }
+    return pageNumbers;
+  };
 
   const handleStatusUpdate = async (id, status, description, extraData = {}) => {
     if (!window.confirm(`Are you sure you want to update to ${status}?`)) return;
@@ -145,7 +170,7 @@ const AdminReturnManagement = () => {
                 <tr><td colSpan="5" className="p-20 text-center font-bold text-slate-400">Fetching return data...</td></tr>
               ) : returns.length === 0 ? (
                 <tr><td colSpan="5" className="p-20 text-center font-bold text-slate-400">No return requests found.</td></tr>
-              ) : returns.map((ret) => (
+              ) : paginatedReturns.map((ret) => (
                 <tr key={ret.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-8 py-6">
                     <span className="text-sm font-black text-slate-900">#RET-{ret.id.toString().padStart(5, '0')}</span>
@@ -153,8 +178,8 @@ const AdminReturnManagement = () => {
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-800 italic underline decoration-rose-300 underline-offset-4">{ret.customer_name}</span>
-                      <span className="text-[10px] font-black text-slate-400 uppercase mt-2">Vendor: {ret.vendor_name}</span>
+                       <span className="text-sm font-bold text-slate-800 italic underline decoration-rose-300 underline-offset-4">{ret.customer_name}</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase mt-2">Vendor: {ret.vendor_name}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-sm font-black text-brand-purple italic">₹{ret.refund_amount}</td>
@@ -185,9 +210,8 @@ const AdminReturnManagement = () => {
                        )}
                        {ret.status === 'Refund Approved' && (
                           <button 
-                            onClick={() => handleStatusUpdate(ret.id, 'Refund Processed', 'Admin processed and credited the refund')}
-                            disabled={ret.status === 'Refund Processed'}
-                            className={`bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-emerald-600/20 ${ret.status === 'Refund Processed' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => { setSelectedReturn(ret); setShowDetailModal(true); }}
+                            className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-emerald-600/20"
                           >
                             Process Payment
                           </button>
@@ -202,6 +226,54 @@ const AdminReturnManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalItems > 0 && (
+          <div className="px-8 py-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/20">
+            <span className="text-xs font-semibold text-slate-500">
+              Showing <span className="font-bold text-slate-800">{indexOfFirstItem + 1}</span> to{" "}
+              <span className="font-bold text-slate-800">
+                {Math.min(indexOfLastItem, totalItems)}
+              </span>{" "}
+              of <span className="font-bold text-slate-800">{totalItems}</span> requests
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white active:scale-95 ${
+                  currentPage === 1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="flex items-center gap-1.5">
+                {getPageNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-10 h-10 rounded-xl font-bold text-xs transition-all flex items-center justify-center border active:scale-95 ${
+                      currentPage === pageNum
+                        ? "bg-brand-purple border-brand-purple text-white shadow-lg shadow-brand-purple/20"
+                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white active:scale-95 ${
+                  currentPage === totalPages ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       {/* Detail & Refund Processing Modal */}
       {showDetailModal && selectedReturn && (

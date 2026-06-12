@@ -18,7 +18,8 @@ import {
   ChevronRight,
   MoreHorizontal,
   RotateCcw,
-  ChevronLeft
+  ChevronLeft,
+  XCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
@@ -41,7 +42,7 @@ const PaymentList = () => {
     order_id: "",
     sort_by: "-created_at",
     page: 1,
-    month: new Date().getMonth() + 1,
+    month: "",
     year: new Date().getFullYear()
   });
   const [totalPages, setTotalPages] = useState(1);
@@ -56,22 +57,23 @@ const PaymentList = () => {
     "July", "August", "September", "October", "November", "December"
   ];
 
+  const getDisplayStatus = (status) => {
+    const s = status?.toUpperCase();
+    if (s === 'SETTLED' || s === 'PAID') return 'Settled';
+    if (s === 'RETURN_HOLD') return 'Return Hold';
+    if (s === 'REFUND_HOLD') return 'Refund Hold';
+    if (s === 'READY_FOR_PAYOUT' || s === 'PENDING') return 'Pending Payout';
+    if (s === 'REFUNDED' || s === 'CANCELLED') return 'Refunded';
+    return status;
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const [payoutsRes, statsRes] = await Promise.all([
         paymentService.getVendorPayouts({
-          status: filters.status === "All" ? "" : filters.status,
-          start_date: filters.start_date,
-          end_date: filters.end_date,
-          order_id: filters.order_id,
           sort_by: filters.sort_by,
-          page: filters.page,
-          // We can also filter table by selected month if no specific date range is set
-          ...( (!filters.start_date && !filters.end_date) && {
-              month: filters.month,
-              year: filters.year
-          })
+          page_size: 100
         }),
         paymentService.getVendorPayoutStatsForVendor({
             month: filters.month,
@@ -79,15 +81,41 @@ const PaymentList = () => {
         })
       ]);
 
-      if (payoutsRes.data.results) {
-          setPayouts(payoutsRes.data.results);
-          setTotalCount(payoutsRes.data.count);
-          setTotalPages(Math.ceil(payoutsRes.data.count / 10));
-      } else {
-          setPayouts(Array.isArray(payoutsRes.data) ? payoutsRes.data : []);
-          setTotalPages(1);
-          setTotalCount(payoutsRes.data.length || 0);
+      let list = payoutsRes.data.results || (Array.isArray(payoutsRes.data) ? payoutsRes.data : []);
+
+      // Client-side filtering to bypass backend MySQL CONVERT_TZ issues
+      // 1. Filter by status
+      if (filters.status && filters.status !== "All") {
+          list = list.filter(p => getDisplayStatus(p.settlementStatus || p.status) === filters.status);
       }
+
+      // 2. Filter by order_id
+      if (filters.order_id) {
+          list = list.filter(p => String(p.order_id).includes(filters.order_id));
+      }
+
+      // 3. Filter by date range or month/year
+      if (filters.start_date || filters.end_date) {
+          if (filters.start_date) {
+              const start = new Date(filters.start_date);
+              start.setHours(0, 0, 0, 0);
+              list = list.filter(p => new Date(p.created_at) >= start);
+          }
+          if (filters.end_date) {
+              const end = new Date(filters.end_date);
+              end.setHours(23, 59, 59, 999);
+              list = list.filter(p => new Date(p.created_at) <= end);
+          }
+      } else if (filters.month && filters.year) {
+          list = list.filter(p => {
+              const d = new Date(p.created_at);
+              return (d.getMonth() + 1) === parseInt(filters.month) && d.getFullYear() === parseInt(filters.year);
+          });
+      }
+
+      setTotalCount(list.length);
+      setTotalPages(Math.ceil(list.length / 10));
+      setPayouts(list.slice((filters.page - 1) * 10, filters.page * 10));
       setStats(statsRes.data);
     } catch (err) {
       toast.error("Failed to fetch payment data");
@@ -119,10 +147,10 @@ const PaymentList = () => {
           order_id: "",
           sort_by: "-created_at",
           page: 1,
-          month: new Date().getMonth() + 1,
+          month: "",
           year: new Date().getFullYear()
       });
-      toast.success("Filters reset to current month");
+      toast.success("Filters reset successfully");
   };
 
   const handlePageChange = (newPage) => {
@@ -204,7 +232,7 @@ const PaymentList = () => {
               >
                  <Calendar size={14} className="text-indigo-500" />
                  <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
-                     {stats.selected_period || "Loading..."}
+                     {filters.month ? stats.selected_period : `All Months (${filters.year})`}
                  </span>
                  <ChevronDown size={14} className={clsx("text-slate-300 transition-transform", showMonthPicker && "rotate-180")} />
               </button>
@@ -251,6 +279,15 @@ const PaymentList = () => {
                                   </button>
                               ))}
                           </div>
+                          <button
+                            onClick={() => {
+                                setFilters(f => ({...f, month: "", page: 1}));
+                                setShowMonthPicker(false);
+                            }}
+                            className="mt-3 w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                          >
+                            All Months
+                          </button>
                       </motion.div>
                   )}
               </AnimatePresence>
@@ -322,11 +359,11 @@ const PaymentList = () => {
                                 className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-indigo-400 transition-all appearance-none cursor-pointer"
                               >
                                   <option value="All">All Transactions</option>
-                                  <option value="Pending">Pending</option>
-                                  <option value="Paid">Paid</option>
+                                  <option value="Pending Payout">Pending Payout</option>
+                                  <option value="Return Hold">Return Hold</option>
                                   <option value="Refund Hold">Refund Hold</option>
-                                  <option value="Cancelled">Cancelled</option>
-                                  <option value="Released">Released</option>
+                                  <option value="Settled">Settled</option>
+                                  <option value="Refunded">Refunded</option>
                               </select>
                           </div>
                           <div className="space-y-3">
@@ -404,7 +441,7 @@ const PaymentList = () => {
                               <CreditCard size={20} />
                             </div>
                             <div>
-                              <div className="text-sm font-black text-slate-900 leading-none mb-1.5 italic">Settlement #{p.transaction_id.slice(-6)}</div>
+                              <div className="text-sm font-black text-slate-900 leading-none mb-1.5 italic">Settlement #{p.transaction_id}</div>
                               <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-tighter">
                                 <Calendar size={12} className="text-indigo-400" />
                                 {new Date(p.created_at).toLocaleDateString('en-GB')}
@@ -439,10 +476,10 @@ const PaymentList = () => {
                               "inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm transition-all",
                               getStatusColor(p.settlementStatus || p.status)
                           )}>
-                            {(p.settlementStatus || p.status) === 'SETTLED' || (p.settlementStatus || p.status) === 'Paid' ? <CheckCircle2 size={12} /> : 
+                            {['SETTLED', 'Paid'].includes(p.settlementStatus || p.status) ? <CheckCircle2 size={12} /> : 
                              ['REFUND_HOLD', 'REFUNDED', 'Refund Hold', 'Cancelled'].includes(p.settlementStatus || p.status) ? <XCircle size={12} /> : 
-                             (p.settlementStatus || p.status) === 'READY_FOR_PAYOUT' ? <RotateCcw size={12} /> : <Clock size={12} />}
-                            {(p.settlementStatus || p.status).replace('_', ' ')}
+                             ['READY_FOR_PAYOUT', 'Pending'].includes(p.settlementStatus || p.status) ? <RotateCcw size={12} /> : <Clock size={12} />}
+                            {getDisplayStatus(p.settlementStatus || p.status)}
                           </span>
                         </td>
                         <td className="px-10 py-7 text-right">

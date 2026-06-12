@@ -189,6 +189,15 @@ const VendorTransactions = () => {
     }
   };
 
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setVendorFilter("");
+    setStatusFilter("All");
+    setDateRange({ start: "", end: "" });
+    setAmountRange({ min: "", max: "" });
+    toast.success("Filters cleared successfully");
+  };
+
   const getStatusStyle = (status) => {
     switch (status) {
       case 'SETTLED':
@@ -317,8 +326,8 @@ const VendorTransactions = () => {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden px-4 md:px-0"
           >
-            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="space-y-2">
+            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm flex flex-wrap gap-6 items-end">
+                <div className="flex-1 min-w-[280px] space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Search Merchant</label>
                     <div className="relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -331,7 +340,7 @@ const VendorTransactions = () => {
                         />
                     </div>
                 </div>
-                <div className="space-y-2">
+                <div className="w-full sm:w-[220px] space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Select Vendor</label>
                     <select 
                         value={vendorFilter} 
@@ -342,15 +351,15 @@ const VendorTransactions = () => {
                         {vendors.map(v => <option key={v.id} value={v.id}>{v.shop_name}</option>)}
                     </select>
                 </div>
-                <div className="space-y-2">
+                <div className="w-full md:w-auto min-w-[280px] space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Status Protocol</label>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex gap-1">
                         {['All', 'Pending', 'Paid', 'Hold'].map(s => (
                             <button 
                                 key={s}
                                 onClick={() => setStatusFilter(s)}
                                 className={clsx(
-                                    "px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-tighter transition-all flex-1 min-w-[60px]",
+                                    "px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-tighter transition-all flex-1 min-w-[65px] text-center",
                                     statusFilter === s ? "bg-purple-600 text-white shadow-md shadow-purple-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100"
                                 )}
                             >
@@ -359,7 +368,7 @@ const VendorTransactions = () => {
                         ))}
                     </div>
                 </div>
-                <div className="space-y-2">
+                <div className="flex-1 min-w-[280px] space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Date Range</label>
                     <div className="flex items-center gap-2">
                         <div className="relative flex-1">
@@ -367,7 +376,7 @@ const VendorTransactions = () => {
                                 type="date" 
                                 value={dateRange.start}
                                 onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-                                className="w-full pl-3 pr-2 py-3 bg-slate-50 border-none rounded-xl text-[11px] focus:ring-2 focus:ring-purple-400 cursor-pointer"
+                                className="w-full pl-3 pr-2 py-3 bg-slate-50 border-none rounded-xl text-xs focus:ring-2 focus:ring-purple-400 cursor-pointer"
                             />
                         </div>
                         <span className="text-slate-300 font-bold">-</span>
@@ -376,10 +385,18 @@ const VendorTransactions = () => {
                                 type="date" 
                                 value={dateRange.end}
                                 onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-                                className="w-full pl-3 pr-2 py-3 bg-slate-50 border-none rounded-xl text-[11px] focus:ring-2 focus:ring-purple-400 cursor-pointer"
+                                className="w-full pl-3 pr-2 py-3 bg-slate-50 border-none rounded-xl text-xs focus:ring-2 focus:ring-purple-400 cursor-pointer"
                             />
                         </div>
                     </div>
+                </div>
+                <div className="w-full sm:w-auto">
+                    <button 
+                        onClick={handleResetFilters}
+                        className="px-6 py-3 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-sm min-w-[100px]"
+                    >
+                        Reset
+                    </button>
                 </div>
             </div>
           </motion.div>

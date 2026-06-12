@@ -120,6 +120,10 @@ class VendorPayout(models.Model):
     returnRequestedAt = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        # Auto-fill returnEligibleUntil from due_date if not present
+        if not self.returnEligibleUntil and self.due_date:
+            self.returnEligibleUntil = self.due_date
+
         # 1. Update settlementStatus if status was changed from outside
         if self.status == 'Paid' and self.settlementStatus != 'SETTLED':
             self.settlementStatus = 'SETTLED'
