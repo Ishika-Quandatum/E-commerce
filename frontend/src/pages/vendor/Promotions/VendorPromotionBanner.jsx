@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { adminService, promotionService } from '../../../services/api';
+import { adminService, promotionService, vendorService } from '../../../services/api';
 import { Megaphone, Plus, Trash2, Calendar, Tag, Image as ImageIcon, Loader2, Edit2, X, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 const VendorPromotionBanner = () => {
   const [products, setProducts] = useState([]);
@@ -10,6 +10,7 @@ const VendorPromotionBanner = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
   const initialFormState = {
     product: '',
@@ -46,12 +47,19 @@ const VendorPromotionBanner = () => {
     try {
       const [prodRes, promoRes] = await Promise.all([
         adminService.getProducts(),
-        promotionService.getVendorBanners()
+        promotionService.getVendorBanners(),
       ]);
       const productsData = Array.isArray(prodRes.data) ? prodRes.data : (prodRes.data?.results || []);
       setProducts(productsData);
       const promotionsData = Array.isArray(promoRes.data) ? promoRes.data : (promoRes.data?.results || []);
       setPromotions(promotionsData);
+      try {
+        const subscriptionRes = await vendorService.getCurrentSubscription();
+        setSubscription(subscriptionRes.data);
+      } catch (subscriptionError) {
+        if (subscriptionError.response?.status !== 404) throw subscriptionError;
+        setSubscription(null);
+      }
     } catch (err) {
       console.error("Error fetching vendor promotion data", err);
     } finally {
@@ -149,6 +157,17 @@ const VendorPromotionBanner = () => {
   const [viewMode, setViewMode] = useState('grid');
 
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-brand-purple" size={48} /></div>;
+
+  if (!subscription) return (
+    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
+      <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm text-center">
+        <Megaphone className="mx-auto text-brand-purple" size={48} />
+        <h1 className="text-3xl font-black text-brand-navy mt-5">Subscription Required</h1>
+        <p className="text-slate-500 font-bold mt-2">Subscribe to a plan to promote your products.</p>
+        <a href="/vendor/subscription" className="inline-flex mt-6 px-8 py-3 rounded-2xl bg-brand-purple text-white font-black">View Plans</a>
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto">

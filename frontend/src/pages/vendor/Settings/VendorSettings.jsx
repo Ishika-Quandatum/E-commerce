@@ -5,10 +5,12 @@ import {
     Clock, Calendar, Globe, Trash2, Mail, Loader2, Phone
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { vendorService, authService, productService } from "../../../services/api";
+import { vendorService, productService } from "../../../services/api";
 import MapPicker from "../../../components/vendor/common/MapPicker";
 import { toast } from "react-hot-toast";
 import clsx from "clsx";
+
+const MotionDiv = motion.div;
 
 const VendorSettings = () => {
     const [activeTab, setActiveTab] = useState("shop"); // shop, account, address, logistics
@@ -45,7 +47,7 @@ const VendorSettings = () => {
                 logo: res.data.shop_logo,
                 banner: res.data.shop_banner
             });
-        } catch (err) {
+        } catch {
             toast.error("Failed to load settings");
         } finally {
             setLoading(false);
@@ -102,7 +104,7 @@ const VendorSettings = () => {
             } else {
                 if (!isAuto) toast.error("Could not find precise coordinates for this address.");
             }
-        } catch (err) {
+        } catch {
             if (!isAuto) toast.error("Geocoding failed. Try manual placement.");
         } finally {
             setGeocodingLoading(false);
@@ -207,7 +209,7 @@ const VendorSettings = () => {
             <form onSubmit={handleSave} className="space-y-8">
                 <AnimatePresence mode="wait">
                     {activeTab === "shop" && (
-                        <motion.div 
+                        <MotionDiv
                             key="shop"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -270,6 +272,7 @@ const VendorSettings = () => {
                                                 className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-6 font-bold text-slate-700 focus:bg-white focus:border-brand-purple transition-all outline-none"
                                             />
                                         </div>
+
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shop Category</label>
                                             <select 
@@ -300,12 +303,25 @@ const VendorSettings = () => {
                                         placeholder="Tell customers about your shop story, quality, and legacy..."
                                     />
                                 </div>
+                                {data.store_url && (
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Store Link</label>
+                                        <div className="rounded-3xl border border-slate-100 bg-slate-50 p-6">
+                                            <p className="text-sm font-medium text-slate-500 mb-3">Your customers can visit your store using this link.</p>
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <input value={data.store_url} readOnly className="flex-1 h-12 bg-white border border-slate-100 rounded-2xl px-4 font-bold text-slate-700 outline-none" />
+                                                <button type="button" onClick={() => { navigator.clipboard.writeText(data.store_url); toast.success("Store link copied!"); }} className="h-12 px-5 rounded-2xl bg-brand-purple text-white font-bold">Copy Link</button>
+                                            </div>
+                                            <p className="mt-3 text-xs font-bold text-emerald-600">● Store Status: Active</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     )}
 
                     {activeTab === "account" && (
-                        <motion.div 
+                        <MotionDiv
                             key="account"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -376,11 +392,11 @@ const VendorSettings = () => {
                                     Changing your email will affect your login credentials. You will be required to log in again with the new email address.
                                 </p>
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     )}
 
                     {activeTab === "address" && (
-                        <motion.div 
+                        <MotionDiv
                             key="address"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -432,11 +448,11 @@ const VendorSettings = () => {
                                     />
                                 </div>
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     )}
 
                     {activeTab === "logistics" && (
-                        <motion.div 
+                        <MotionDiv
                             key="logistics"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -537,7 +553,7 @@ const VendorSettings = () => {
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     )}
                 </AnimatePresence>
 

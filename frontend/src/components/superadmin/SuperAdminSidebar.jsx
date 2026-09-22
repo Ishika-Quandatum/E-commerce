@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Users, 
@@ -15,22 +15,14 @@ import {
   Bike,
   RotateCcw,
   Settings as SettingsIcon,
-  LogOut
+  BadgeCheck
 } from "lucide-react";
 import clsx from "clsx";
 import { usePlatform } from "../../context/PlatformContext";
-import { useAuth } from "../../context/AuthContext";
 
 const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { platformName } = usePlatform();
-  const { logout } = useAuth();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
 
   const menuItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
@@ -66,6 +58,7 @@ const SuperAdminSidebar = ({ isOpen, setIsOpen }) => {
       ]
     },
     { name: "Tracking", path: "/admin/tracking", icon: MapPin },
+    { name: "Subscriptions", path: "/admin/subscriptions", icon: BadgeCheck },
     { name: "Settings", path: "/admin/settings", icon: SettingsIcon },
   ];
 

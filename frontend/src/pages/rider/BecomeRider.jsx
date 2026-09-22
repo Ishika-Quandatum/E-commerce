@@ -64,13 +64,19 @@ const BecomeRider = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    if (!e.currentTarget.checkValidity()) {
+      setError('Please complete all required fields before submitting.');
+      return;
+    }
+
     if (formData.password !== formData.confirm_password) {
       setError("Passwords do not match");
       return;
     }
 
     setLoading(true);
-    setError('');
 
     const data = new FormData();
     Object.keys(formData).forEach(key => {
@@ -85,7 +91,13 @@ const BecomeRider = () => {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 5000);
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed. Please check your details.");
+      const responseData = err.response?.data;
+      const fieldErrors = responseData && typeof responseData === 'object'
+        ? Object.entries(responseData)
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+          .join(' ')
+        : '';
+      setError(fieldErrors || "Registration failed. Please check your details.");
     } finally {
       setLoading(false);
     }
@@ -131,7 +143,7 @@ const BecomeRider = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
         >
-          <form onSubmit={handleSubmit} className="p-8 sm:p-12">
+          <form noValidate onSubmit={handleSubmit} className="p-8 sm:p-12">
             {error && (
               <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 font-bold text-sm">
                 <AlertCircle size={18} /> {error}

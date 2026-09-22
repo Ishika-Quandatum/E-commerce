@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Vendor
+from django.conf import settings
+from .models import Vendor, SubscriptionPlan, VendorSubscription
 from apps.users.models import User
 
 
@@ -13,20 +14,27 @@ class VendorSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     products_count = serializers.SerializerMethodField()
     total_orders_count = serializers.SerializerMethodField()
+    store_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Vendor
         fields = [
-            'id', 'user', 'username', 'email', 'vendor_name', 'shop_name', 'shop_type', 
+            'id', 'user', 'username', 'email', 'vendor_name', 'shop_name', 'shop_type',
             'shop_address', 'city', 'state', 'pincode', 'pickup_contact', 'alternative_contact',
             'shop_logo', 'shop_banner', 'shop_description',
             'opening_time', 'closing_time', 'working_days',
             'pickup_availability', 'delivery_radius', 'estimated_dispatch_time',
             'location_lat', 'location_lng',
-            'status', 'created_at', 'avatar', 'rating', 'total_ratings', 
+            'status', 'store_slug', 'store_url', 'created_at', 'avatar', 'rating', 'total_ratings',
             'followers_count', 'products_count', 'total_orders_count'
         ]
-        read_only_fields = ['user', 'status', 'created_at']
+        read_only_fields = ['user', 'status', 'store_slug', 'store_url', 'created_at']
+
+    def get_store_url(self, obj):
+        if not obj.store_slug:
+            return None
+        frontend_url = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+        return f'{frontend_url}/store/{obj.store_slug}/' if frontend_url else f'/store/{obj.store_slug}/'
 
     def get_avatar(self, obj):
         if obj.user and obj.user.avatar:
@@ -111,3 +119,34 @@ class VendorSignupSerializer(serializers.ModelSerializer):
         # Create vendor application
         vendor = Vendor.objects.create(user=user, status='Pending', **validated_data)
         return vendor
+
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = ['id', 'name', 'price', 'duration_days', 'max_promotions',
+                  'description', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class VendorSubscriptionSerializer(serializers.ModelSerializer):
+    plan = SubscriptionPlanSerializer(read_only=True)
+    vendor_name = serializers.ReadOnlyField(source='vendor.shop_name')
+    vendor_email = serializers.ReadOnlyField(source='vendor.user.email')
+    promotion_count = serializers.SerializerMethodField()
+    plan_id = serializers.PrimaryKeyRelatedField(
+        source='plan', queryset=SubscriptionPlan.objects.filter(is_active=True),
+        write_only=True, required=False
+    )
+    is_active = serializers.ReadOnlyField()
+
+    class Meta:
+        model = VendorSubscription
+        fields = ['id', 'vendor', 'vendor_name', 'vendor_email', 'plan', 'plan_id',
+                  'payment_id', 'start_date', 'end_date', 'status', 'is_active',
+                  'promotion_count', 'created_at', 'updated_at']
+        read_only_fields = ['vendor', 'payment_id', 'start_date', 'end_date',
+                            'status', 'is_active', 'created_at', 'updated_at']
+
+    def get_promotion_count(self, obj):
+        return obj.vendor.promotions.count()

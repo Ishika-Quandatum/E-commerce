@@ -53,6 +53,7 @@ const CustomerRoutes = () => {
         <Route path="/shipping-info" element={<ShippingInfo />} />
         <Route path="/returns" element={<Returns />} />
         <Route path="/vendor-shop/:id" element={<VendorShop />} />
+        <Route path="/store/:slug" element={<VendorShop />} />
       </Routes>
       <Footer />
     </>

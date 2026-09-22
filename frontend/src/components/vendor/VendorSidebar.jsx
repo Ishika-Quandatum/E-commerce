@@ -13,6 +13,7 @@ import {
   RotateCcw,
   User,
   Settings
+  ,BadgeCheck
 } from "lucide-react";
 import clsx from "clsx";
 import { usePlatform } from "../../context/PlatformContext";
@@ -35,6 +36,7 @@ const VendorSidebar = ({ isOpen, setIsOpen }) => {
     { name: "Orders", path: "/vendor/orders", icon: ShoppingBag },
     { name: "Dispatch", path: "/vendor/dispatch", icon: Truck },
     { name: "Returns", path: "/vendor/returns", icon: RotateCcw },
+    { name: "Subscription", path: "/vendor/subscription", icon: BadgeCheck },
     { name: "Promotions", path: "/vendor/promotion-banner", icon: Megaphone },
     { name: "Payments", path: "/vendor/payments", icon: CreditCard },
     { name: "Profile", path: "/vendor/profile", icon: User },

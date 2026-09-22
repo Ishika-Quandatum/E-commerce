@@ -16,6 +16,7 @@ import VendorReturnList from "../pages/vendor/Returns/VendorReturnList";
 import VendorReturnDetail from "../pages/vendor/Returns/VendorReturnDetail";
 import VendorProfile from "../pages/vendor/Profile/VendorProfile";
 import VendorSettings from "../pages/vendor/Settings/VendorSettings";
+import VendorSubscription from "../pages/vendor/Subscription/VendorSubscription";
 
 const VendorRoutes = () => {
   const { user, loading, isVendor, isSuperAdmin } = useAuth();
@@ -59,6 +60,7 @@ const VendorRoutes = () => {
         {/* Profile & Settings */}
         <Route path="profile" element={<VendorProfile />} />
         <Route path="settings" element={<VendorSettings />} />
+        <Route path="subscription" element={<VendorSubscription />} />
 
 
       </Route>

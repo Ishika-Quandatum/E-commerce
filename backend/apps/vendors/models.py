@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 
 class Vendor(models.Model):
@@ -36,6 +37,7 @@ class Vendor(models.Model):
     estimated_dispatch_time = models.CharField(max_length=50, null=True, blank=True) # e.g. "24 Hours"
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    store_slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=10.00)  # Percentage
     location_lat = models.FloatField(null=True, blank=True)
     location_lng = models.FloatField(null=True, blank=True)
@@ -59,3 +61,72 @@ class Follower(models.Model):
 
     def __str__(self):
         return f"{self.user.username} following {self.vendor.shop_name}"
+
+
+class SubscriptionPlan(models.Model):
+    name = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_days = models.PositiveIntegerField()
+    max_promotions = models.PositiveIntegerField(null=True, blank=True)
+    description = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['price', 'duration_days']
+
+    def __str__(self):
+        return self.name
+
+
+class VendorSubscription(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('ACTIVE', 'Active'),
+        ('EXPIRED', 'Expired'),
+        ('FAILED', 'Failed'),
+        ('CANCELLED', 'Cancelled'),
+    )
+
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='subscriptions')
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name='subscriptions')
+    payment_id = models.CharField(max_length=255, unique=True)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def is_active(self):
+        now = timezone.now()
+        return (
+            self.status == 'ACTIVE'
+            and self.start_date is not None
+            and self.end_date is not None
+            and self.start_date <= now <= self.end_date
+        )
+
+
+def has_active_subscription(vendor):
+    now = timezone.now()
+    return VendorSubscription.objects.filter(
+        vendor=vendor,
+        status='ACTIVE',
+        start_date__lte=now,
+        end_date__gte=now,
+    ).exists()
+
+
+def get_active_subscription(vendor):
+    now = timezone.now()
+    return VendorSubscription.objects.filter(
+        vendor=vendor,
+        status='ACTIVE',
+        start_date__lte=now,
+        end_date__gte=now,
+    ).select_related('plan').order_by('-end_date').first()

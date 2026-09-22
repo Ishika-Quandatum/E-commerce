@@ -115,6 +115,11 @@ export const adminService = {
   getProductStats: () => api.get('products/admin_stats/'),
   addRiderBonus: (id, data) => api.post(`tracking/riders/${id}/add_bonus/`, data),
   updateRiderSalaryConfig: (id, data) => api.post(`tracking/riders/${id}/update_salary_config/`, data),
+  getSubscriptionPlans: () => api.get('vendors/subscription-plans/'),
+  createSubscriptionPlan: (data) => api.post('vendors/subscription-plans/', data),
+  updateSubscriptionPlan: (id, data) => api.patch(`vendors/subscription-plans/${id}/`, data),
+  toggleSubscriptionPlan: (id) => api.post(`vendors/subscription-plans/${id}/toggle_active/`),
+  getVendorSubscriptions: () => api.get('vendors/subscriptions/'),
 };
 
 export const trackingService = {
@@ -153,6 +158,7 @@ export const paymentService = {
 export const vendorService = {
   getVendors: (params) => api.get('vendors/', { params }),
   getVendorDetail: (id) => api.get(`vendors/${id}/`),
+  getVendorStore: (slug) => api.get(`vendors/store/${encodeURIComponent(slug)}/`),
   getVendorProducts: (id, params) => api.get('products/', { params: { ...params, vendor: id } }),
   followVendor: (id) => api.post(`vendors/${id}/follow/`),
   isFollowing: (id) => api.get(`vendors/${id}/is_following/`),
@@ -160,6 +166,11 @@ export const vendorService = {
 
   approve: (id) => api.post(`vendors/${id}/approve/`),
   reject: (id) => api.post(`vendors/${id}/reject/`),
+  getSubscriptionPlans: () => api.get('vendors/subscription-plans/'),
+  getCurrentSubscription: () => api.get('vendors/subscriptions/current/'),
+  getSubscriptionHistory: () => api.get('vendors/subscriptions/'),
+  initiateSubscription: (planId) => api.post('vendors/subscriptions/initiate/', { plan_id: planId }),
+  verifySubscriptionPayment: (data) => api.post('vendors/subscriptions/verify_payment/', data),
 
   // Profile & Settings
   getProfile: () => api.get('vendors/profile/'),

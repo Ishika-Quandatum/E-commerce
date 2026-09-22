@@ -17,6 +17,8 @@ SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+SUBSCRIPTION_PAYMENT_WEBHOOK_SECRET = config('SUBSCRIPTION_PAYMENT_WEBHOOK_SECRET', default='')
 
 ALLOWED_HOSTS = ['*']
 
@@ -155,4 +157,3 @@ CORS_ALLOW_METHODS = ['*']
 # SMTP Settings
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='sarasneha97@gmail.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='ggtm evum zops hsoc')
-

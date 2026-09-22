@@ -6,11 +6,13 @@ import { Star, Users, Package, ShieldCheck, Filter, ChevronDown, LayoutGrid, Lis
 import { toast } from 'react-hot-toast';
 
 const VendorShop = () => {
-    const { id } = useParams();
+    const { id, slug } = useParams();
+    const vendorKey = id || slug;
     const navigate = useNavigate();
     const [vendor, setVendor] = useState(null);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [isFollowing, setIsFollowing] = useState(false);
     const [filters, setFilters] = useState({
         sort: 'newest',
@@ -21,28 +23,32 @@ const VendorShop = () => {
 
     useEffect(() => {
         fetchVendorData();
-    }, [id]);
+    }, [vendorKey]);
 
     useEffect(() => {
-        fetchVendorProducts();
-    }, [id, filters]);
+        if (vendor?.id) fetchVendorProducts();
+    }, [vendor?.id, filters]);
 
     const fetchVendorData = async () => {
         try {
-            const res = await vendorService.getVendorDetail(id);
+            setError('');
+            const res = slug
+                ? await vendorService.getVendorStore(slug)
+                : await vendorService.getVendorDetail(id);
             setVendor(res.data);
             
-            const followRes = await vendorService.isFollowing(id);
+            const followRes = await vendorService.isFollowing(res.data.id);
             setIsFollowing(followRes.data.is_following);
         } catch (err) {
             console.error("Error fetching vendor data", err);
+            setError(err.response?.status === 404 ? 'Store not found.' : 'Unable to load this store.');
         }
     };
 
     const fetchVendorProducts = async () => {
         setLoading(true);
         try {
-            const res = await vendorService.getVendorProducts(id, {
+            const res = await vendorService.getVendorProducts(vendor.id, {
                 sort: filters.sort,
                 search: filters.search
             });
@@ -75,7 +81,7 @@ const VendorShop = () => {
 
         setIsFollowLoading(true);
         try {
-            const res = await vendorService.followVendor(id);
+            const res = await vendorService.followVendor(vendor.id);
             const isNowFollowing = res.data.following;
             setIsFollowing(isNowFollowing);
             setVendor(prev => ({ ...prev, followers_count: res.data.followers_count }));
@@ -122,7 +128,13 @@ const VendorShop = () => {
         }
     };
 
-    if (!vendor) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    if (!vendor) {
+        return (
+            <div className="min-h-screen flex items-center justify-center px-4 text-center">
+                {error || 'Loading...'}
+            </div>
+        );
+    }
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
